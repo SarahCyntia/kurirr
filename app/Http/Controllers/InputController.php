@@ -31,12 +31,13 @@ class InputController extends Controller
         $page = $request->page ? $request->page - 1 : 0;
 
         DB::statement('SET @no := ' . ($page * $per));
-
+        // $data = Input::select('nama_barang', 'alamat_asal','alamat_tujuan', 'penerima', 'biaya_pengiriman', 'ststus');
         $data = Input::when($request->search, function (Builder $query, string $search) {
                 $query->where('nama_barang', 'like', "%$search%")
                       ->orWhere('alamat_asal', 'like', "%$search%")
                       ->orWhere('alamat_tujuan', 'like', "%$search%")
                       ->orWhere('penerima', 'like', "%$search%")
+                      ->orWhere('biaya_pengiriman', 'like', "%$search%")
                       ->orWhere('status', 'like', "%$search%");
             })
             ->latest()
@@ -57,6 +58,7 @@ class InputController extends Controller
             'alamat_asal' => 'required|string|max:255',
             'alamat_tujuan' => 'required|string|max:255',
             'penerima' => 'required|string|max:255',
+            'biaya_pengiriman' => 'required|string|max:255',
         ]);
 
         $id_pelanggan = Pelanggan::where('user_id', $request->id_user)->first('id');
@@ -66,6 +68,7 @@ class InputController extends Controller
             'alamat_asal' => $request->alamat_asal,
             'alamat_tujuan' => $request->alamat_tujuan,
             'penerima' => $request->penerima,
+            'biaya_pengiriman' => $request->biaya_pengiriman,
             'id_pelanggan' =>$id_pelanggan->id,
         ]);
     
@@ -89,6 +92,7 @@ class InputController extends Controller
             'alamat_asal' => $Input->alamat_asal,
             'alamat_tujuan' => $Input->alamat_tujuan,
             'penerima' => $Input->penerima,
+            'biaya_pengiriman' => $Input->biaya_pengiriman,
             // 'status' => $Input->status,
         ]);
     }
@@ -108,11 +112,35 @@ class InputController extends Controller
             'data' => $input
         ]);
     }
+    public function get()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => Input::select('nama_barang', 'alamat_asal', 'alamat_tujuan', 'penerima', 'biaya_pengiriman', 'status')->get()
+        ]);
+    }
 
     // Optional: Hapus data
-    public function destroy($id)
-    {
-        Input::destroy($id);
-        return response()->json(['message' => 'Data berhasil dihapus']);
-    }
+//     public function destroy($id)
+//     {
+//         Input::destroy($id);
+//         return response()->json(['message' => 'Data berhasil dihapus']);
+//     }
+// }
+public function destroy(Input $input)
+{
+
+    // Hapus data user yang terkait
+    // if ($input->user) {
+    //     $input->user->delete();
+    // }
+
+    // Hapus data kurir
+    $input->delete();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Data pesanan berhasil dihapus'
+    ]);
+}
 }

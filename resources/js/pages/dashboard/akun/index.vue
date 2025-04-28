@@ -76,7 +76,7 @@ onMounted(() => {
 <template>
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Profil Kurir</h3>
+            <h3 class="card-title">Profil</h3>
             <img :src="kurir.photo" class="rounded-circle mb-3 mt-5" width="50" height="50" alt="Foto ">
         </div>
         <!-- mengambil dari type -->

@@ -182,17 +182,17 @@ const routes: Array<RouteRecordRaw> = [
             //         breadcrumbs: ["Master", "Kurirs"],
             //     },
             // },
+            {
+                path: "/dashboard/order/input",
+                name: "dashboard.order.input",
+                component: () =>
+                    import("@/pages/dashboard/order/input/index.vue"),
+                // meta: {
+                    //     pageTitle: "Input Data Order",
+                //     // breadcrumbs: ["Master", "Users"],
+                // },
+            },
         ],
-    },
-    {
-        path: "/dashboard/order/input",
-        name: "dashboard.order.input",
-        component: () =>
-            import("@/pages/dashboard/order/input/index.vue"),
-        // meta: {
-            //     pageTitle: "Input Data Order",
-        //     // breadcrumbs: ["Master", "Users"],
-        // },
     },
     {
         path: "/dashboard_pengguna",

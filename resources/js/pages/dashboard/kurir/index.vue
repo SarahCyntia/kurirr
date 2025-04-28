@@ -21,7 +21,6 @@ const columns = [
     column.accessor("user.name", { header: "Nama" }),
     column.accessor("user.email", { header: "Email" }),
     column.accessor("user.phone", { header: "No. Telp" }),
-    
     // column.accessor("status", { header: "Status" }),
     column.accessor("jenis_kendaraan", { header: "Jenis Kendaraan" }),
     column.accessor("alamat", { header: "Alamat" }),

@@ -28,18 +28,18 @@ const columns = [
         header: "Aksi",
         cell: (cell) =>
             h("div", { class: "d-flex gap-2" }, [
-                h(
-                    "button",
-                    {
-                        class: "btn btn-sm btn-icon btn-info",
-                        onClick: () => {
-                            selected.value = cell.getValue();
-                            openForm.value = true;
-                        },
-                    },
-                    h("i", { class: "bi bi-file-excel" })
-                    // h("i", { class: "la la-pencil fs-2" })
-                ),
+                // h(
+                //     "button",
+                //     {
+                //         class: "btn btn-sm btn-icon btn-info",
+                //         onClick: () => {
+                //             selected.value = cell.getValue();
+                //             openForm.value = true;
+                //         },
+                //     },
+                //     h("i", { class: "bi bi-file-excel" })
+                //     // h("i", { class: "la la-pencil fs-2" })
+                // ),
                 h(
                     "button",
                     {
@@ -73,15 +73,10 @@ watch(openForm, (val) => {
     <div class="card">
         <div class="card-header align-items-center">
             <h2 class="mb-0">List Input Order</h2>
-            <button
-                type="button"
-                class="btn btn-sm btn-primary ms-auto"
-                v-if="!openForm"
-                @click="openForm = true"
-            >
-                Tambah
-                <i class="la la-plus"></i>
-            </button>
+            <button type="button" class="btn btn-sm btn-primary ms-auto" v-if="!openForm" @click="openForm = true">
+              Tambah
+              <i class="la la-plus"></i>
+          </button>
         </div>
         <div class="card-body">
             <p v-if="inputData">Data input: {{ inputData }}</p>
@@ -94,14 +89,14 @@ watch(openForm, (val) => {
             <!-- Tanpa spasi -->
         </div>
     </div>
-    <button
+    <!-- <button
         type="button"
         class="btn btn-sm btn-primary ms-auto"
         v-if="!openForm"
         @click="$router.push('/dashboard')"
     >
         Kembali
-    </button>
+    </button> -->
 </template>
 
 <style>

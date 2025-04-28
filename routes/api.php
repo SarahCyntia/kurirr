@@ -18,6 +18,7 @@ use App\Http\Controllers\OrderController;
 use App\Models\Pelanggan;
 use App\Http\Controllers\AkunController;
 use App\Http\Controllers\InputController;
+use App\Http\Controllers\OrderedController;
 use App\Models\Input;
 
 /*
@@ -128,13 +129,23 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::post('/input', [InputController::class, 'index'])->withoutMiddleware('can:input');
         Route::post('/input/store', [InputController::class, 'store']);
         Route::put('/input', [InputController::class, 'update']);
-        Route::apiResource('/index', InputController::class)
+        // Route::put('/input', [InputController::class, 'update'])->withoutMiddleware('can:input');
+        Route::apiResource('/Input', InputController::class)
+            ->except(['index', 'store']);
+    });
+    Route::middleware('can:ordered')->group(function () {
+        Route::get('/ordered', [OrderedController::class, 'get'])->withoutMiddleware('can:ordered');
+        Route::post('/ordered', [OrderedController::class, 'index']);
+        Route::post('/ordered/store', [OrderedController::class, 'store']);
+        Route::get('/ordered/{Input}', [OrderedController::class, 'show']);
+        Route::put('/ordered', [OrderedController::class, 'update']);
+        // Route::put('/ordered', [OrderedController::class, 'update'])->withoutMiddleware('can:ordered');
+        Route::apiResource('/Ordered', OrderedController::class)
             ->except(['index', 'store']);
     });
 
 
     // Route::post('/Pelanggans/store', [PelangganController::class, 'store']);
-    Route::apiResource('komplains', KomplainController::class);
     // Route::apiResource('ratings', RatingController::class);
 
     Route::apiResource('pengiriman', PengirimanController::class);

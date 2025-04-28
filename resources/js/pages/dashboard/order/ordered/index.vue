@@ -3,29 +3,55 @@ import { h, ref, watch, onMounted } from "vue";
 import { useDelete } from "@/libs/hooks";
 import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
-import type {  Input } from "@/types";
+import type { Input } from "@/types";
 import axios from "axios"; // Pastikan axios sudah terinstall
 
-const column = createColumnHelper< Input>();
+const column = createColumnHelper<Input>();
 const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
-const  inputData = ref< Input | null>(null); // Data  input yang terkait dengan user login
+const inputData = ref<Input | null>(null); // Data  input yang terkait dengan user login
 
-const { delete: deleteInput } = useDelete({ // Ganti `delete.input` jadi `deleteInput`
-  onSuccess: () => paginateRef.value.refetch(),
+const { delete: deleteInput } = useDelete({
+    // Ganti `delete.input` jadi `deleteInput`
+    onSuccess: () => paginateRef.value.refetch(),
 });
 
 const columns = [
-  column.accessor("no", { header: "No" }),
-  column.accessor("nama_barang", { header: "Nama Barang" }),
-  column.accessor("alamat_asal", { header: "Alamat Asal" }),
-  column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
-  column.accessor("penerima", { header: "Penerima" }),
-  column.accessor("biaya_pengiriman", { header: "Biaya Pengiriman" }),
-  // column.accessor("np_resi", { header: "Nomor Resi" }),
-  column.accessor("status", { header: "Status" }),
-  column.accessor("id", {
+    column.accessor("no", { header: "No" }),
+    column.accessor("nama_barang", { header: "Nama Barang" }),
+    column.accessor("alamat_asal", { header: "Alamat Asal" }),
+    column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
+    column.accessor("penerima", { header: "Penerima" }),
+    column.accessor("biaya_pengiriman", { header: "Biaya Pengiriman" }),
+    // column.accessor("status", { header: "Status" }),
+    column.accessor("status", {
+        header: "Status",
+        cell: (cell) => {
+            const status = cell.getValue();
+            const badgeClass =
+                status === "dalam proses"
+                    ? "bg-primary"
+                    : status === "dikirim"
+                    ? "bg-warning"
+                    : status === "selesai"
+                    ? "bg-info"
+                    : "bg-secondary"; // default kalau selain itu
+
+            const label =
+                status === "dalam proses"
+                    ? "Dalam Proses"
+                    : status === "dikirim"
+                    ? "Dikirim"
+                    : status === "selesai"
+                    ? "Selesai"
+                    : "Dibatalkan";
+
+            return h("span", { class: `badge ${badgeClass}` }, label);
+        },
+    }),
+
+    column.accessor("id", {
         header: "Aksi",
         cell: (cell) =>
             h("div", { class: "d-flex gap-2" }, [
@@ -44,15 +70,13 @@ const columns = [
                     "button",
                     {
                         class: "btn btn-sm btn-icon btn-danger",
-                        onClick: () => deleteKurir(`kurir/${cell.getValue()}`),
+                        onClick: () => deleteInput(`input/${cell.getValue()}`),
                     },
                     h("i", { class: "la la-trash fs-2" })
                 ),
             ]),
     }),
 ];
-
-
 
 const refresh = () => paginateRef.value.refetch();
 
@@ -65,20 +89,30 @@ watch(openForm, (val) => {
 </script>
 
 <template>
-  <Form :selected="selected" @close="openForm = false" v-if="openForm" @refresh="refresh" />
+    <Form
+        :selected="selected"
+        @close="openForm = false"
+        v-if="openForm"
+        @refresh="refresh"
+    />
 
-  <div class="card">
-    <div class="card-header align-items-center">
-      <h2 class="mb-0">Ordered</h2>
-      <!-- <button type="button" class="btn btn-sm btn-primary ms-auto" v-if="!openForm" @click="openForm = true">
+    <div class="card">
+        <div class="card-header align-items-center">
+            <h2 class="mb-0">Ordered</h2>
+            <!-- <button type="button" class="btn btn-sm btn-primary ms-auto" v-if="!openForm" @click="openForm = true">
         Tambah
         <i class="la la-plus"></i>
       </button> -->
+        </div>
+        <div class="card-body">
+            <p v-if="inputData">Data input: {{ inputData }}</p>
+            <paginate
+                ref="paginateRef"
+                id="table-inputorder"
+                url="/ordered"
+                :columns="columns"
+            ></paginate>
+            <!-- Tanpa spasi -->
+        </div>
     </div>
-    <div class="card-body">
-      <p v-if="inputData">Data input: {{ inputData }}</p>
-      <paginate ref="paginateRef" id="table-inputorder" url="/input" :columns="columns"></paginate> <!-- Tanpa spasi -->
-    </div>
-  </div>
 </template>
-

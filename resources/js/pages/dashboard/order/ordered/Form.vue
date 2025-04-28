@@ -6,7 +6,7 @@ import axios from "@/libs/axios";
 import { toast } from "vue3-toastify";
 import type {  Input } from "@/types";
 import ApiService from "@/core/services/ApiService";
-import { useAuthStore } from "@/stores/auth";
+// import { useAuthStore } from "@/stores/auth";
 
 const props = defineProps({
     selected: {
@@ -17,14 +17,15 @@ const props = defineProps({
 
 const emit = defineEmits(["close", "refresh"]);
 
-const user = useAuthStore();
+// const user = useAuthStore();
 
 const  Input = ref({
     nama_barang: "",
     alamat_asal: "",
     alamat_tujuan: "",
     penerima: "",
-    id_user: user.user.id,
+    biaya_pengiriman: "",
+    // id_user: user.user.id,
     // status: "",
     
 });
@@ -37,14 +38,15 @@ const formSchema = Yup.object().shape({
     alamat_asal: Yup.string().nullable(),
     alamat_tujuan: Yup.string().nullable(),
     penerima: Yup.string().required("Nama penerima harus diisi"),
+    biaya_pengiriman: Yup.string().nullable(),
     // status: Yup.string().required("Status harus diisi"),
     // jenis_kelamin: Yup.string().required("Pilih status  Input"),
 });
 
-// ✅ Mendapatkan data  Input untuk edit
+// ✅ Mendapatkan data Input untuk edit
 function getEdit() {
-    block(document.getElementById("form- Input"));
-    ApiService.get(" Input", props.selected)
+    block(document.getElementById("form-Input"));
+    ApiService.get("Ordered", props.selected)
         .then(({ data }) => {
             console.log(data);
              Input.value = {
@@ -52,9 +54,10 @@ function getEdit() {
                 alamat_asal: data.alamat_asal || "",
                 alamat_tujuan: data.alamat_tujuan || "",
                 penerima: data.penerima || "",
+                biaya_pengiriman: data.biaya_pengiriman || "",
                 // status: data.status || "",
             }
-            console.log( Input.value);
+            console.log(Input.value);
 
             // photo.value = data. Input.photo
             //     ? ["/storage/" + data. .photo]
@@ -76,8 +79,9 @@ function submit() {
     formData.append("alamat_asal",  Input.value.alamat_asal);
     formData.append("alamat_tujuan",  Input.value.alamat_tujuan);
     formData.append("penerima",  Input.value.penerima);
-    formData.append("id_user",  Input.value.id_user);
-    // formData.append("status",  Input.value.status);
+    formData.append("biaya_pengiriman",  Input.value.biaya_pengiriman);
+    // formData.append("id_user",  Input.value.id_user);
+    formData.append("status",  Input.value.status);
 
     // if (photo.value.length && photo.value[0].file) {
     //     formData.append("photo", photo.value[0].file);
@@ -89,7 +93,7 @@ function submit() {
     block(document.getElementById("form-Input"));
     axios({
         method: "post",
-        url: props.selected ? `/Input/${props.selected}` : "/Input/store",
+        url: props.selected ? `/Ordered/${props.selected}` : "/Ordered/store",
         data: formData,
         headers: {
             "Content-Type": "multipart/form-data",
@@ -98,7 +102,7 @@ function submit() {
         .then(() => {
             emit("close");
             emit("refresh");
-            toast.success("Data  Input berhasil disimpan");
+            toast.success("Data Input berhasil disimpan");
             formRef.value.resetForm();
         })
         .catch((err: any) => {
@@ -206,6 +210,19 @@ watch(
                         <ErrorMessage name="penerima" class="text-danger" />
                     </div>
                 </div>
+                <div class="col-md-6">
+                    <div class="fv-row mb-7">
+                        <label class="form-label fw-bold fs-6">Biaya Pengiriman</label>
+                        <Field
+                            class="form-control"
+                            type="text"
+                            name="biaya_pengiriman"
+                            v-model=" Input.biaya_pengiriman"
+                            placeholder="Masukkan Biaya Pengiriman"
+                        />
+                        <ErrorMessage name="biaya_pengiriman" class="text-danger" />
+                    </div>
+                </div>
 
                 <!-- Status -->
                 <div class="col-md-6">
@@ -218,10 +235,11 @@ watch(
                             class="form-control"
                             name="status"
                             v-model=" Input.status"
+                            placeholder="Masukkan status Pengiriman"
                         >
                             <option value="dalam_proses">Dalam Proses</option>
-                            <option value="Dikirim">Dikirim</option>
-                            <option value="Selesai">Selesai</option>
+                            <option value="dikirim">Dikirim</option>
+                            <option value="selesai">Selesai</option>
                         </Field>
                         <ErrorMessage name="status" class="text-danger" />
                     </div>

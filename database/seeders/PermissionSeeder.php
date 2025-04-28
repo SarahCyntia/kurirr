@@ -46,7 +46,8 @@ class PermissionSeeder extends Seeder
 
         $permissionIdsByRole = [
             'admin' => $insertPermissions('admin'),
-            'pelanggan' =>$insertPermissions('pelanggan')
+            'pelanggan' =>$insertPermissions('pelanggan'),
+            'kurir' =>$insertPermissions('kurir')
         ];
 
         foreach ($permissionIdsByRole as $role => $permissionIds) {
