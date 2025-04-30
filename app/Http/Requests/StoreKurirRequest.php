@@ -19,7 +19,7 @@ class StoreKurirRequest extends FormRequest
 '             jenis_kendaraan' => 'required|in:motor,mobil',            // 'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             // 'email' => 'required|email|unique:kurir,email',
             'alamat' => 'required|string|max:500',
-            'penilaian' => 'required|string|max:500',
+            'penilaian' => 'nullable|string|max:500',
             // 'id_card_number' => 'required|string|max:20|unique:kurirs,id_card_number',
             // 'status' => 'required|in:aktif,nonaktif',
             'status' => 'required|string',

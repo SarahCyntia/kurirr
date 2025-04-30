@@ -20,7 +20,7 @@ class UpdateKurirRequest extends FormRequest
             // 'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             // 'email' => 'required|email|unique:kurir,email,' . $this->kurir->id,
             'alamat' => 'required|string|max:500',
-            'penilaian' => 'required|string|max:500',
+            'penilaian' => 'nullable|string|max:500',
             // 'id_card_number' => 'required|string|max:20|unique:kurirs,id_card_number,' . $this->kurir->id,
             'status' => 'required|string',
             // 'jenis_kelamin' => 'required|in:laki-laki,perempuan'

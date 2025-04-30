@@ -23,33 +23,59 @@ const columns = [
     column.accessor("alamat_asal", { header: "Alamat Asal" }),
     column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
     column.accessor("penerima", { header: "Penerima" }),
-    column.accessor("status", { header: "Status" }),
-    column.accessor("id", {
-        header: "Aksi",
-        cell: (cell) =>
-            h("div", { class: "d-flex gap-2" }, [
-                // h(
-                //     "button",
-                //     {
-                //         class: "btn btn-sm btn-icon btn-info",
-                //         onClick: () => {
-                //             selected.value = cell.getValue();
-                //             openForm.value = true;
-                //         },
-                //     },
-                //     h("i", { class: "bi bi-file-excel" })
-                //     // h("i", { class: "la la-pencil fs-2" })
-                // ),
-                h(
-                    "button",
-                    {
-                        class: "btn btn-sm btn-icon btn-danger",
-                        onClick: () => deteleInput(`input/${cell.getValue()}`), // Tanpa spasi
-                    },
-                    h("i", { class: "bi bi-file-excel" })
-                ),
-            ]),
+    column.accessor("berat_paket", { header: "Berat " }),
+    column.accessor("biaya_pengiriman", { header: "Biaya Pengiriman" }),
+    column.accessor("metode_pengiriman", { header: "Metode Pengiriman" }),
+    // column.accessor("status", { header: "Status" }),
+    column.accessor("status", {
+        header: "Status",
+        cell: (cell) => {
+            const status = cell.getValue();
+            const badgeClass =
+                status === "menunggu"
+                    ? "bg-success"
+                    : status === "dalam proses"
+                    ? "bg-primary"
+                    : status === "pengambilan paket"
+                    ? "bg-danger"
+                    : status === "dikirim"
+                    ? "bg-warning"
+                    : status === "selesai"
+                    ? "bg-info"
+                    : "bg-secondary"; // default kalau selain itu
+
+            const label =
+                status === "menunggu"
+                    ? "Menunggu"
+                    : status === "pengambilan paket"
+                    ? "Pengambilan Paket"
+                    : status === "dalam proses"
+                    ? "Dalam Proses"
+                    : status === "dikirim"
+                    ? "Dikirim"
+                    : status === "selesai"
+                    ? "Selesai"
+                    : "Dibatalkan";
+
+            return h("span", { class: `badge ${badgeClass}` }, label);
+        },
+        
     }),
+//    column.accessor("id", {
+//     header: "Aksi",
+//     cell: (cell) =>
+//         h("div", { class: "d-flex gap-2" }, [
+//             h(
+//                 "button",
+//                 {
+//                     class: "btn btn-sm btn-icon btn-danger", // Ganti warna jadi warning
+//                     onClick: () => cancelInput(`input/${cell.getValue()}`), // Fungsi dibatalkan
+//                 },
+//                 h("i", { class: "bi bi-x-circle" }) // Ganti ikon jadi cancel
+//             ),
+//         ]),
+// }),
+
 ];
 
 const refresh = () => paginateRef.value.refetch();
@@ -80,12 +106,10 @@ watch(openForm, (val) => {
         </div>
         <div class="card-body">
             <p v-if="inputData">Data input: {{ inputData }}</p>
-            <paginate
-                ref="paginateRef"
-                id="table-inputorder"
-                url="/input"
-                :columns="columns"
-            ></paginate>
+            <paginate ref="paginateRef" id="table-inputorder" url="/input?status=menunggu"
+                :columns="columns"/>
+                <!-- <paginate ref="paginateRef" id="table-transaksi" url="/trans?exclude_status=Terkirim"
+                :columns="columns"/> -->
             <!-- Tanpa spasi -->
         </div>
     </div>

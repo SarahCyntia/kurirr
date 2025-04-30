@@ -19,16 +19,17 @@ const emit = defineEmits(["close", "refresh"]);
 
 // const user = useAuthStore();
 
-const  Input = ref({
-    nama_barang: "",
-    alamat_asal: "",
-    alamat_tujuan: "",
-    penerima: "",
-    biaya_pengiriman: "",
-    // id_user: user.user.id,
-    // status: "",
+// const  Input = ref({
+//     nama_barang: "",
+//     alamat_asal: "",
+//     alamat_tujuan: "",
+//     penerima: "",
+//     biaya_pengiriman: "",
+//     // id_user: user.user.id,
+//     // status: "",
     
-});
+// });
+const Input = ref<Input>({}as Input);
 const photo = ref<any>([]);
 const formRef = ref();
 
@@ -38,7 +39,9 @@ const formSchema = Yup.object().shape({
     alamat_asal: Yup.string().nullable(),
     alamat_tujuan: Yup.string().nullable(),
     penerima: Yup.string().required("Nama penerima harus diisi"),
+    berat_paket: Yup.string().nullable(),
     biaya_pengiriman: Yup.string().nullable(),
+    berat_paket: Yup.string().nullable(),
     // status: Yup.string().required("Status harus diisi"),
     // jenis_kelamin: Yup.string().required("Pilih status  Input"),
 });
@@ -54,8 +57,9 @@ function getEdit() {
                 alamat_asal: data.alamat_asal || "",
                 alamat_tujuan: data.alamat_tujuan || "",
                 penerima: data.penerima || "",
+                berat_paket: data.berat_paket || "",
                 biaya_pengiriman: data.biaya_pengiriman || "",
-                // status: data.status || "",
+                status: data.status || "dalam proses",
             }
             console.log(Input.value);
 
@@ -79,6 +83,7 @@ function submit() {
     formData.append("alamat_asal",  Input.value.alamat_asal);
     formData.append("alamat_tujuan",  Input.value.alamat_tujuan);
     formData.append("penerima",  Input.value.penerima);
+    formData.append("berat_paket",  Input.value.berat_paket);
     formData.append("biaya_pengiriman",  Input.value.biaya_pengiriman);
     // formData.append("id_user",  Input.value.id_user);
     formData.append("status",  Input.value.status);
@@ -212,10 +217,23 @@ watch(
                 </div>
                 <div class="col-md-6">
                     <div class="fv-row mb-7">
+                        <label class="form-label fw-bold fs-6">Berat Paket</label>
+                        <Field
+                            class="form-control"
+                            type="string"
+                            name="berat_paket"
+                            v-model=" Input.berat_paket"
+                            placeholder="Masukkan Berat Paket"
+                        />
+                        <ErrorMessage name="berat_paket" class="text-danger" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="fv-row mb-7">
                         <label class="form-label fw-bold fs-6">Biaya Pengiriman</label>
                         <Field
                             class="form-control"
-                            type="text"
+                            type="number"
                             name="biaya_pengiriman"
                             v-model=" Input.biaya_pengiriman"
                             placeholder="Masukkan Biaya Pengiriman"
@@ -237,7 +255,9 @@ watch(
                             v-model=" Input.status"
                             placeholder="Masukkan status Pengiriman"
                         >
-                            <option value="dalam_proses">Dalam Proses</option>
+                            <option value="menunggu">Menunggu</option>
+                            <option value="dalam proses">Dalam Proses</option>
+                            <option value="pengambilan paket">Pengambilan Paket</option>
                             <option value="dikirim">Dikirim</option>
                             <option value="selesai">Selesai</option>
                         </Field>

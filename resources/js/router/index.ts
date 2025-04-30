@@ -93,10 +93,10 @@ const routes: Array<RouteRecordRaw> = [
                 path: "/dashboard/akun",
                 name: "dashboard.akun",
                 component: () => import("@/pages/dashboard/akun/index.vue"),
-                meta: {
-                    pageTitle: "Akun",
-                    breadcrumbs: ["Akun"],
-                },
+                // meta: {
+                //     pageTitle: "Akun",
+                //     breadcrumbs: ["Akun"],
+                // },
             },
             {
                 path: "/dashboard/pengiriman",
@@ -191,6 +191,18 @@ const routes: Array<RouteRecordRaw> = [
                     //     pageTitle: "Input Data Order",
                 //     // breadcrumbs: ["Master", "Users"],
                 // },
+            },
+            {
+                path: "/dashboard/order/riwayat",
+                name: "dashboard.order.riwayat",
+                component: () =>
+                    import("@/pages/dashboard/order/riwayat/index.vue"),
+            },
+            {
+                path: "/dashboard/order/riwayat",
+                name: "dashboard.order.riwayat",
+                component: () =>
+                    import("@/pages/dashboard/order/riwayat/inde.vue"),
             },
         ],
     },

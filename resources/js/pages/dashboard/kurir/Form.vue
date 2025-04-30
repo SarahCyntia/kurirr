@@ -39,7 +39,7 @@ const formSchema = Yup.object().shape({
     email: Yup.string().email("Email harus valid").nullable(),
     phone: Yup.string().required("Nomor Telepon harus diisi"),
     alamat: Yup.string().nullable(),
-    penilaian: Yup.string().nullable(),
+    // penilaian: Yup.string().nullable(),
     status: Yup.string().required("Status harus diisi"),
     jenis_kendaraan: Yup.string().required("Pilih Jenis Kendaraan"),
 });
@@ -51,7 +51,7 @@ function getEdit() {
         .then(({ data }) => {
             console.log(data);
             kurir.value = {
-                penilaian: data.user.penilaian || "",
+                // penilaian: data.user.penilaian || "",
                 alamat: data.user.alamat || "",
                 status: data.user.status || "nonaktif",
                 jenis_kendaraan: data.user.jenis_kendaraan || "",
@@ -85,7 +85,7 @@ function submit() {
     formData.append("email", kurir.value.user.email);
     formData.append("phone", kurir.value.user.phone);
     formData.append("photo", kurir.value.user.photo);
-    formData.append("penilaian", kurir.value.penilaian);
+    // formData.append("penilaian", kurir.value.penilaian);
     formData.append("alamat", kurir.value.alamat);
     formData.append("status", kurir.value.status);
     formData.append("jenis_kendaraan", kurir.value.jenis_kendaraan);
@@ -294,7 +294,7 @@ watch(
                     </div>
                 </div>
 
-                <div class="col-md-6">
+                <!-- <div class="col-md-6">
                     <div class="fv-row mb-7">
                         <label class="form-label fw-bold fs-6">Penilaian</label>
                         <Field
@@ -309,7 +309,7 @@ watch(
                             
                         <ErrorMessage name="penilaian" class="text-danger" />
                     </div>
-                </div>
+                </div> -->
 
                 <!--jenis kelamin-->
                 <!-- <div class="col-md-6">

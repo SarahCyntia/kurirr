@@ -24,6 +24,7 @@ const  Input = ref({
     alamat_asal: "",
     alamat_tujuan: "",
     penerima: "",
+    metode_pengiriman: "",
     id_user: user.user.id,
     // status: "",
     
@@ -37,6 +38,7 @@ const formSchema = Yup.object().shape({
     alamat_asal: Yup.string().nullable(),
     alamat_tujuan: Yup.string().nullable(),
     penerima: Yup.string().required("Nama penerima harus diisi"),
+    metode_pengiriman: Yup.string().required("Metode pengiriman harus diisi"),
     // status: Yup.string().required("Status harus diisi"),
     // jenis_kelamin: Yup.string().required("Pilih status  Input"),
 });
@@ -52,6 +54,7 @@ function getEdit() {
                 alamat_asal: data.alamat_asal || "",
                 alamat_tujuan: data.alamat_tujuan || "",
                 penerima: data.penerima || "",
+                metode_pengiriman: data.metode_pengiriman || "",
                 // status: data.status || "",
             }
             console.log( Input.value);
@@ -76,6 +79,7 @@ function submit() {
     formData.append("alamat_asal",  Input.value.alamat_asal);
     formData.append("alamat_tujuan",  Input.value.alamat_tujuan);
     formData.append("penerima",  Input.value.penerima);
+    formData.append("metode_pengiriman",  Input.value.metode_pengiriman);
     formData.append("id_user",  Input.value.id_user);
     // formData.append("status",  Input.value.status);
 
@@ -208,23 +212,23 @@ watch(
                 </div>
 
                 <!-- Status -->
-                <!-- <div class="col-md-6">
+                <div class="col-md-6">
                     <div class="fv-row mb-7">
                         <label class="form-label fw-bold fs-6 required"
-                            >Status</label
+                            >Metode Pengiriman</label
                         >
                         <Field
                             as="select"
                             class="form-control"
-                            name="status"
-                            v-model=" Input.status"
+                            name="metode_pengiriman"
+                            v-model=" Input.metode_pengiriman"
                         >
-                            <option value="aktif">Aktif</option>
-                            <option value="nonaktif">Nonaktif</option>
+                            <option value="pick-up">Pick-up</option>
+                            <option value="drop-off">Drop-off</option>
                         </Field>
-                        <ErrorMessage name="status" class="text-danger" />
+                        <ErrorMessage name="metode_pengiriman" class="text-danger" />
                     </div>
-                </div> -->
+                </div>
             </div>
         </div>
 

@@ -60,7 +60,7 @@ class PelangganController extends Controller
         return response()->json([
             'success' => true,
             'pelanggan' => [
-                // 'id' => $pelanggan->id,
+                'id' => $pelanggan->id,
                 'alamat' => $pelanggan->alamat,
                 'keluhan' => $pelanggan->keluhan,
                 'user' => [

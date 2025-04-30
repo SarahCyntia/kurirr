@@ -1,111 +1,131 @@
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import axios from "@/libs/axios";
+import { toast } from "vue3-toastify";
+import type { kurir } from "@/types";
+
+
+// Import store autentikasi untuk mengambil data user yang sedang login
+import { useAuthStore } from "@/stores/auth";
+
+// Inisialisasi store agar bisa akses data user yang login
+const store = useAuthStore();
+
+const kurir = ref({
+    name: "",
+    email: "",
+    phone: "",
+    photo: "",
+    status: "",
+    rating: 0,
+    alamat: "",
+    jenis_kendaraan: "",
+});
+
+const getProfile = async () => {
+    kurir.value = {
+        name: store.user.name,
+        email: store.user.email,
+        phone: store.user.phone,
+        photo: store.user.photo ? "/storage/" + store.user.photo : "/default-avatar.png",
+        // status: store.user.kurir?.status,
+        // status: store.user?.kurir?.status || "-",
+        status: store.user.kurir?.status,
+        alamat: store.user.kurir?.alamat,
+        jenis_kendaraan: store.user.kurir?.jenis_kendaraan,
+        rating: store.user.rating,
+    };
+};
+
+
+onMounted(() => {
+    getProfile();
+});
+</script>
+
 <template>
-    <div class="order-list">
-      <h2>Daftar Pesanan</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Pelanggan</th>
-            <th>Produk</th>
-            <th>Status</th>
-            <th>Aksi Kurir</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="order in orders" :key="order.id">
-            <td>{{ order.id }}</td>
-            <td>{{ order.penerima }}</td>
-            <td>{{ order.produk }}</td>
-            <td>{{ order.status }}</td>
-            <td>
-              <select v-model="order.status" @change="handleStatusChange(order)">
-                <option>Packing</option>
-                <option>Dikirim</option>
-                <option>Selesai</option>
-              </select>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-  
-      <h2>Ringkasan Pengguna</h2>
-      <ul>
-        <li v-for="(user, name) in userSummary" :key="name">
-          {{ name }} - Total Pesanan: {{ user.total }} - Total Harga: Rp {{ user.totalHarga.toLocaleString() }}
-        </li>
-      </ul>
+    <div class="profile-card shadow d-flex">
+      <div class="profile-image-container">
+        <img :src="kurir.photo" class="profile-image" alt="Foto" />
+      </div>
+      <div class="profile-info">
+        <h3 class="profile-name">👤 {{ kurir.name }}</h3>
+        <p class="profile-email">📧 {{ kurir.email }}</p>
+        <p class="profile-phone">📞 {{ kurir.phone }}</p>
+        <p class="profile-alamat">🏠 {{ kurir.alamat }}</p>
+        <p class="profile-jenis_kendaraan">🛵 {{ kurir.jenis_kendaraan }}</p>
+        <p class="profile-status">
+          <span :class="kurir.status === 'aktif' ? 'status-active' : 'status-inactive'">
+            📌 {{ kurir.status || '-' }}
+          </span>
+        </p>
+      </div>
     </div>
   </template>
   
-  <script setup>
-  import { ref, computed, onMounted } from 'vue'
-  
-  const orders = ref([])
-  
-  const generateDummyOrders = () => {
-    const names = ['Rina', 'Andi', 'Budi']
-    const products = ['Sembako', 'Blender', 'Laptop']
-    const defaultStatuses = ['Packing', 'Dikirim', 'Selesai']
-  
-    for (let i = 1; i <= 5; i++) {
-      orders.value.push({
-        id: `ORD${String(i).padStart(3, '0')}`,
-        penerima: names[i % names.length],
-        produk: products[i % products.length],
-        status: defaultStatuses[0],
-        totalHarga: Math.floor(Math.random() * 500000 + 100000),
-      })
-    }
-  }
-  
-  // Otomatis hitung jika pesanan sudah selesai/dikirim
-  const userSummary = computed(() => {
-    const summary = {}
-    for (const order of orders.value) {
-      if (order.status === 'Dikirim' || order.status === 'Selesai') {
-        if (!summary[order.penerima]) {
-          summary[order.penerima] = {
-            total: 0,
-            totalHarga: 0,
-          }
-        }
-        summary[order.penerima].total += 1
-        summary[order.penerima].totalHarga += order.totalHarga
-      }
-    }
-    return summary
-  })
-  
-  // Simulasi aksi kurir ubah status
-  const handleStatusChange = (order) => {
-    // Simulasi sistem otomatis
-    console.log(`Kurir mengubah status pesanan ${order.id} menjadi ${order.status}`)
-  }
-    
-  onMounted(() => {
-    generateDummyOrders()
-  })
-  </script>
-  
   <style scoped>
-  .order-list {
-    padding: 20px;
-    font-family: sans-serif;
+  .profile-card {
+    display: flex;
+    align-items: center;
+    max-width: 700px;
+    margin: 100px auto;
+    padding: 100px 100px;
+    border-radius: 15px;
+    background: linear-gradient(to right, #f0f8ff, #e6f7ff);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
+  
+  .profile-image-container {
+    flex-shrink: 0;
+    margin-right: 70px;
   }
-  th, td {
-    border: 1px solid #ccc;
-    padding: 8px 10px;
+  
+  .profile-image {
+    width: 250px;
+    height: 250px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 3px solid #376186;
   }
-  th {
-    background-color: #f4f4f4;
+  
+  .profile-info {
+    flex: 1;
   }
-  select {
-    padding: 4px 6px;
+  
+  .profile-name {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #000000;
+    margin-bottom: 10px;
+  }
+  
+  .profile-email,
+  .profile-jenis_kendaraan,
+  .profile-alamat,
+  .profile-phone {
+    color: #403c3c;
+    font-size: 1.5rem;
+    margin: 15px 0;
+  }
+  
+  .profile-status {
+    margin-top: 12px;
+    font-weight: bold;
+  }
+  
+  .status-active {
+    color: #28a745;
+    background-color: #d4edda;
+    padding: 5px 10px;
+    border-radius: 10px;
+  }
+  
+  .status-inactive {
+    color: #dc3545;
+    background-color: #f8d7da;
+    padding: 5px 10px;
+    border-radius: 10px;
   }
   </style>
   

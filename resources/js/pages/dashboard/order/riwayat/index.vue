@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, ref, watch, onMounted } from "vue";
 import { useDelete } from "@/libs/hooks";
-import Form from "./Form.vue";
+// import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { Input } from "@/types";
 import axios from "axios"; // Pastikan axios sudah terinstall
@@ -23,7 +23,6 @@ const columns = [
     column.accessor("alamat_asal", { header: "Alamat Asal" }),
     column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
     column.accessor("penerima", { header: "Penerima" }),
-    column.accessor("berat_paket", { header: "Berat Paket" }),
     column.accessor("biaya_pengiriman", { header: "Biaya Pengiriman" }),
     column.accessor("metode_pengiriman", { header: "Metode Pengiriman" }),
     // column.accessor("status", { header: "Status" }),
@@ -61,31 +60,31 @@ const columns = [
         },
     }),
 
-    column.accessor("id", {
-        header: "Aksi",
-        cell: (cell) =>
-            h("div", { class: "d-flex gap-2" }, [
-                h(
-                    "button",
-                    {
-                        class: "btn btn-sm btn-icon btn-info",
-                        onClick: () => {
-                            selected.value = cell.getValue();
-                            openForm.value = true;
-                        },
-                    },
-                    h("i", { class: "la la-pencil fs-2" })
-                ),
-                h(
-                    "button",
-                    {
-                        class: "btn btn-sm btn-icon btn-danger",
-                        onClick: () => deleteInput(`input/${cell.getValue()}`),
-                    },
-                    h("i", { class: "la la-trash fs-2" })
-                ),
-            ]),
-    }),
+    // column.accessor("id", {
+    //     header: "Aksi",
+    //     cell: (cell) =>
+    //         h("div", { class: "d-flex gap-2" }, [
+    //             h(
+    //                 "button",
+    //                 {
+    //                     class: "btn btn-sm btn-icon btn-info",
+    //                     onClick: () => {
+    //                         selected.value = cell.getValue();
+    //                         openForm.value = true;
+    //                     },
+    //                 },
+    //                 h("i", { class: "la la-pencil fs-2" })
+    //             ),
+    //             h(
+    //                 "button",
+    //                 {
+    //                     class: "btn btn-sm btn-icon btn-danger",
+    //                     onClick: () => deleteInput(`input/${cell.getValue()}`),
+    //                 },
+    //                 h("i", { class: "la la-trash fs-2" })
+    //             ),
+    //         ]),
+    // }),
 ];
 
 const refresh = () => paginateRef.value.refetch();
@@ -116,7 +115,7 @@ watch(openForm, (val) => {
         </div>
         <div class="card-body">
             <p v-if="inputData">Data input: {{ inputData }}</p>
-            <paginate ref="paginateRef" id="table-inputorder" url="/ordered?exclude_status=selesai"
+            <paginate ref="paginateRef" id="table-inputorder" url="/ordered?status=selesai"
                 :columns="columns"/>
             <!-- Tanpa spasi -->
         </div>

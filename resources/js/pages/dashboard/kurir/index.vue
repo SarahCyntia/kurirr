@@ -24,7 +24,16 @@ const columns = [
     // column.accessor("status", { header: "Status" }),
     column.accessor("jenis_kendaraan", { header: "Jenis Kendaraan" }),
     column.accessor("alamat", { header: "Alamat" }),
-    column.accessor("penilaian", { header: "Penilaian" }),
+    // column.accessor("penilaian", { header: "Penilaian" }),
+    column.accessor("penilaian", {
+    header: "Penilaian",
+    cell: (cell) => {
+      const penilaian = cell.getValue();
+      return penilaian
+        ? h("span", { class: "fw-bold text-warning" }) // Menampilkan bintang
+        : "Belum ada Penilaian";
+    },
+  }),
     column.accessor("status", {
         header: "Status",
         cell: (cell) =>

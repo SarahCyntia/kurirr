@@ -38,8 +38,17 @@ class OrderedController extends Controller
                       ->orWhere('alamat_asal', 'like', "%$search%")
                       ->orWhere('alamat_tujuan', 'like', "%$search%")
                       ->orWhere('penerima', 'like', "%$search%")
+                      ->orWhere('berat_paket', 'like', "%$search%")
                       ->orWhere('biaya_pengiriman', 'like', "%$search%")
+                      ->orWhere('metode_pengiriman', 'like', "%$search%")
+                      ->orWhere('penerima', 'like', "%$search%")
                       ->orWhere('status', 'like', "%$search%");
+            })
+            ->when($request->status, function ($query, $status) {
+                $query->where('status', $status);
+            })
+            ->when($request->has('exclude_status'), function ($query) use ($request) {
+                $query->where('status', '!=', $request->exclude_status);
             })
             ->latest()
             ->paginate($per);
@@ -59,7 +68,10 @@ class OrderedController extends Controller
             'alamat_asal' => 'required|string|max:255',
             'alamat_tujuan' => 'required|string|max:255',
             'penerima' => 'required|string|max:255',
-            'biaya_pengiriman' => 'required|string|max:255',
+            'biaya_pengiriman' => 'nullable|string|max:255',
+            'metode_pengiriman' => 'nullable|string|max:255',
+            'berat_paket' => 'nullable|string|max:255',
+            'status' => 'required|string',
         ]);
 
         $id_pelanggan = Pelanggan::where('user_id', $request->id_user)->first('id');
@@ -70,6 +82,9 @@ class OrderedController extends Controller
             'alamat_tujuan' => $request->alamat_tujuan,
             'penerima' => $request->penerima,
             'biaya_pengiriman' => $request->biaya_pengiriman,
+            'metode_pengiriman' => $request->metode_pengiriman,
+            'berat_paket' => $request->berat_paket,
+            'status' => $request->status,
             'id_pelanggan' =>$id_pelanggan->id,
         ]);
     
@@ -94,7 +109,9 @@ class OrderedController extends Controller
             'alamat_tujuan' => $data->alamat_tujuan,
             'penerima' => $data->penerima,
             'biaya_pengiriman' => $data->biaya_pengiriman,
-            // 'status' => $Input->status,
+            'metode_pengiriman' => $data->metode_pengiriman,
+            'berat_paket' => $data->berat_paket,
+            'status' => $data->status,
         ]);
     }
 
@@ -102,24 +119,29 @@ class OrderedController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:dikirim,selesai,dalam proses,dibatalkan',
+            'status' => 'required|string',
+            'biaya_pengiriman' => 'required|string',
         ]);
 
         $ordered = Input::findOrFail($id);
-        $ordered->update(['status' => $request->status]);
+        $ordered->update([
+            'status' => $request->status,
+            'biaya_pengiriman' => $request->biaya_pengiriman,
+            'berat_paket' => $request->berat_paket,
+        ]);
 
         return response()->json([
             'message' => 'Status pesanan diperbarui',
             'data' => $ordered
         ]);
     }
-    public function get()
-    {
-        return response()->json([
-            'success' => true,
-            'data' => Input::select('nama_barang', 'alamat_asal', 'alamat_tujuan', 'penerima', 'biaya_pengiriman', 'status')->get()
-        ]);
-    }
+    // public function get()
+    // {
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => Input::select('nama_barang', 'alamat_asal', 'alamat_tujuan', 'penerima', 'biaya_pengiriman', 'status')->get()
+    //     ]);
+    // }
 
     // Optional: Hapus data
 //     public function destroy($id)

@@ -104,6 +104,12 @@ const MainMenuConfig: Array<MenuItem> = [
                         name: "input",
                         keenthemesIcon: "bi bi-cart",
                     },
+                    {
+                        heading: "Riwayat",
+                        route: "/dashboard/order/riwayat",
+                        name: "riwayat",
+                        keenthemesIcon: "bi bi-cart",
+                    },
                 ],
             },
             // {

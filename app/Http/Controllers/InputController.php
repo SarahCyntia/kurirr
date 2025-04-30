@@ -37,9 +37,17 @@ class InputController extends Controller
                       ->orWhere('alamat_asal', 'like', "%$search%")
                       ->orWhere('alamat_tujuan', 'like', "%$search%")
                       ->orWhere('penerima', 'like', "%$search%")
+                      ->orWhere('metode_pengiriman', 'like', "%$search%")
                       ->orWhere('biaya_pengiriman', 'like', "%$search%")
                       ->orWhere('status', 'like', "%$search%");
             })
+            ->when($request->status, function ($query, $status) {
+                $query->where('status', $status);
+            })
+            ->when($request->has('exclude_status'), function ($query) use ($request) {
+                $query->where('status', '!=', $request->exclude_status);
+            })
+
             ->latest()
             ->paginate($per);
 
@@ -58,7 +66,8 @@ class InputController extends Controller
             'alamat_asal' => 'required|string|max:255',
             'alamat_tujuan' => 'required|string|max:255',
             'penerima' => 'required|string|max:255',
-            'biaya_pengiriman' => 'required|string|max:255',
+            'metode_pengiriman' => 'required|string|max:255',
+            'biaya_pengiriman' => 'nullable|string|max:255',
         ]);
 
         $id_pelanggan = Pelanggan::where('user_id', $request->id_user)->first('id');
@@ -68,6 +77,7 @@ class InputController extends Controller
             'alamat_asal' => $request->alamat_asal,
             'alamat_tujuan' => $request->alamat_tujuan,
             'penerima' => $request->penerima,
+            'metode_pengiriman' => $request->metode_pengiriman,
             'biaya_pengiriman' => $request->biaya_pengiriman,
             'id_pelanggan' =>$id_pelanggan->id,
         ]);
@@ -92,6 +102,7 @@ class InputController extends Controller
             'alamat_asal' => $Input->alamat_asal,
             'alamat_tujuan' => $Input->alamat_tujuan,
             'penerima' => $Input->penerima,
+            'metode_pengiriman' => $Input->metode_pengiriman,
             'biaya_pengiriman' => $Input->biaya_pengiriman,
             // 'status' => $Input->status,
         ]);
@@ -101,7 +112,7 @@ class InputController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:dikirim,selesai,dalam proses,dibatalkan',
+            'status' => 'required|in:dikirim,selesai,dalam proses,dibatalkan,pengambilan paket, menunggu',
         ]);
 
         $input = Input::findOrFail($id);
@@ -116,7 +127,7 @@ class InputController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => Input::select('nama_barang', 'alamat_asal', 'alamat_tujuan', 'penerima', 'biaya_pengiriman', 'status')->get()
+            'data' => Input::select('nama_barang', 'alamat_asal', 'alamat_tujuan', 'penerima', 'metode_pembayaran', 'biaya_pengiriman', 'status')->get()
         ]);
     }
 

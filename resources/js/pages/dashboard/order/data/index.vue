@@ -22,32 +22,69 @@ const columns = [
   column.accessor("alamat_asal", { header: "Alamat Asal" }),
   column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
   column.accessor("penerima", { header: "Penerima" }),
-  column.accessor("status", { header: "Status" }),
-  // column.accessor("id", {
-  //   header: "Aksi",
-  //   cell: (cell) =>
-  //     h("div", { class: "d-flex gap-2" }, [
-  //       h(
-  //         "button",
-  //         {
-  //           class: "btn btn-sm btn-icon btn-info",
-  //           onClick: () => {
-  //             selected.value = cell.getValue();
-  //             openForm.value = true;
-  //           },
-  //         },
-  //         h("i", { class: "la la-pencil fs-2" })
-  //       ),
-  //       h(
-  //         "button",
-  //         {
-  //           class: "btn btn-sm btn-icon btn-danger",
-  //           onClick: () => deleteInput(`input/${cell.getValue()}`), // Tanpa spasi
-  //         },
-  //         h("i", { class: "la la-trash fs-2" })
-  //       ),
-  //     ]),
-  // }),
+  column.accessor("berat_paket", { header: "Berat Paket" }),
+  column.accessor("biaya_pengiriman", { header: "biaya_pengiriman" }),
+  column.accessor("metode_pengiriman", { header: "Metode Pengiriman" }),
+  // column.accessor("status", { header: "Status" }),
+  column.accessor("status", {
+        header: "Status",
+        cell: (cell) => {
+            const status = cell.getValue();
+            const badgeClass =
+                status === "menunggu"
+                    ? "bg-success"
+                    : status === "dalam proses"
+                    ? "bg-primary"
+                    : status === "pengambilan paket"
+                    ? "bg-danger"
+                    : status === "dikirim"
+                    ? "bg-warning"
+                    : status === "selesai"
+                    ? "bg-info"
+                    : "bg-secondary"; // default kalau selain itu
+
+            const label =
+                status === "menunggu"
+                    ? "Menunggu"
+                    : status === "pengambilan paket"
+                    ? "Pengambilan Paket"
+                    : status === "dalam proses"
+                    ? "Dalam Proses"
+                    : status === "dikirim"
+                    ? "Dikirim"
+                    : status === "selesai"
+                    ? "Selesai"
+                    : "Dibatalkan";
+
+            return h("span", { class: `badge ${badgeClass}` }, label);
+        },
+    }),
+
+    // column.accessor("id", {
+    //     header: "Aksi",
+    //     cell: (cell) =>
+    //         h("div", { class: "d-flex gap-2" }, [
+    //             h(
+    //                 "button",
+    //                 {
+    //                     class: "btn btn-sm btn-icon btn-info",
+    //                     onClick: () => {
+    //                         selected.value = cell.getValue();
+    //                         openForm.value = true;
+    //                     },
+    //                 },
+    //                 h("i", { class: "la la-pencil fs-2" })
+    //             ),
+    //             h(
+    //                 "button",
+    //                 {
+    //                     class: "btn btn-sm btn-icon btn-danger",
+    //                     onClick: () => deleteInput(`input/${cell.getValue()}`),
+    //                 },
+    //                 h("i", { class: "la la-trash fs-2" })
+    //             ),
+    //         ]),
+    // }),
 ];
 
 
@@ -78,14 +115,7 @@ watch(openForm, (val) => {
       <paginate ref="paginateRef" id="table-inputorder" url="/input" :columns="columns"></paginate> <!-- Tanpa spasi -->
     </div>
   </div>
-  <!-- <button
-      type="button"
-      class="btn btn-sm btn-primary ms-auto"
-      v-if="!openForm"
-      @click="$router.push('/dashboard_pengguna')"
-  >
-      Kembali
-  </button> -->
+
 </template>
 
 <!-- 

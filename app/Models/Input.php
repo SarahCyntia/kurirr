@@ -19,6 +19,9 @@ class Input extends Model
         'alamat_asal',
         'alamat_tujuan',
         'penerima',
+        'berat_paket',
+        'metode_pengiriman',
+        'biaya_pengiriman',
         'status',
     ];
 
