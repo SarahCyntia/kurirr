@@ -138,8 +138,7 @@ const routes: Array<RouteRecordRaw> = [
             {
                 path: "/dashboard/order/ordered",
                 name: "dashboard.order.ordered",
-                component: () =>
-                    import("@/pages/dashboard/order/ordered/index.vue"),
+                component: () => import("@/pages/dashboard/order/ordered/index.vue"),
                 // meta: {
                     //     pageTitle: "Input Data Order",
                     //     // breadcrumbs: ["Master", "Users"],
@@ -192,12 +191,12 @@ const routes: Array<RouteRecordRaw> = [
                 //     // breadcrumbs: ["Master", "Users"],
                 // },
             },
-            {
-                path: "/dashboard/order/riwayat",
-                name: "dashboard.order.riwayat",
-                component: () =>
-                    import("@/pages/dashboard/order/riwayat/index.vue"),
-            },
+            // {
+            //     path: "/dashboard/order/riwayat",
+            //     name: "dashboard.order.riwayat",
+            //     component: () =>
+            //         import("@/pages/dashboard/order/riwayat/index.vue"),
+            // },
             {
                 path: "/dashboard/order/riwayat",
                 name: "dashboard.order.riwayat",

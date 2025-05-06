@@ -5,10 +5,11 @@ import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { Input } from "@/types";
 import axios from "axios"; // Pastikan axios sudah terinstall
+import Swal from "sweetalert2";
 
 const column = createColumnHelper<Input>();
 const paginateRef = ref<any>(null);
-const selected = ref<string>("");
+const selected = ref<number>();
 const openForm = ref<boolean>(false);
 const inputData = ref<Input | null>(null); // Data  input yang terkait dengan user login
 
@@ -17,16 +18,35 @@ const { delete: deleteInput } = useDelete({
     onSuccess: () => paginateRef.value.refetch(),
 });
 
+const showRincian = (data: Input) => {
+    Swal.fire({
+        // title: <strong>Detail Input</strong>,
+        title: "Detail Order",
+
+        html: `
+      <div style="text-align: left;">
+        <p><b>Berat Paket:</b> ${data.berat_paket}</p>
+        <p><b>Metode Pengiriman:</b> ${data.metode_pengiriman}</p>
+        <p><b>Biaya Pengiriman:</b> ${data.biaya_pengiriman}</p>
+        <p><b>Tanggal Order :</b> ${data.tanggal_order || '-'}</p>
+        <p><b>Tanggal Dikemas:</b> ${data.tanggal_dikemas|| '-'}</p>
+        <p><b>Tanggal Pengambilan:</b> ${data.tanggal_pengambilan || '-'}</p>
+        <p><b>Tanggal Dikirim:</b> ${data.tanggal_dikirim || '-'}</p>
+        <p><b>Tanggal Penerimaan:</b> ${data.tanggal_penerimaan || '-'}</p>
+      </div>
+    `,
+        // icon: "info",
+        confirmButtonText: "Tutup",
+        // customClass: {
+        //   popup: 'text-start',
+        // },
+    });
+};
+
 const columns = [
     column.accessor("no", { header: "No" }),
     column.accessor("nama_barang", { header: "Nama Barang" }),
     column.accessor("alamat_asal", { header: "Alamat Asal" }),
-    column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
-    column.accessor("penerima", { header: "Penerima" }),
-    column.accessor("berat_paket", { header: "Berat Paket" }),
-    column.accessor("biaya_pengiriman", { header: "Biaya Pengiriman" }),
-    column.accessor("metode_pengiriman", { header: "Metode Pengiriman" }),
-    // column.accessor("status", { header: "Status" }),
     column.accessor("status", {
         header: "Status",
         cell: (cell) => {
@@ -35,11 +55,11 @@ const columns = [
                 status === "menunggu"
                     ? "bg-success"
                     : status === "dalam proses"
-                    ? "bg-primary"
+                    ? "bg-warning"
                     : status === "pengambilan paket"
                     ? "bg-danger"
                     : status === "dikirim"
-                    ? "bg-warning"
+                    ? "bg-primary"
                     : status === "selesai"
                     ? "bg-info"
                     : "bg-secondary"; // default kalau selain itu
@@ -80,12 +100,26 @@ const columns = [
                     "button",
                     {
                         class: "btn btn-sm btn-icon btn-danger",
-                        onClick: () => deleteInput(`input/${cell.getValue()}`),
+                        onClick: () => showRincian(cell.row.original),
                     },
-                    h("i", { class: "la la-trash fs-2" })
+                    h("i", { class: "bi bi-building" })
+                    // "Lihat"
                 ),
             ]),
     }),
+    // column.display({
+    //     id: "rincian",
+    //     header: "Detail Input",
+    //     cell: (cell) =>
+    //         h(
+    //             "button",
+    //             {
+    //                 class: "btn btn-sm btn-danger",
+    //                 onClick: () => showRincian(cell.row.original),
+    //             },
+    //             "Lihat Detail"
+    //         ),
+    // }),
 ];
 
 const refresh = () => paginateRef.value.refetch();
@@ -116,8 +150,12 @@ watch(openForm, (val) => {
         </div>
         <div class="card-body">
             <p v-if="inputData">Data input: {{ inputData }}</p>
-            <paginate ref="paginateRef" id="table-inputorder" url="/ordered?exclude_status=selesai"
-                :columns="columns"/>
+            <paginate
+                ref="paginateRef"
+                id="table-inputorder"
+                url="/ordered?exclude_status=selesai"
+                :columns="columns"
+            />
             <!-- Tanpa spasi -->
         </div>
     </div>

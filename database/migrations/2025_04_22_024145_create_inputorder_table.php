@@ -21,7 +21,12 @@ return new class extends Migration
             $table->enum('metode_pengiriman'['pick-up', 'drop-off']);
             $table->string('biaya_pengiriman');
             $table->string('berat_paket');
-            $table->enum('status',['dikirim','selesai','dalam proses','dibatalkan'])->default('dalam proses');
+            $table->date('tanggal_order');
+            $table->date('tanggal_dikemas');
+            $table->date('taggal_pengambilan');
+            $table->date('tanggal_dikirim');
+            $table->date('tanggal_penerimaan');
+            $table->enum('status',['dikirim','selesai','dalam proses','dibatalkan', 'menunggu'])->default('menunggu');
             $table->timestamps();
         });
     }

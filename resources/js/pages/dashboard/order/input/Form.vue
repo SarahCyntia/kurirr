@@ -4,7 +4,7 @@ import { onMounted, ref, watch, computed } from "vue";
 import * as Yup from "yup";
 import axios from "@/libs/axios";
 import { toast } from "vue3-toastify";
-import type {  Input } from "@/types";
+import type { Input } from "@/types";
 import ApiService from "@/core/services/ApiService";
 import { useAuthStore } from "@/stores/auth";
 
@@ -19,7 +19,7 @@ const emit = defineEmits(["close", "refresh"]);
 
 const user = useAuthStore();
 
-const  Input = ref({
+const Input = ref({
     nama_barang: "",
     alamat_asal: "",
     alamat_tujuan: "",
@@ -27,7 +27,6 @@ const  Input = ref({
     metode_pengiriman: "",
     id_user: user.user.id,
     // status: "",
-    
 });
 const photo = ref<any>([]);
 const formRef = ref();
@@ -49,15 +48,15 @@ function getEdit() {
     ApiService.get(" Input", props.selected)
         .then(({ data }) => {
             console.log(data);
-             Input.value = {
+            Input.value = {
                 nama_barang: data.nama_barang || "",
                 alamat_asal: data.alamat_asal || "",
                 alamat_tujuan: data.alamat_tujuan || "",
                 penerima: data.penerima || "",
                 metode_pengiriman: data.metode_pengiriman || "",
                 // status: data.status || "",
-            }
-            console.log( Input.value);
+            };
+            console.log(Input.value);
 
             // photo.value = data. Input.photo
             //     ? ["/storage/" + data. .photo]
@@ -75,12 +74,12 @@ function getEdit() {
 // ✅ Submit Form (Tambah/Update)
 function submit() {
     const formData = new FormData();
-    formData.append("nama_barang",  Input.value.nama_barang);
-    formData.append("alamat_asal",  Input.value.alamat_asal);
-    formData.append("alamat_tujuan",  Input.value.alamat_tujuan);
-    formData.append("penerima",  Input.value.penerima);
-    formData.append("metode_pengiriman",  Input.value.metode_pengiriman);
-    formData.append("id_user",  Input.value.id_user);
+    formData.append("nama_barang", Input.value.nama_barang);
+    formData.append("alamat_asal", Input.value.alamat_asal);
+    formData.append("alamat_tujuan", Input.value.alamat_tujuan);
+    formData.append("penerima", Input.value.penerima);
+    formData.append("metode_pengiriman", Input.value.metode_pengiriman);
+    formData.append("id_user", Input.value.id_user);
     // formData.append("status",  Input.value.status);
 
     // if (photo.value.length && photo.value[0].file) {
@@ -88,6 +87,9 @@ function submit() {
     // }
     if (props.selected) {
         formData.append("_method", "PUT");
+    } else {
+        formData.append("tanggal_order", new Date().toISOString());
+        formData.append("status", "menunggu");
     }
 
     block(document.getElementById("form-Input"));
@@ -142,7 +144,7 @@ watch(
     >
         <div class="card-header align-items-center">
             <!-- <h2 class="mb-0">{{ selected ? "Edit" : "Tambah" }}  Input</h2> -->
-            <h2 class="mb-0">{{ selected ? "Edit" : "Tambah" }}  Input order</h2>
+            <h2 class="mb-0">{{ selected ? "Edit" : "Tambah" }} Input order</h2>
             <button
                 type="button"
                 class="btn btn-sm btn-light-danger ms-auto"
@@ -154,16 +156,16 @@ watch(
 
         <div class="card-body">
             <div class="row">
-
-                
                 <div class="col-md-6">
                     <div class="fv-row mb-7">
-                        <label class="form-label fw-bold fs-6">Nama Barang</label>
+                        <label class="form-label fw-bold fs-6"
+                            >Nama Barang</label
+                        >
                         <Field
                             class="form-control"
                             type="text"
                             name="nama_barang"
-                            v-model=" Input.nama_barang"
+                            v-model="Input.nama_barang"
                             placeholder="Masukkan Nama Barang"
                         />
                         <ErrorMessage name="nama_barang" class="text-danger" />
@@ -173,12 +175,14 @@ watch(
                 <!-- Alamat -->
                 <div class="col-md-6">
                     <div class="fv-row mb-7">
-                        <label class="form-label fw-bold fs-6">Alamat Asal</label>
+                        <label class="form-label fw-bold fs-6"
+                            >Alamat Asal</label
+                        >
                         <Field
                             class="form-control"
                             type="text"
                             name="alamat_asal"
-                            v-model=" Input.alamat_asal"
+                            v-model="Input.alamat_asal"
                             placeholder="Masukkan Alamat Asal"
                         />
                         <ErrorMessage name="alamat_asal" class="text-danger" />
@@ -186,15 +190,20 @@ watch(
                 </div>
                 <div class="col-md-6">
                     <div class="fv-row mb-7">
-                        <label class="form-label fw-bold fs-6">Alamat Tujuan</label>
+                        <label class="form-label fw-bold fs-6"
+                            >Alamat Tujuan</label
+                        >
                         <Field
                             class="form-control"
                             type="text"
                             name="alamat_tujuan"
-                            v-model=" Input.alamat_tujuan"
+                            v-model="Input.alamat_tujuan"
                             placeholder="Masukkan Alamat Tujuan"
                         />
-                        <ErrorMessage name="alamat_tujuan" class="text-danger" />
+                        <ErrorMessage
+                            name="alamat_tujuan"
+                            class="text-danger"
+                        />
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -204,7 +213,7 @@ watch(
                             class="form-control"
                             type="text"
                             name="penerima"
-                            v-model=" Input.penerima"
+                            v-model="Input.penerima"
                             placeholder="Masukkan Nama Penerima"
                         />
                         <ErrorMessage name="penerima" class="text-danger" />
@@ -221,12 +230,15 @@ watch(
                             as="select"
                             class="form-control"
                             name="metode_pengiriman"
-                            v-model=" Input.metode_pengiriman"
+                            v-model="Input.metode_pengiriman"
                         >
                             <option value="pick-up">Pick-up</option>
                             <option value="drop-off">Drop-off</option>
                         </Field>
-                        <ErrorMessage name="metode_pengiriman" class="text-danger" />
+                        <ErrorMessage
+                            name="metode_pengiriman"
+                            class="text-danger"
+                        />
                     </div>
                 </div>
             </div>

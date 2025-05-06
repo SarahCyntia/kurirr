@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
     public function me()
     {
+        $user = Auth::user()->load('kurir'); // penting: load relasi kurir
         return response()->json([
             'user' => auth()->user()
         ]);
@@ -16,6 +18,7 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        
         $validator = Validator::make($request->post(), [
             'email' => 'required|email',
             'password' => 'required',
@@ -34,10 +37,11 @@ class AuthController extends Controller
                 'message' => 'Email / Password salah!'
             ], 401);
         }
+        // $user = Auth::user()->load('kurir'); // <- ini WAJIB
 
         return response()->json([
             'status' => true,
-            'user' => auth()->user(),
+            'user' => auth()->user()->load('kurir'),
             'token' => $token
         ]);
     }

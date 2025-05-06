@@ -81,6 +81,12 @@ const MainMenuConfig: Array<MenuItem> = [
                 keenthemesIcon: "bi bi-cart",
             },
             {
+                heading: "Pelanggan",
+                route: "/dashboard/pelanggan",
+                name: "pelanggan",
+                keenthemesIcon: "bi bi-person",
+            },
+            {
                 sectionTitle: "Order",
                 route: "/dashboard/order",
                 keenthemesIcon: "bi bi-cart",
@@ -123,12 +129,6 @@ const MainMenuConfig: Array<MenuItem> = [
                 route: "/dashboard/pengiriman",
                 name: "pengiriman",
                 keenthemesIcon: "bi bi-truck",
-            },
-            {
-                heading: "Pelanggan",
-                route: "/dashboard/pelanggan",
-                name: "pelanggan",
-                keenthemesIcon: "bi bi-person",
             },
             {
                 heading: "Transaksi",

@@ -155,10 +155,6 @@ class KurirController extends Controller
             ]
         ]);
     }
-
-    /**
-     * Get all kurir
-     */
     public function get()
     {
         return response()->json([

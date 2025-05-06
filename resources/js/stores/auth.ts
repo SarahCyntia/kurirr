@@ -3,6 +3,13 @@ import { defineStore } from "pinia";
 import ApiService from "@/core/services/ApiService";
 import JwtService from "@/core/services/JwtService";
 
+export interface Kurir {
+    alamat:string;
+    jenis_kendaraan: string;
+    status : string;
+
+}
+
 export interface User {
     id: number;
     uuid: string;
@@ -16,6 +23,7 @@ export interface User {
         name: string;
         full_name: string;
     };
+    kurir?: Kurir;
 }
 
 export const useAuthStore = defineStore("auth", () => {
@@ -25,7 +33,9 @@ export const useAuthStore = defineStore("auth", () => {
 
     function setAuth(authUser: User, token = "") {
         isAuthenticated.value = true;
-        user.value = authUser, authUser.kurir;
+        user.value = 
+            authUser, authUser.kurir,
+
         error.value = null;
 
         if (token) {

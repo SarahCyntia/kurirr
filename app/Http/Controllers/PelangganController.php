@@ -13,9 +13,6 @@ use function Laravel\Prompts\select;
 
 class PelangganController extends Controller
 {
-    /**
-     * Get paginated list of pelanggan
-     */
     public function index(Request $request)
     {
         $per = $request->per ?? 10;

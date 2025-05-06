@@ -26,7 +26,8 @@ const columns = [
     column.accessor("metode_pengiriman", { header: "Metode Pengiriman" }),
     column.accessor("berat_paket", { header: "Berat " }),
     column.accessor("biaya_pengiriman", { header: "Biaya Pengiriman" }),
-    column.accessor("tanggal_order", { header: "Tanggal Order" }),
+    column.accessor("tanggal_input", { header: "Tanggal Input" }),
+    column.accessor("tanggal_penerimaan", { header: "Tanggal Penerimaan" }),
     // column.accessor("status", { header: "Status" }),
     column.accessor("status", {
         header: "Status",
@@ -36,11 +37,11 @@ const columns = [
                 status === "menunggu"
                     ? "bg-success"
                     : status === "dalam proses"
-                    ? "bg-warning"
+                    ? "bg-primary"
                     : status === "pengambilan paket"
                     ? "bg-danger"
                     : status === "dikirim"
-                    ? "bg-primary"
+                    ? "bg-warning"
                     : status === "selesai"
                     ? "bg-info"
                     : "bg-secondary"; // default kalau selain itu
@@ -60,6 +61,7 @@ const columns = [
 
             return h("span", { class: `badge ${badgeClass}` }, label);
         },
+        
     }),
 //    column.accessor("id", {
 //     header: "Aksi",

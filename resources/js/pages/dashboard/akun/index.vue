@@ -28,12 +28,10 @@ const getProfile = async () => {
         email: store.user.email,
         phone: store.user.phone,
         photo: store.user.photo ? "/storage/" + store.user.photo : "/default-avatar.png",
-        // status: store.user.kurir?.status,
-        // status: store.user?.kurir?.status || "-",
         status: store.user.kurir?.status,
         alamat: store.user.kurir?.alamat,
         jenis_kendaraan: store.user.kurir?.jenis_kendaraan,
-        rating: store.user.rating,
+        rating: store.user.kurir?.rating,
     };
 };
 
@@ -56,7 +54,7 @@ onMounted(() => {
         <p class="profile-jenis_kendaraan">🛵 {{ kurir.jenis_kendaraan }}</p>
         <p class="profile-status">
           <span :class="kurir.status === 'aktif' ? 'status-active' : 'status-inactive'">
-            📌 {{ kurir.status || '-' }}
+            📌 {{ kurir.status || '-' }}   
           </span>
         </p>
       </div>

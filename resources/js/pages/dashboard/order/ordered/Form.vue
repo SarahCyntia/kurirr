@@ -17,18 +17,6 @@ const props = defineProps({
 
 const emit = defineEmits(["close", "refresh"]);
 
-// const user = useAuthStore();
-
-// const  Input = ref({
-//     nama_barang: "",
-//     alamat_asal: "",
-//     alamat_tujuan: "",
-//     penerima: "",
-//     biaya_pengiriman: "",
-//     // id_user: user.user.id,
-//     // status: "",
-    
-// });
 const Input = ref<Input>({}as Input);
 const photo = ref<any>([]);
 const formRef = ref();
@@ -41,7 +29,6 @@ const formSchema = Yup.object().shape({
     penerima: Yup.string().required("Nama penerima harus diisi"),
     berat_paket: Yup.string().nullable(),
     biaya_pengiriman: Yup.string().nullable(),
-    berat_paket: Yup.string().nullable(),
     // status: Yup.string().required("Status harus diisi"),
     // jenis_kelamin: Yup.string().required("Pilih status  Input"),
 });
@@ -59,7 +46,7 @@ function getEdit() {
                 penerima: data.penerima || "",
                 berat_paket: data.berat_paket || "",
                 biaya_pengiriman: data.biaya_pengiriman || "",
-                status: data.status || "dalam proses",
+                status: data.status || "menunggu",
             }
             console.log(Input.value);
 
@@ -93,6 +80,9 @@ function submit() {
     // }
     if (props.selected) {
         formData.append("_method", "PUT");
+    } else {
+        // formData.append("tanggal_order", new Date().toISOString());
+        formData.append("status", "menunggu");
     }
 
     block(document.getElementById("form-Input"));
@@ -131,6 +121,7 @@ watch(
     () => props.selected,
     () => {
         if (props.selected) {
+            console.log("edit")
             getEdit();
         }
     }
@@ -220,7 +211,7 @@ watch(
                         <label class="form-label fw-bold fs-6">Berat Paket</label>
                         <Field
                             class="form-control"
-                            type="string"
+                            type="text"
                             name="berat_paket"
                             v-model=" Input.berat_paket"
                             placeholder="Masukkan Berat Paket"

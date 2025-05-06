@@ -13,10 +13,6 @@ use Symfony\Component\Console\Input\Input as InputInput;
 class InputController extends Controller
 {
     // Menampilkan semua data  input
-    // public function index()
-    // {
-    //     return  input::all();
-    // }
 
     // ✅ Middleware auth (jika hanya user login boleh akses)
     public function __construct()
@@ -39,6 +35,8 @@ class InputController extends Controller
                       ->orWhere('penerima', 'like', "%$search%")
                       ->orWhere('metode_pengiriman', 'like', "%$search%")
                       ->orWhere('biaya_pengiriman', 'like', "%$search%")
+                      ->orWhere('tanggal_input', 'like', "%$search%")
+                      ->orWhere('tanggal_penerimaan', 'like', "%$search%")
                       ->orWhere('status', 'like', "%$search%");
             })
             ->when($request->status, function ($query, $status) {
@@ -68,6 +66,8 @@ class InputController extends Controller
             'penerima' => 'required|string|max:255',
             'metode_pengiriman' => 'required|string|max:255',
             'biaya_pengiriman' => 'nullable|string|max:255',
+            'tanggal_order' => 'nullable|date|before_or_equal:now',
+            // 'tanggal_order' => 'nullable|date',
         ]);
 
         $id_pelanggan = Pelanggan::where('user_id', $request->id_user)->first('id');
@@ -79,7 +79,8 @@ class InputController extends Controller
             'penerima' => $request->penerima,
             'metode_pengiriman' => $request->metode_pengiriman,
             'biaya_pengiriman' => $request->biaya_pengiriman,
-            'id_pelanggan' =>$id_pelanggan->id,
+            'tanggal_order' => now()->format('Y-m-d H:i:s'),
+            'id_pelanggan' =>$id_pelanggan ->id,
         ]);
     
         // return redirect()->route('input.index')->with('success', 'Input Order berhasil ditambahkan.');
@@ -110,19 +111,99 @@ class InputController extends Controller
 
     // Optional: Update data status oleh kurir
     public function update(Request $request, $id)
-    {
-        $request->validate([
-            'status' => 'required|in:dikirim,selesai,dalam proses,dibatalkan,pengambilan paket, menunggu',
-        ]);
+{
+    $request->validate([
+        'status' => 'required|string',
+        'berat_paket' => 'required|numeric|min:1',
+        'biaya_pengiriman' => 'required|numeric|min:0',
+    ]);
 
-        $input = Input::findOrFail($id);
-        $input->update(['status' => $request->status]);
+    $input = Input::where('id', $id)->firstOrFail();
 
-        return response()->json([
-            'message' => 'Status pesanan diperbarui',
-            'data' => $input
-        ]);
+    // if ($transaksi->kurir_id && $transaksi->status !== 'Terkirim') {
+    //     return response()->json([
+    //         'message' => 'Kurir sudah memiliki order yang sedang diproses.'
+    //     ], 400);
+    // }
+    $user = auth()->user();
+    $kurirId = $user->kurir->kurir_id ?? null;
+
+    // Cegah kurir mengambil pesanan yang sudah diambil kurir lain
+    // if ($user->role === 'kurir') {
+    //     if ($transaksi->kurir_id && $transaksi->kurir_id != $kurirId) {
+    //         return response()->json([
+    //             'message' => 'Pesanan sudah diambil oleh kurir lain.'
+    //         ], 403);
+    //     }
+    // }
+    
+    // $kurir = auth()->user()->kurir;
+
+    // // Cek apakah kurir sudah pegang 1 order yang belum selesai
+    // $masihAktif = Transaksi::where('kurir_id', $kurir->kurir_id)
+    //     ->whereIn('status', ['Penjemputan Barang', 'Sedang Dikirim']) // sesuaikan dengan status aktifmu
+    //     ->exists();
+
+    // if ($masihAktif) {
+    //     return response()->json([
+    //         'message' => 'Kurir hanya bisa mengambil 1 order dalam satu waktu.'
+    //     ], 404);
+    // }
+
+
+    // Update kolom waktu dengan status baru dan timestamp
+    // $waktuLama = $transaksi->waktu ?? '';
+    // $transaksi->penilaian = $request->penilaian;
+    // $transaksi->komentar = $request->komentar;
+    
+    $waktuBaru = now()->format('d-m-Y H:i:s');
+    $statusString = $request->status . ' (' . $waktuBaru . ')';
+    switch ($request->status) {
+        case 'dalam proses':
+            $input->tanggal_dikemas = now();
+            break;
+        case 'pengambilan paket':
+            $input->tanggal_pengambilan = now();
+            break;
+        case 'dikirim':
+            $input->tanggal_dikirim = now();
+            break;
+        case 'selesai':
+            $input->tanggal_penerimaan = now();
+            break;
     }
+    
+    $input->update([
+        'status' => $request->status,
+        'berat_barang' => $request->berat_barang,
+        'biaya' => $request->biaya,
+        'kurir_id' => $request->kurir_id,
+        // 'kurir_id' => $request->kurir->kurir_id,
+        // 'waktu' => $waktuLama ? $waktuLama . '<br>' . $statusString : $statusString,
+    ]);
+    
+    $input->save();
+    return response()->json([
+        'message' => 'Status berhasil diperbarui',
+        'status' => $input->status,
+    ]);
+}
+
+
+    // public function update(Request $request, $id)
+    // {
+    //     $request->validate([
+    //         'status' => 'required|in:dikirim,selesai,dalam proses,dibatalkan,pengambilan paket, menunggu',
+    //     ]);
+
+    //     $input = Input::findOrFail($id);
+    //     $input->update(['status' => $request->status]);
+
+    //     return response()->json([
+    //         'message' => 'Status pesanan diperbarui',
+    //         'data' => $input
+    //     ]);
+    // }
     public function get()
     {
         return response()->json([
@@ -130,14 +211,6 @@ class InputController extends Controller
             'data' => Input::select('nama_barang', 'alamat_asal', 'alamat_tujuan', 'penerima', 'metode_pembayaran', 'biaya_pengiriman', 'status')->get()
         ]);
     }
-
-    // Optional: Hapus data
-//     public function destroy($id)
-//     {
-//         Input::destroy($id);
-//         return response()->json(['message' => 'Data berhasil dihapus']);
-//     }
-// }
 public function destroy(Input $input)
 {
 

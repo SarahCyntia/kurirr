@@ -1,32 +1,49 @@
 <script setup lang="ts">
-import { h, ref, watch, onMounted } from "vue";
+import { h, ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
-// import Form from "./Form.vue";
+// import Form from "./form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
+import Swal from "sweetalert2";
 import type { Input } from "@/types";
-import axios from "axios"; // Pastikan axios sudah terinstall
 
 const column = createColumnHelper<Input>();
 const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
-const inputData = ref<Input | null>(null); // Data  input yang terkait dengan user login
 
 const { delete: deleteInput } = useDelete({
-    // Ganti `delete.input` jadi `deleteInput`
-    onSuccess: () => paginateRef.value.refetch(),
+  onSuccess: () => refresh(),
 });
 
+const showRincian = (data: Input) => {
+  Swal.fire({
+    // title: <strong>Detail Input</strong>,
+    title: "Detail Riwayat",
+
+    html: `
+       <p><b>Berat Paket:</b> ${data.berat_paket}</p>
+        <p><b>Metode Pengiriman:</b> ${data.metode_pengiriman}</p>
+        <p><b>Biaya Pengiriman:</b> ${data.biaya_pengiriman}</p>
+        <p><b>Tanggal Order :</b> ${data.tanggal_order || '-'}</p>
+        <p><b>Tanggal Dikemas:</b> ${data.tanggal_dikemas|| '-'}</p>
+        <p><b>Tanggal Pengambilan:</b> ${data.tanggal_pengambilan || '-'}</p>
+        <p><b>Tanggal Dikirim:</b> ${data.tanggal_dikirim || '-'}</p>
+        <p><b>Tanggal Penerimaan:</b> ${data.tanggal_penerimaan || '-'}</p>
+      </div>
+    `,
+    // icon: "info",
+    confirmButtonText: "Tutup",
+    // customClass: {
+    //   popup: 'text-start',
+    // },
+  });
+};
+
 const columns = [
-    column.accessor("no", { header: "No" }),
-    column.accessor("nama_barang", { header: "Nama Barang" }),
-    column.accessor("alamat_asal", { header: "Alamat Asal" }),
-    column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
-    column.accessor("penerima", { header: "Penerima" }),
-    column.accessor("biaya_pengiriman", { header: "Biaya Pengiriman" }),
-    column.accessor("metode_pengiriman", { header: "Metode Pengiriman" }),
-    // column.accessor("status", { header: "Status" }),
-    column.accessor("status", {
+  column.accessor("no", { header: "No" }),
+  column.accessor("nama_barang", { header: "Nama Barang" }),
+  column.accessor("alamat_asal", { header: "Alamat asal" }),
+  column.accessor("status", {
         header: "Status",
         cell: (cell) => {
             const status = cell.getValue();
@@ -34,11 +51,11 @@ const columns = [
                 status === "menunggu"
                     ? "bg-success"
                     : status === "dalam proses"
-                    ? "bg-primary"
+                    ? "bg-warning"
                     : status === "pengambilan paket"
                     ? "bg-danger"
                     : status === "dikirim"
-                    ? "bg-warning"
+                    ? "bg-primary"
                     : status === "selesai"
                     ? "bg-info"
                     : "bg-secondary"; // default kalau selain itu
@@ -60,64 +77,45 @@ const columns = [
         },
     }),
 
-    // column.accessor("id", {
-    //     header: "Aksi",
-    //     cell: (cell) =>
-    //         h("div", { class: "d-flex gap-2" }, [
-    //             h(
-    //                 "button",
-    //                 {
-    //                     class: "btn btn-sm btn-icon btn-info",
-    //                     onClick: () => {
-    //                         selected.value = cell.getValue();
-    //                         openForm.value = true;
-    //                     },
-    //                 },
-    //                 h("i", { class: "la la-pencil fs-2" })
-    //             ),
-    //             h(
-    //                 "button",
-    //                 {
-    //                     class: "btn btn-sm btn-icon btn-danger",
-    //                     onClick: () => deleteInput(`input/${cell.getValue()}`),
-    //                 },
-    //                 h("i", { class: "la la-trash fs-2" })
-    //             ),
-    //         ]),
-    // }),
+    column.accessor("id", {
+        header: "Detail",
+        cell: (cell) =>
+            h("div", { class: "d-flex gap-2" }, [
+                h(
+                    "button",
+                    {
+                        class: "btn btn-sm btn-icon btn-danger",
+                        onClick: () => showRincian(cell.row.original),
+                    },
+                    h("i", { class: "bi bi-building" })
+                    // "Lihat"
+                ),
+            ]),
+    }),
 ];
 
-const refresh = () => paginateRef.value.refetch();
+
+const refresh = () => paginateRef.value?.refetch();
 
 watch(openForm, (val) => {
-    if (!val) {
-        selected.value = "";
-    }
-    window.scrollTo(0, 0);
+  if (!val) {
+    selected.value = "";
+  }
+  window.scrollTo(0, 0);
 });
 </script>
 
 <template>
-    <Form
-        :selected="selected"
-        @close="openForm = false"
-        v-if="openForm"
-        @refresh="refresh"
-    />
+  <Form :selected="selected" @close="openForm = false" v-if="openForm" @refresh="refresh" />
 
-    <div class="card">
-        <div class="card-header align-items-center">
-            <h2 class="mb-0">Ordered</h2>
-            <!-- <button type="button" class="btn btn-sm btn-primary ms-auto" v-if="!openForm" @click="openForm = true">
-        Tambah
-        <i class="la la-plus"></i>
-      </button> -->
-        </div>
-        <div class="card-body">
-            <p v-if="inputData">Data input: {{ inputData }}</p>
-            <paginate ref="paginateRef" id="table-inputorder" url="/input?status=selesai"
-                :columns="columns"/>
-            <!-- Tanpa spasi -->
-        </div>
+  <div class="card">
+    <div class="card-header align-items-center">
+      <h2 class="mb-0">List Riwayat</h2>
     </div>
+    <div class="card-body">
+        <paginate ref="paginateRef" id="table-inputorder" url="/input?status=selesai"
+        :columns="columns"/>
+      <!-- <paginate ref="paginateRef" id="table-inputorder" url="/input" :columns="columns"></paginate> -->
+    </div>
+  </div>
 </template>
