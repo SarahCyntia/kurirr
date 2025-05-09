@@ -25,7 +25,8 @@ const showRincian = (data: Input) => {
 
         html: `
       <div style="text-align: left;">
-        <p><b>Berat Paket:</b> ${data.berat_paket}</p>
+        <p><b>Berat Paket:</b> ${data.berat_paket || '-'}</p>
+        <p><b>Jarak:</b> ${data.jarak || '-'}</p>
         <p><b>Metode Pengiriman:</b> ${data.metode_pengiriman}</p>
         <p><b>Biaya Pengiriman:</b> ${data.biaya_pengiriman}</p>
         <p><b>Tanggal Order :</b> ${data.tanggal_order || '-'}</p>

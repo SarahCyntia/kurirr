@@ -67,14 +67,14 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
 
 
     });
-    Route::middleware('can:d_pengguna')->group(function () {
-        Route::get('d_pengguna', [D_penggunaController::class, 'get'])->withoutMiddleware('can:kurir');
-        Route::post('d_pengguna', [D_penggunaController::class, 'index']);
-        Route::post('d_pengguna/store', [D_penggunaController::class, 'store']);
-        Route::get('/d_pengguna/{uuid}', [D_penggunaController::class, 'show']);
-        Route::put('/d_pengguna/{uuid}', [D_penggunaController::class, 'update']);
-        Route::delete('/d_pengguna/{uuid}', [D_penggunaController::class, 'destroy']);
-    });
+    // Route::middleware('can:d_pengguna')->group(function () {
+    //     Route::get('d_pengguna', [D_penggunaController::class, 'get'])->withoutMiddleware('can:kurir');
+    //     Route::post('d_pengguna', [D_penggunaController::class, 'index']);
+    //     Route::post('d_pengguna/store', [D_penggunaController::class, 'store']);
+    //     Route::get('/d_pengguna/{uuid}', [D_penggunaController::class, 'show']);
+    //     Route::put('/d_pengguna/{uuid}', [D_penggunaController::class, 'update']);
+    //     Route::delete('/d_pengguna/{uuid}', [D_penggunaController::class, 'destroy']);
+    // });
 
     Route::middleware('can:kurir')->group(function () {
         Route::get('kurir', [KurirController::class, 'get'])->withoutMiddleware('can:kurir');
@@ -108,15 +108,6 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
             ->except(['index', 'store']);
         // Route::delete('/pesanan', [PesananController::class, 'destroy']); // Hapus pesanan
     });
-    // Route::middleware('can:pesanan')->group(function () {
-    //     // Route::get('pesanan', [PelangganController::class, 'get'])->withoutMiddleware('can:pesanan');
-    //     Route::get('pesanan', [PesananController::class, 'index']); // Ambil semua pesanan
-    //     Route::post('/pesanan/store', [PesananController::class, 'store']); // Tambah pesanan baru
-    //     Route::get('/pesanan/{uuid}', [PesananController::class, 'show']); // Detail pesanan
-    //     Route::put('/pesanan/{uuid}', [PesananController::class, 'update']); // Update pesanan
-    //     Route::delete('/pesanan/{uuid}', [PesananController::class, 'destroy']); // Hapus pesanan
-    // });
-
     // Route::middleware('can:order')->group(function () {
     //     Route::get('/order', [OrderController::class, 'index']);
     //     Route::post('/order', [OrderController::class, 'store']);
@@ -130,6 +121,7 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::post('/input/store', [InputController::class, 'store']);
         Route::put('/input', [InputController::class, 'update']);
         // Route::put('/input', [InputController::class, 'update'])->withoutMiddleware('can:input');
+        Route::post('/input/stores', [InputController::class, 'storePenilaian']);
         Route::apiResource('/Input', InputController::class)
             ->except(['index', 'store']);
     });

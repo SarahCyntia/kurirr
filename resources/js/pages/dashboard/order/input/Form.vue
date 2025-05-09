@@ -44,8 +44,8 @@ const formSchema = Yup.object().shape({
 
 // ✅ Mendapatkan data  Input untuk edit
 function getEdit() {
-    block(document.getElementById("form- Input"));
-    ApiService.get(" Input", props.selected)
+    block(document.getElementById("form-Input"));
+    ApiService.get("Input", props.selected)
         .then(({ data }) => {
             console.log(data);
             Input.value = {
@@ -57,11 +57,6 @@ function getEdit() {
                 // status: data.status || "",
             };
             console.log(Input.value);
-
-            // photo.value = data. Input.photo
-            //     ? ["/storage/" + data. .photo]
-            //     : [];
-            //  Input.value.password = "";
         })
         .catch((err: any) => {
             toast.error(err.response.data.message || "Gagal mengambil data");
@@ -80,11 +75,6 @@ function submit() {
     formData.append("penerima", Input.value.penerima);
     formData.append("metode_pengiriman", Input.value.metode_pengiriman);
     formData.append("id_user", Input.value.id_user);
-    // formData.append("status",  Input.value.status);
-
-    // if (photo.value.length && photo.value[0].file) {
-    //     formData.append("photo", photo.value[0].file);
-    // }
     if (props.selected) {
         formData.append("_method", "PUT");
     } else {
@@ -232,8 +222,8 @@ watch(
                             name="metode_pengiriman"
                             v-model="Input.metode_pengiriman"
                         >
-                            <option value="pick-up">Pick-up</option>
-                            <option value="drop-off">Drop-off</option>
+                            <option value="pick-up">Pick-up (kurir jemput)</option>
+                            <option value="drop-off">Drop-off (pelanggan antar)</option>
                         </Field>
                         <ErrorMessage
                             name="metode_pengiriman"

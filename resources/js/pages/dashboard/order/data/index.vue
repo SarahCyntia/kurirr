@@ -15,6 +15,7 @@ const { delete: deleteInput } = useDelete({
   onSuccess: () => refresh(),
 });
 
+
 const showRincian = (data: Input) => {
   Swal.fire({
     // title: <strong>Detail Input</strong>,
@@ -22,7 +23,8 @@ const showRincian = (data: Input) => {
 
     html: `
       <div style="text-align: left;">
-        <p><b>Berat Paket:</b> ${data.berat_paket}</p>
+        <p><b>Berat Paket:</b> ${data.berat_paket || '-'}</p>
+        <p><b>Jarak:</b> ${data.jarak || '-'}</p>
         <p><b>Metode Pengiriman:</b> ${data.metode_pengiriman}</p>
         <p><b>Biaya Pengiriman:</b> ${data.biaya_pengiriman}</p>
        <p><b>Tanggal Order :</b> ${data.tanggal_order || '-'}</p>
@@ -79,7 +81,7 @@ const columns = [
     }),
 
     column.accessor("id", {
-        header: "Aksi",
+        header: "Detail",
         cell: (cell) =>
             h("div", { class: "d-flex gap-2" }, [
                 h(

@@ -116,6 +116,12 @@ const MainMenuConfig: Array<MenuItem> = [
                         name: "riwayat",
                         keenthemesIcon: "bi bi-cart",
                     },
+                    {
+                        heading: "Riwayatt",
+                        route: "/dashboard/order/riwayatt",
+                        name: "riwayatt",
+                        keenthemesIcon: "bi bi-cart",
+                    },
                 ],
             },
             // {

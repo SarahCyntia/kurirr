@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
-// import Form from "./form.vue";
+import Form from "./form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import Swal from "sweetalert2";
 import type { Input } from "@/types";
@@ -19,10 +19,9 @@ const showRincian = (data: Input) => {
   Swal.fire({
     // title: <strong>Detail Input</strong>,
     title: "Detail Riwayat",
-
     html: `
-        <p><b>Berat Paket:</b> ${data.berat_paket || '-'}</p>
-        <p><b>Jarak:</b> ${data.jarak || '-'}</p>
+       <p><b>Berat Paket:</b> ${data.berat_paket || '-'}</p>
+       <p><b>Jarak:</b> ${data.jarak || '-'}</p>
         <p><b>Metode Pengiriman:</b> ${data.metode_pengiriman}</p>
         <p><b>Biaya Pengiriman:</b> ${data.biaya_pengiriman}</p>
         <p><b>Tanggal Order :</b> ${data.tanggal_order || '-'}</p>
@@ -32,7 +31,11 @@ const showRincian = (data: Input) => {
         <p><b>Tanggal Penerimaan:</b> ${data.tanggal_penerimaan || '-'}</p>
       </div>
     `,
+    // icon: "info",
     confirmButtonText: "Tutup",
+    // customClass: {
+    //   popup: 'text-start',
+    // },
   });
 };
 
@@ -40,8 +43,6 @@ const columns = [
   column.accessor("no", { header: "No" }),
   column.accessor("nama_barang", { header: "Nama Barang" }),
   column.accessor("alamat_asal", { header: "Alamat asal" }),
-  column.accessor("nilai", { header: "Nilai" }),
-  column.accessor("ulasan", { header: "Ulasan" }),
   column.accessor("status", {
         header: "Status",
         cell: (cell) => {
@@ -74,6 +75,30 @@ const columns = [
 
             return h("span", { class: `badge ${badgeClass}` }, label);
         },
+    }),
+    column.accessor("id", {
+        header: "Penilaian",
+        cell: (cell) => {
+    const row = cell.row.original; // Ambil data lengkap baris
+
+    // Cek apakah penilaian sudah ada
+    const sudahDinilai = row.nilai && row.ulasan;
+
+    return h(
+        "button",
+        {
+            class: "btn btn-sm d-flex align-items-center gap-1 " + (sudahDinilai ? "btn-secondary" : "btn-info"),
+            disabled: sudahDinilai, // ❗ Disable kalau sudah dinilai
+            onClick: () => {
+                if (!sudahDinilai) {
+                    selected.value = cell.getValue();
+                    openForm.value = true;
+                }
+            },
+        },
+        sudahDinilai ? "Sudah Dinilai" : "Penilaian"
+    );
+}
     }),
 
     column.accessor("id", {

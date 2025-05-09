@@ -13,11 +13,6 @@ use Symfony\Component\Console\Input\Input as InputInput;
 
 class OrderedController extends Controller
 {
-    // Menampilkan semua data  input
-    // public function index()
-    // {
-    //     return  input::all();
-    // }
 
     // ✅ Middleware auth (jika hanya user login boleh akses)
     public function __construct()
@@ -42,6 +37,7 @@ class OrderedController extends Controller
                       ->orWhere('biaya_pengiriman', 'like', "%$search%")
                       ->orWhere('metode_pengiriman', 'like', "%$search%")
                       ->orWhere('penerima', 'like', "%$search%")
+                      ->orWhere('jarak', 'like', "%$search%")
                       ->orWhere('status', 'like', "%$search%");
             })
             ->when($request->status, function ($query, $status) {
@@ -68,6 +64,7 @@ class OrderedController extends Controller
             'alamat_asal' => 'required|string|max:255',
             'alamat_tujuan' => 'required|string|max:255',
             'penerima' => 'required|string|max:255',
+            'jarak' => 'nullable|numeric|max:255',
             'biaya_pengiriman' => 'nullable|string|max:255',
             'metode_pengiriman' => 'nullable|string|max:255',
             'berat_paket' => 'nullable|string|max:255',
@@ -85,22 +82,12 @@ class OrderedController extends Controller
             'biaya_pengiriman' => $request->biaya_pengiriman,
             'metode_pengiriman' => $request->metode_pengiriman,
             'berat_paket' => $request->berat_paket,
+            'jarak' => $request->jarak,
             'status' => $request->status,
             'id_pelanggan' =>$id_pelanggan->id,
         ]);
-    
-        // return redirect()->route('input.index')->with('success', 'Input Order berhasil ditambahkan.');
         return response()->json(['message' => 'data berhasil ditambahkan', 'data' => $Input]);
-
-        // $input = Ordered::create($request->all());
-
-        // return response()->json([
-        //     'message' => 'Pesanan berhasil disimpan',
-        //     'data' => $input
-        // ], 201);
     }
-
-    // Optional: Menampilkan 1 data  input tertentu
     public function show($Input)
     {
         $data = Input::findOrFail($Input);
@@ -111,9 +98,8 @@ class OrderedController extends Controller
             'penerima' => $data->penerima,
             'biaya_pengiriman' => $data->biaya_pengiriman,
             'metode_pengiriman' => $data->metode_pengiriman,
-            // 'tanggal_input' => $data->tanggal_input,
-            // 'tanggal_penerimaan' => $data->metode_pengiriman,
             'berat_paket' => $data->berat_paket,
+            'jarak' => $data->jarak,
             'status' => $data->status,
         ]);
     }
@@ -125,6 +111,7 @@ class OrderedController extends Controller
     $request->validate([
         'status' => 'required|string',
         'berat_paket' => 'nullable|string|min:1',
+        'jarak' => 'nullable|numeric|min:1',
         'biaya_pengiriman' => 'nullable|numeric|min:0',
     ]);
 
@@ -187,6 +174,7 @@ class OrderedController extends Controller
     $input->update([
         'status' => $request->status,
         'berat_paket' => $request->berat_paket,
+        'jarak' => $request->jarak,
         'biaya_pengiriman' => $request->biaya_pengiriman,
         // 'kurir_id' => $request->kurir_id,
         // 'kurir_id' => $request->kurir->kurir_id,
@@ -200,40 +188,7 @@ class OrderedController extends Controller
         
     ]);
 }
-    // public function update(Request $request, $id)
-    // {
-    //     $request->validate([
-    //         'status' => 'required|string',
-    //         'biaya_pengiriman' => 'required|string',
-    //     ]);
 
-    //     $ordered = Input::findOrFail($id);
-    //     $ordered->update([
-    //         'status' => $request->status,
-    //         'biaya_pengiriman' => $request->biaya_pengiriman,
-    //         'berat_paket' => $request->berat_paket,
-    //     ]);
-
-    //     return response()->json([
-    //         'message' => 'Status pesanan diperbarui',
-    //         'data' => $ordered
-    //     ]);
-    // }
-    // public function get()
-    // {
-    //     return response()->json([
-    //         'success' => true,
-    //         'data' => Input::select('nama_barang', 'alamat_asal', 'alamat_tujuan', 'penerima', 'biaya_pengiriman', 'status')->get()
-    //     ]);
-    // }
-
-    // Optional: Hapus data
-//     public function destroy($id)
-//     {
-//         Input::destroy($id);
-//         return response()->json(['message' => 'Data berhasil dihapus']);
-//     }
-// }
 public function destroy(Input $Input)
 {
 

@@ -191,12 +191,12 @@ const routes: Array<RouteRecordRaw> = [
                 //     // breadcrumbs: ["Master", "Users"],
                 // },
             },
-            // {
-            //     path: "/dashboard/order/riwayat",
-            //     name: "dashboard.order.riwayat",
-            //     component: () =>
-            //         import("@/pages/dashboard/order/riwayat/index.vue"),
-            // },
+            {
+                path: "/dashboard/order/riwayatt",
+                name: "dashboard.order.riwayatt",
+                component: () =>
+                    import("@/pages/dashboard/order/riwayatt/index.vue"),
+            },
             {
                 path: "/dashboard/order/riwayat",
                 name: "dashboard.order.riwayat",

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Kurir;
 use App\Http\Requests\StoreKurirRequest;
 use App\Http\Requests\UpdateKurirRequest;
+use App\Models\Input;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -136,7 +138,6 @@ class KurirController extends Controller
             'phone' => $request->phone,
             // 'password' => $request->password,
             'photo' => $validatedData['photo'] ?? $kurir->user->photo,
-            // 'photo' => $request->photo,
         ]);
         
         $kurir->update($validatedData);
@@ -146,12 +147,11 @@ class KurirController extends Controller
                 'id' => $kurir->id,
                 // 'name' => $kurir->name,
                 // 'email' => $kurir->email,
-                // 'phone' => $kurir->phone,
+                // 'phone' => $kurir->phone, tiga tiganya sudah ada di user
                 'alamat' => $kurir->alamat,
                 'status' => $kurir->status,
                 'penilaian' => $kurir->penilaian,
                 'jenis_kendaraan' => $kurir->jenis_kendaraan,
-                // 'photo' => $kurir->photo
             ]
         ]);
     }
@@ -179,6 +179,59 @@ class KurirController extends Controller
         ]);
     }
 
+    // public function transaksiCountByUser()
+    // {
+    //     $user = auth()->user();
+    //     $kurir = $user->kurir;
+    
+    //     if (!$kurir) {
+    //         return response()->json([
+    //             'menunggu' => 0,
+    //             'dalam proses' => 0,
+    //             'pengambilan paket' => 0,
+    //             'dikirm' => 0,
+    //             'selesaai' => 0,
+    //         ]);
+    //     }
+    
+    //     $kurirId = $kurir->kurir_id;
+    
+    //     $menungguCount = Input::where('kurir_id', $kurirId)
+    //         ->where('status', 'menunggu')
+    //         ->whereDate('tanggal_order', Carbon::menunggu())
+    //         ->count();
+            
+    //     $dalamProsesCount = Input::where('kurir_id', $kurirId)
+    //         ->where('status', 'dalam proses')
+    //         ->whereDate('tanggal_dikemas', Carbon::dalamProses())
+    //         ->count();
+
+    //     $pengambilanPaketCount = Input::where('kurir_id', $kurirId)
+    //         ->where('status', 'pengambilan paket')
+    //         ->whereDate('tanggal_pengambilan', Carbon::pengambilanPaket())
+    //         ->count();
+
+    //     $dikirimCount = Input::where('kurir_id', $kurirId)
+    //         ->where('status', 'dikirim')
+    //         ->whereDate('tanggal_dikirim', Carbon::dikirim())
+    //         ->count();
+
+
+    //     $selesaiCount = Input::where('kurir_id', $kurirId)
+    //         ->where('status', 'selesai')
+    //         ->whereMonth('tanggal_penerimaan', Carbon::now()->selesai)
+    //         ->count();
+
+    
+    //     return response()->json([
+    //         'menunggu' => $menungguCount,
+    //         'dalam proses' => $dalamProsesCount,
+    //         'pengambilan paket' => $pengambilanPaketCount,
+    //         'dikirim' => $dikirimCount,
+    //         'selesai' => $selesaiCount,
+    //     ]);
+    // }
+
 
     public function destroy(Kurir $kurir)
 {
@@ -201,24 +254,3 @@ class KurirController extends Controller
     ]);
 }
 }
-
-    // app/Http/Controllers/KurirController.php
-    // public function profile()
-    // {
-    //     // $user = auth()->user();
-
-    //     $kurir = $user->kurir; // relasi user -> kurir (pastikan sudah diset)
-
-    //     return response()->json([
-    //         'kurir' => [
-    //             'alamat' => $kurir?->alamat,
-    //             'penilaian' => $kurir?->penilaian,
-    //             'user' => [
-    //                 'name' => $user->name,
-    //                 'email' => $user->email,
-    //                 'phone' => $user->phone,
-    //                 'photo' => $user->photo,
-    //             ]
-    //         ]
-    //     ]);
-    // }

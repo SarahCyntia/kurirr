@@ -28,6 +28,9 @@ class Input extends Model
         'metode_pengiriman',
         'biaya_pengiriman',
         'status',
+        'nilai',
+        'ulasan',
+        'jarak',
     ];
 
 }

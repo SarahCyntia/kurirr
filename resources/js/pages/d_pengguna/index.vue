@@ -1,3 +1,84 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import axios from '@/libs/axios';
+import { useAuthStore } from "@/stores/auth";
+import { watch } from 'vue';
+import Swal from 'sweetalert2';
+
+const User = ref({ name: "", role: "kurir" });
+const showTransaksi = ref(false);
+const transaksiList = ref([]);
+const todayCount = ref(0);
+const yesterdayCount = ref(0);
+const monthCount = ref(0);
+const transaksiCount = ref(0);
+
+const store = useAuthStore();
+
+const getProfile = async () => {
+  User.value.name = store.user.name;
+
+  if (User.value.role === 'kurir') {
+    try {
+      const res = await axios.get("/kurir/transaksi-count");
+      transaksiCount.value.today = res.data.today;
+      transaksiCount.value.yesterday = res.data.yesterday;
+      transaksiCount.value.month = res.data.month;
+      transaksiCount.value.custom = res.data.custom; // opsional jika digunakan
+    } catch (error) {
+      console.error("Gagal mengambil jumlah transaksi", error);
+    }
+  }
+};
+
+const getTransaksiList = async (filter = null) => {
+  // if (User.value.role === 'kurir') {
+    try {
+      const res = await axios.get('/kurir/transaksi-list', {
+        params: { filter }  // kirim filter ke backend
+      });
+      transaksiList.value = res.data.data;
+      yesterdayCount.value = res.data.yesterdayCount;
+      todayCount.value = res.data.todayCount;
+      monthCount.value = res.data.monthCount;
+      showTransaksi.value = true;
+    }  catch (error) {
+      if (error.response && error.response.status === 403) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Akses Ditolak',
+          text: error.response.data.message || 'Anda tidak memiliki izin untuk melihat data ini.'
+        });
+      } else {
+        console.error("Gagal mengambil daftar transaksi", error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Terjadi Kesalahan',
+          text: 'Gagal mengambil data transaksi.'
+        });
+      }
+    // }
+  }
+};
+
+const closeTransaksiList = () => {
+  showTransaksi.value = false;
+};
+
+
+
+onMounted(() => {
+  getProfile();
+});
+
+// watch(() => store.user, (newUser) => {
+//   if (newUser.role === 'kurir') {
+//     getProfile();
+//   }
+// }, { immediate: true });
+
+</script>
+
 <template>
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">

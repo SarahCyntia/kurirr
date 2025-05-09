@@ -69,7 +69,7 @@ const columns = [
     }),
     column.accessor("user.email", { header: "Email" }),
     column.accessor("alamat", { header: "Alamat" }),
-    column.accessor("keluhan", { header: "Keluhan" }),
+    // column.accessor("keluhan", { header: "Keluhan" }),
     // column.accessor("orderan", { header: "Orderan" }),
   column.accessor("id", {
         header: "Aksi",

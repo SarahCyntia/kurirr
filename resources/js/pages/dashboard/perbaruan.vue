@@ -1,3 +1,4 @@
+
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import axios from "@/libs/axios";
@@ -5,9 +6,10 @@ import { useAuthStore } from "@/stores/auth";
 import { watch } from "vue";
 import Swal from "sweetalert2";
 
-const User = ref({ name: "", role: "kurir" });
-const showTransaksi = ref(false);
+// const User = ref({ name: "", role: "kurir" });
+const showInput = ref(false);
 const orderCount = ref(0);
+const dalamProsesCount = ref(0);
 const dijemputCount = ref(0);
 const dikirimCount = ref(0);
 const selesaiCount = ref(0);
@@ -16,8 +18,9 @@ const store = useAuthStore();
 
 const getStatistikOrder = async () => {
     try {
-        const res = await axios.get("/kurir/statistik-status"); // endpoint ini harus Anda buat di backend
+        const res = await axios.get("/statistik-status"); // endpoint ini harus Anda buat di backend
         orderCount.value = res.data.total;
+        dalamProsesCount.value = res.data.dalam proses;
         dijemputCount.value = res.data.dijemput;
         dikirimCount.value = res.data.dikirim;
         selesaiCount.value = res.data.selesai;
@@ -29,14 +32,15 @@ const getStatistikOrder = async () => {
 const getStatistikOrderList = async (filter = null) => {
     // if (User.value.role === 'kurir') {
     try {
-        const res = await axios.get("/kurir/order-list", {
+        const res = await axios.get("/order-list", {
             params: { filter }, // kirim filter ke backend
         });
         orderCount.value = res.data.orderCount;
+        dalamProsesCount.value = res.data.dalamProsesCount;
         dijemputCount.value = res.data.dijemputCount;
         dikirimCount.value = res.data.dikirimCount;
         selesaiCount.value = res.data.selesaiCount;
-        showTransaksi.value = true;
+        // showTransaksi.value = true;
     } catch (error) {
         if (error.response && error.response.status === 403) {
             Swal.fire({
@@ -59,7 +63,7 @@ const getStatistikOrderList = async (filter = null) => {
 };
 
 const closeStatistikOrder = () => {
-    showTransaksi.value = false;
+    showInput.value = false;
 };
 
 onMounted(() => {
@@ -73,7 +77,7 @@ onMounted(() => {
         <div class="box-wrapper">
             <div class="card">
                 <h2>Total Order</h2>
-                <h1>{{ totalOrder }}</h1>
+                <h1>{{ orderCount }}</h1>
                 <!-- <h3 @click="getStatistikOrder()">Lihat Semua</h3> -->
             </div>
             <div class="card">

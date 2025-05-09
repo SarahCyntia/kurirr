@@ -23,7 +23,7 @@ class PelangganController extends Controller
         $data = Pelanggan::select('id', 'alamat', 'keluhan');
         $data = Pelanggan::with('user')->select('id', 'user_id', 'alamat', 'keluhan') // Tambahkan relasi user
             ->when($request->search, function ($query, $search) {
-                // $query->where('name', 'like', "%$search%")
+                // $query->where('name', 'like', "%$search%") karena sudah ada di user
                     $query->where('id', 'like', "%$search%")
                         ->orWhere('alamat', 'like', "%$search%")
                         ->orWhere('keluhan', 'like', "%$search%");

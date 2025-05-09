@@ -37,6 +37,8 @@ class InputController extends Controller
                       ->orWhere('biaya_pengiriman', 'like', "%$search%")
                       ->orWhere('tanggal_input', 'like', "%$search%")
                       ->orWhere('tanggal_penerimaan', 'like', "%$search%")
+                      ->orWhere('nilai', 'like', "%$search%")
+                    //   ->orWhere('ulasan', 'like', "%$search%")
                       ->orWhere('status', 'like', "%$search%");
             })
             ->when($request->status, function ($query, $status) {
@@ -63,11 +65,13 @@ class InputController extends Controller
             'nama_barang' => 'required|string|max:255',
             'alamat_asal' => 'required|string|max:255',
             'alamat_tujuan' => 'required|string|max:255',
+            'jarak' => 'nullable|numeric|max:255',
             'penerima' => 'required|string|max:255',
             'metode_pengiriman' => 'required|string|max:255',
             'biaya_pengiriman' => 'nullable|string|max:255',
+            'nilai' => 'nullable|string|max:255',
+            'ulasan' => 'nullable|string|max:255',
             'tanggal_order' => 'nullable|date|before_or_equal:now',
-            // 'tanggal_order' => 'nullable|date',
         ]);
 
         $id_pelanggan = Pelanggan::where('user_id', $request->id_user)->first('id');
@@ -79,19 +83,15 @@ class InputController extends Controller
             'penerima' => $request->penerima,
             'metode_pengiriman' => $request->metode_pengiriman,
             'biaya_pengiriman' => $request->biaya_pengiriman,
+            'nilai' => $request->nilai,
+            'jarak' => $request->jarak,
+            'ulasan' => $request->ulasan,
             'tanggal_order' => now()->format('Y-m-d H:i:s'),
             'id_pelanggan' =>$id_pelanggan ->id,
         ]);
     
         // return redirect()->route('input.index')->with('success', 'Input Order berhasil ditambahkan.');
         return response()->json(['message' => 'data berhasil ditambahkan', 'data' => $Input]);
-
-        // $input = Input::create($request->all());
-
-        // return response()->json([
-        //     'message' => 'Pesanan berhasil disimpan',
-        //     'data' => $input
-        // ], 201);
     }
 
     // Optional: Menampilkan 1 data  input tertentu
@@ -104,7 +104,10 @@ class InputController extends Controller
             'alamat_tujuan' => $Input->alamat_tujuan,
             'penerima' => $Input->penerima,
             'metode_pengiriman' => $Input->metode_pengiriman,
+            'jarak' => $Input->jarak,
             'biaya_pengiriman' => $Input->biaya_pengiriman,
+            'nilai' => $Input->nilai,
+            'ulasan' => $Input->ulasan,
             // 'status' => $Input->status,
         ]);
     }
@@ -115,6 +118,7 @@ class InputController extends Controller
     $request->validate([
         'status' => 'required|string',
         'berat_paket' => 'required|numeric|min:1',
+        'jarak' => 'required|numeric|min:1',
         'biaya_pengiriman' => 'required|numeric|min:0',
     ]);
 
@@ -152,9 +156,9 @@ class InputController extends Controller
 
 
     // Update kolom waktu dengan status baru dan timestamp
-    // $waktuLama = $transaksi->waktu ?? '';
-    // $transaksi->penilaian = $request->penilaian;
-    // $transaksi->komentar = $request->komentar;
+    // $waktuLama = $input->waktu ?? '';
+    $input->nilai = $request->nilai;
+    $input->ulasan = $request->ulasan;
     
     $waktuBaru = now()->format('d-m-Y H:i:s');
     $statusString = $request->status . ' (' . $waktuBaru . ')';
@@ -172,10 +176,14 @@ class InputController extends Controller
             $input->tanggal_penerimaan = now();
             break;
     }
+
+    
     
     $input->update([
         'status' => $request->status,
         'berat_barang' => $request->berat_barang,
+        'biaya_pengiriman' => $request->biaya_pengiriman,
+        'jarak' => $request->jarak,
         'biaya' => $request->biaya,
         'kurir_id' => $request->kurir_id,
         // 'kurir_id' => $request->kurir->kurir_id,
@@ -189,37 +197,49 @@ class InputController extends Controller
     ]);
 }
 
-
-    // public function update(Request $request, $id)
+    // public function updatePenilaian(Request $request, $id)
     // {
     //     $request->validate([
-    //         'status' => 'required|in:dikirim,selesai,dalam proses,dibatalkan,pengambilan paket, menunggu',
+    //         'nilai' => 'nullable|string',
+    //         'ulasan' => 'nullable|string',
     //     ]);
 
     //     $input = Input::findOrFail($id);
-    //     $input->update(['status' => $request->status]);
-
-    //     return response()->json([
-    //         'message' => 'Status pesanan diperbarui',
-    //         'data' => $input
-    //     ]);
+    //     $input->nilai = $request->nilai;
+    //     $input->ulasan = $request->ulasan;
+    //     $input->save();
+        
+    //     return response()->json(['message' => 'Penilaian disimpan.']);
     // }
     public function get()
     {
         return response()->json([
             'success' => true,
-            'data' => Input::select('nama_barang', 'alamat_asal', 'alamat_tujuan', 'penerima', 'metode_pembayaran', 'biaya_pengiriman', 'status')->get()
+            'data' => Input::select('nama_barang', 'alamat_asal', 'alamat_tujuan', 'penerima', 'jarak' ,'metode_pembayaran', 'biaya_pengiriman', 'status')->get()
         ]);
     }
+
+    public function storePenilaian(Request $request)
+{
+    $request->validate([
+        'id' => 'nullable|integer|exists:inputorder,id', 
+        'nilai' => 'nullable|string',
+        'ulasan' => 'nullable|string',
+    ]);
+
+    $input = Input::find($request->id);
+    if (!$input) {
+        return response()->json(['message' => 'Input tidak ditemukan'], 404);
+    }
+
+    $input->nilai = $request->nilai;
+    $input->ulasan = $request->ulasan;
+    $input->save();
+
+    return response()->json(['message' => 'Penilaian disimpan.']);
+}
 public function destroy(Input $input)
 {
-
-    // Hapus data user yang terkait
-    // if ($input->user) {
-    //     $input->user->delete();
-    // }
-
-    // Hapus data kurir
     $input->delete();
 
     return response()->json([

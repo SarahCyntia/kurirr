@@ -24,10 +24,7 @@ const columns = [
     column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
     column.accessor("penerima", { header: "Penerima" }),
     column.accessor("metode_pengiriman", { header: "Metode Pengiriman" }),
-    column.accessor("berat_paket", { header: "Berat " }),
-    column.accessor("biaya_pengiriman", { header: "Biaya Pengiriman" }),
     column.accessor("tanggal_order", { header: "Tanggal Order" }),
-    // column.accessor("status", { header: "Status" }),
     column.accessor("status", {
         header: "Status",
         cell: (cell) => {
@@ -61,21 +58,6 @@ const columns = [
             return h("span", { class: `badge ${badgeClass}` }, label);
         },
     }),
-//    column.accessor("id", {
-//     header: "Aksi",
-//     cell: (cell) =>
-//         h("div", { class: "d-flex gap-2" }, [
-//             h(
-//                 "button",
-//                 {
-//                     class: "btn btn-sm btn-icon btn-danger", // Ganti warna jadi warning
-//                     onClick: () => cancelInput(`input/${cell.getValue()}`), // Fungsi dibatalkan
-//                 },
-//                 h("i", { class: "bi bi-x-circle" }) // Ganti ikon jadi cancel
-//             ),
-//         ]),
-// }),
-
 ];
 
 const refresh = () => paginateRef.value.refetch();
@@ -113,22 +95,12 @@ watch(openForm, (val) => {
             <!-- Tanpa spasi -->
         </div>
     </div>
-    <!-- <button
-        type="button"
-        class="btn btn-sm btn-primary ms-auto"
-        v-if="!openForm"
-        @click="$router.push('/dashboard')"
-    >
-        Kembali
-    </button> -->
 </template>
 
 <style>
-
 .btn {
   margin-top: 3rem;
   padding-right: 5rem;
   padding-left: 5rem;
 }
-  
 </style>
