@@ -1,3 +1,3 @@
 <template>
-  halo
+    halo
 </template>

@@ -1,104 +1,106 @@
-<template>
-  <div class="order-app">
-    <h2>Daftar Pesanan</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nama Kurir</th>
-          <th>Nama Pelanggan</th>
-          <th>Nama Toko</th>
-          <th>Produk</th>
-          <th>Total Harga</th>
-          <th>Pengirim</th>
-          <th>Penerima</th>
-          <th>Alamat</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="order in orders" :key="order.id">
-          <td>{{ order.id }}</td>
-          <td>{{ order.kurirId }}</td>
-          <td>{{ order.namaPelanggan }}</td>
-          <td>{{ order.namaToko }}</td>
-          <td>{{ order.produk }}</td>
-          <td>Rp {{ order.totalHarga.toLocaleString() }}</td>
-          <td>{{ order.pengirim }}</td>
-          <td>{{ order.penerima }}</td>
-          <td>{{ order.alamat }}</td>
-          <td>{{ order.status }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</template>
+<script setup lang="ts">
+import { h, ref, watch, onMounted } from "vue";
+import { useDelete } from "@/libs/hooks";
+import Form from "./Form.vue";
+import { createColumnHelper } from "@tanstack/vue-table";
+import type { Input } from "@/types";
+import axios from "axios"; // Pastikan axios sudah terinstall
 
-<script setup>
-import { ref } from 'vue'
+const column = createColumnHelper<Input>();
+const paginateRef = ref<any>(null);
+const selected = ref<string>("");
+const openForm = ref<boolean>(false);
+const inputData = ref<Input | null>(null); // Data  input yang terkait dengan user login
 
-const orders = ref([])
-let orderCounter = 1
+const { delete: deleteInput } = useDelete({
+    // Ganti `delete.input` jadi `deleteInput`
+    onSuccess: () => paginateRef.value.refetch(),
+});
 
-const form = ref({
-  namaPelanggan: '',
-  namaToko: '',
-  produk: '',
-  totalHarga: '',
-  alamat: '',
-})
+const columns = [
+    column.accessor("no", { header: "No" }),
+    column.accessor("nama_pengirim", { header: "Nama Pengirim" }),
+    column.accessor("no.telp", { header: "No. Telp" }),
+    column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
+    column.accessor("penerima", { header: "Penerima" }),
+    column.accessor("metode_pengiriman", { header: "Metode Pengiriman" }),
+    column.accessor("tanggal_order", { header: "Tanggal Order" }),
+    column.accessor("status", {
+        header: "Status",
+        cell: (cell) => {
+            const status = cell.getValue();
+            const badgeClass =
+                status === "menunggu"
+                    ? "bg-success"
+                    : status === "dalam proses"
+                    ? "bg-warning"
+                    : status === "pengambilan paket"
+                    ? "bg-danger"
+                    : status === "dikirim"
+                    ? "bg-primary"
+                    : status === "selesai"
+                    ? "bg-info"
+                    : "bg-secondary"; // default kalau selain itu
 
-// Simulasi pelanggan kirim pesanan
-const submitOrder = () => {
-  orders.value.push({
-    id: `ORD${String(orderCounter++).padStart(3, '0')}`,
-    namaPelanggan: form.value.namaPelanggan,
-    namaToko: form.value.namaToko,
-    produk: form.value.produk,
-    totalHarga: Number(form.value.totalHarga),
-    alamat: form.value.alamat,
-    status: 'Dalam Proses', // default awal
-  })
+            const label =
+                status === "menunggu"
+                    ? "Menunggu"
+                    : status === "pengambilan paket"
+                    ? "Pengambilan Paket"
+                    : status === "dalam proses"
+                    ? "Dalam Proses"
+                    : status === "dikirim"
+                    ? "Dikirim"
+                    : status === "selesai"
+                    ? "Selesai"
+                    : "Dibatalkan";
 
-  // Reset form
-  form.value = {
-    namaPelanggan: '',
-    namaToko: '',
-    produk: '',
-    totalHarga: '',
-    alamat: '',
-  }
-}
+            return h("span", { class: `badge ${badgeClass}` }, label);
+        },
+    }),
+];
+
+const refresh = () => paginateRef.value.refetch();
+
+watch(openForm, (val) => {
+    if (!val) {
+        selected.value = "";
+    }
+    window.scrollTo(0, 0);
+});
 </script>
 
-<style scoped>
-.order-app {
-  padding: 20px;
-  font-family: Arial;
-}
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 20px;
-  max-width: 400px;
-}
-input {
-  padding: 6px;
-}
-button {
-  padding: 8px;
-  background: #3498db;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
+<template>
+    <Form
+        :selected="selected"
+        @close="openForm = false"
+        v-if="openForm"
+        @refresh="refresh"
+    />
+
+    <div class="card">
+        <div class="card-header align-items-center">
+            <h2 class="mb-0">List Input Order</h2>
+            <button type="button" class="btn btn-sm btn-primary ms-auto" v-if="!openForm" @click="openForm = true">
+              Tambah
+              <i class="la la-plus"></i>
+          </button>
+        </div>
+        <div class="card-body">
+            <p v-if="inputData">Data input: {{ inputData }}</p>
+            <paginate ref="paginateRef" id="table-inputorder" url="/input?status=menunggu"
+                :columns="columns"/>
+                <!-- <paginate ref="paginateRef" id="table-transaksi" url="/trans?exclude_status=Terkirim"
+                :columns="columns"/> -->
+            <!-- Tanpa spasi -->
+        </div>
+    </div>
+</template>
+
+<style>
+.btn {
+  margin-top: 3rem;
+  padding-right: 5rem;
+  padding-left: 5rem;
 }
 </style>

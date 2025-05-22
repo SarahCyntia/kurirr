@@ -118,7 +118,13 @@ watch(openForm, (val) => {
     <div class="card-body">
         <!-- <paginate ref="paginateRef" id="table-inputorder" url="/input?status=selesai"
         :columns="columns"/> -->
-      <paginate ref="paginateRef" id="table-inputorder" url="/input" :columns="columns"></paginate>
+      <!-- <paginate ref="paginateRef" id="table-inputorder" url="/input" :columns="columns"></paginate> -->
+      <paginate
+                ref="paginateRef"
+                id="table-inputorder"
+                url="/input?exclude_status=selesai"
+                :columns="columns"
+            />
     </div>
   </div>
 </template>

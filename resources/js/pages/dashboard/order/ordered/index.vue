@@ -82,45 +82,72 @@ const columns = [
         },
     }),
 
-    column.accessor("id", {
-        header: "Aksi",
-        cell: (cell) =>
-            h("div", { class: "d-flex gap-2" }, [
-                h(
-                    "button",
-                    {
-                        class: "btn btn-sm btn-icon btn-info",
-                        onClick: () => {
-                            selected.value = cell.getValue();
-                            openForm.value = true;
-                        },
-                    },
-                    h("i", { class: "la la-pencil fs-2" })
-                ),
-                h(
-                    "button",
-                    {
-                        class: "btn btn-sm btn-icon btn-danger",
-                        onClick: () => showRincian(cell.row.original),
-                    },
-                    h("i", { class: "bi bi-building" })
-                    // "Lihat"
-                ),
-            ]),
-    }),
-    // column.display({
-    //     id: "rincian",
-    //     header: "Detail Input",
+    // column.accessor("id", {
+    //     header: "Aksi",
     //     cell: (cell) =>
-    //         h(
+    //         h("div", { class: "d-flex gap-2" }, [
+    //             h(
+    //                 "button",
+    //                 {
+    //                     class: "btn btn-sm btn-icon btn-info",
+    //                     onClick: () => {
+    //                         selected.value = cell.getValue();
+    //                         openForm.value = true;
+    //                     },
+    //                 },
+    //                 h("i", { class: "la la-pencil fs-2" })
+    //             ),
+    //             h(
+    //                 "button",
+    //                 {
+    //                     class: "btn btn-sm btn-icon btn-danger",
+    //                     onClick: () => showRincian(cell.row.original),
+    //                 },
+    //                 h("i", { class: "bi bi-building" })
+    //                 // "Lihat"
+    //             ),
+    //             h(
     //             "button",
     //             {
-    //                 class: "btn btn-sm btn-danger",
-    //                 onClick: () => showRincian(cell.row.original),
+    //                 class: "btn btn-sm btn-icon btn-info",
+    //                     onClick: () => {
+    //                         selected.value = cell.getValue();
+    //                         openForm.value = true;
+    //                     },
     //             },
-    //             "Lihat Detail"
+    //             "Ambil Order"
     //         ),
+    //         ]),
     // }),
+
+    column.accessor("id",{
+        header: "Order",
+        cell: (cell) =>
+            h(
+                "button",
+                {
+                    class: "btn btn-sm btn-info",
+                    onClick: () => {
+                        selected.value = cell.getValue();
+                        openForm.value = true;
+                    },
+                },
+                "Ambil Order"
+            ),
+    }),
+    column.display({
+        id: "rincian",
+        header: "Detail Input",
+        cell: (cell) =>
+            h(
+                "button",
+                {
+                    class: "btn btn-sm btn-danger",
+                    onClick: () => showRincian(cell.row.original),
+                },
+                "Lihat Detail"
+            ),
+    }),
 ];
 
 const refresh = () => paginateRef.value.refetch();

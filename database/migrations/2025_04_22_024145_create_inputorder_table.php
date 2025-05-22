@@ -18,7 +18,8 @@ return new class extends Migration
             $table->text('alamat_asal');
             $table->text('alamat_tujuan');
             $table->string('penerima');
-            $table->enum('metode_pengiriman'['pick-up', 'drop-off']);
+            $table->enum('metode_pengiriman',['pick-up', 'drop-off']);
+            // $table->enum('metode_pengiriman'['pick-up', 'drop-off']);
             $table->string('biaya_pengiriman');
             $table->string('berat_paket');
             $table->date('tanggal_order');

@@ -28,7 +28,7 @@ const routes: Array<RouteRecordRaw> = [
             {
                 path: "/dashboard",
                 name: "dashboard",
-                component: () => import("@/pages/dashboard/Index.vue"),
+                component: () => import("@/pages/dashboard/inde.vue"),
                 // meta: {
                 //     pageTitle: "Dashboard",
                 //     breadcrumbs: ["Dashboard"],

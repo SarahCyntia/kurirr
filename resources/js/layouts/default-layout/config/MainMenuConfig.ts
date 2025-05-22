@@ -99,7 +99,7 @@ const MainMenuConfig: Array<MenuItem> = [
                         keenthemesIcon: "bi bi-cart",
                     },
                     {
-                        heading: "Ordered",
+                        heading: "Orderan",
                         route: "/dashboard/order/ordered",
                         name: "ordered",
                         keenthemesIcon: "bi bi-cart",

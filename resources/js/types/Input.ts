@@ -4,7 +4,7 @@ export interface Input {
     alamat_asal: string
     alamat_tujuan: string
     penerima: string
-    berat_paket: string
+    berat_paket: number
     tanggal_order : Date
     tanggal_dikemas : Date
     tanggal_pengambilan : Date

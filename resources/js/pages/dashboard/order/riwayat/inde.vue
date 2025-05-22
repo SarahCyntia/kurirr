@@ -21,6 +21,7 @@ const showRincian = (data: Input) => {
     title: "Detail Riwayat",
 
     html: `
+    <div style="text-align: left;">
         <p><b>Berat Paket:</b> ${data.berat_paket || '-'}</p>
         <p><b>Jarak:</b> ${data.jarak || '-'}</p>
         <p><b>Metode Pengiriman:</b> ${data.metode_pengiriman}</p>

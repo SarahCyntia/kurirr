@@ -6,6 +6,7 @@ import axios from "@/libs/axios";
 import { toast } from "vue3-toastify";
 import type { Input } from "@/types";
 import ApiService from "@/core/services/ApiService";
+
 // import { useAuthStore } from "@/stores/auth";
 
 const props = defineProps({
@@ -24,23 +25,41 @@ const formRef = ref();
 
 // ✅ Validasi form menggunakan Yup
 const formSchema = Yup.object().shape({
-    nama_barang: Yup.string().required("Nama harus diisi"),
-    alamat_asal: Yup.string().nullable(),
-    alamat_tujuan: Yup.string().nullable(),
-    penerima: Yup.string().required("Nama penerima harus diisi"),
-    berat_paket: Yup.string().nullable(),
-    biaya_pengiriman: Yup.string().nullable(),
-    metode_pengiriman: Yup.string().nullable(),
-    jarak: Yup.number()
-  .transform((value, originalValue) =>
-    String(originalValue).trim() === "" ? null : Number(originalValue)
-  )
-  .when("metode_pengiriman", {
-    is: "pick-up",
-    then: (schema) => schema.required("Jarak harus diisi").min(1, "Minimal 1 km").nullable(),
-    otherwise: (schema) => schema.notRequired().nullable(),
-  }),
+  nama_barang: Yup.string().required("Nama harus diisi"),
+  alamat_asal: Yup.string().nullable(),
+  alamat_tujuan: Yup.string().nullable(),
+  penerima: Yup.string().required("Nama penerima harus diisi"),
+
+  berat_paket: Yup.number()
+    .transform((value, originalValue) =>
+      String(originalValue).trim() === "" ? undefined : Number(originalValue)
+    )
+    .when("metode_pengiriman", {
+      is: "drop-off",
+      then: (schema) => schema.min(1, "Minimal 1 kg").nullable(),
+      otherwise: (schema) => schema.notRequired().nullable(),
+    }),
+
+  biaya_pengiriman: Yup.number()
+    .transform((value, originalValue) =>
+      String(originalValue).trim() === "" ? undefined : Number(originalValue)
+    )
+    .nullable(),
+
+  metode_pengiriman: Yup.string().nullable(),
+
+  jarak: Yup.number()
+    .transform((value, originalValue) =>
+      String(originalValue).trim() === "" ? undefined : Number(originalValue)
+    )
+    .when("metode_pengiriman", {
+      is: "pick-up",
+      then: (schema) => schema.min(1, "Minimal 1 km").nullable(),
+      otherwise: (schema) => schema.notRequired().nullable(),
+    }),
 });
+
+
 // ✅ Mendapatkan data Input untuk edit
 function getEdit() {
     block(document.getElementById("form-Input"));
@@ -120,6 +139,40 @@ onMounted(() => {
     }
 });
 
+// Hitung biaya pengiriman berdasarkan jarak (pick-up)
+watch(() => Input.value.jarak, (newVal) => {
+  if (Input.value.metode_pengiriman === "pick-up" && newVal != null) {
+    const biayaPerKm = 10000;
+    Input.value.biaya_pengiriman = Number(newVal) * biayaPerKm;
+  }
+});
+
+// Hitung biaya pengiriman berdasarkan berat (drop-off)
+watch(() => Input.value.berat_paket, (newVal) => {
+  if (Input.value.metode_pengiriman === "drop-off" && newVal != null) {
+    const biayaPerKg = 10000;
+    Input.value.biaya_pengiriman = Number(newVal) * biayaPerKg;
+  }
+});
+
+// Pantau perubahan metode pengiriman
+watch(() => Input.value.metode_pengiriman, (newMethod) => {
+  if (!props.selected) {
+    Input.value.biaya_pengiriman = null; // Reset biaya jika metode berubah
+  }
+
+  // Reset jarak jika bukan pick-up
+  if (newMethod !== "pick-up") {
+    Input.value.jarak = null;
+  }
+
+  // Reset berat jika bukan drop-off
+  if (newMethod !== "drop-off") {
+    Input.value.berat_paket = null;
+  }
+});
+
+
 // ✅ Pantau perubahan selected (Edit Mode)
 watch(
     () => props.selected,
@@ -130,35 +183,6 @@ watch(
         }
     }
 );
-watch(() => Input.value.jarak, (newVal) => {
-  if (Input.value.metode_pengiriman === "pick-up" && newVal != null) {
-    // Biaya pengiriman per km, misalnya Rp10.000 per km
-    const biayaPerKm = 7000;
-    Input.value.biaya_pengiriman = newVal * biayaPerKm;
-  }
-});
-watch(() => Input.value.berat_paket, (newVal) => {
-  if (Input.value.metode_pengiriman === "drop-off" && newVal != null) {
-    // Biaya pengiriman per km, misalnya Rp10.000 per km
-    const biayaPerKm = 7000;
-    Input.value.biaya_pengiriman = newVal * biayaPerKm;
-  }
-});
-
-// // Reset biaya_pengiriman jika metode berubah
-// watch(() => Input.value.metode_pengiriman, (newMethod) => {
-//   if ((newMethod === "drop-off" || newMethod === "pick-up") && !props.selected) {
-//     Input.value.biaya_pengiriman = null; // Reset biaya pengiriman
-//   }
-// });
-
-// // Pastikan jarak terisi saat pick-up
-// watch(() => Input.value.metode_pengiriman, (newMethod) => {
-//   if (newMethod !== "pick-up") {
-//     Input.value.jarak = null; // Reset jarak jika bukan pick-up
-//   }
-// });
-
 // watch(
 //     () => Input.value.metode_pengiriman,
 //     () => {
@@ -171,16 +195,11 @@ watch(() => Input.value.berat_paket, (newVal) => {
 //     }
 // );
 
-watch(() => Input.metode_pengiriman, (newVal) => {
-  if (newVal === "drop-off") {
-    Input.jarak = "";
-  }
-});
-watch(() => Input.metode_pengiriman, (newVal) => {
-  if (newVal === "pick-up") {
-    Input.berat_paket = "";
-  }
-});
+// watch(() => Input.metode_pengiriman, (newVal) => {
+//   if (newVal === "pick-up") {
+//     Input.berat_paket = "";
+//   }
+// });
 
 
 </script>

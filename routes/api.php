@@ -20,6 +20,7 @@ use App\Http\Controllers\AkunController;
 use App\Http\Controllers\InputController;
 use App\Http\Controllers\OrderedController;
 use App\Models\Input;
+use App\Http\Controllers\LaporanKurirController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,16 +66,7 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
                 ->except(['index', 'store']);
         });
 
-
     });
-    // Route::middleware('can:d_pengguna')->group(function () {
-    //     Route::get('d_pengguna', [D_penggunaController::class, 'get'])->withoutMiddleware('can:kurir');
-    //     Route::post('d_pengguna', [D_penggunaController::class, 'index']);
-    //     Route::post('d_pengguna/store', [D_penggunaController::class, 'store']);
-    //     Route::get('/d_pengguna/{uuid}', [D_penggunaController::class, 'show']);
-    //     Route::put('/d_pengguna/{uuid}', [D_penggunaController::class, 'update']);
-    //     Route::delete('/d_pengguna/{uuid}', [D_penggunaController::class, 'destroy']);
-    // });
 
     Route::middleware('can:kurir')->group(function () {
         Route::get('kurir', [KurirController::class, 'get'])->withoutMiddleware('can:kurir');
@@ -136,16 +128,15 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
             ->except(['index', 'store']);
     });
 
-
-    // Route::post('/Pelanggans/store', [PelangganController::class, 'store']);
-    // Route::apiResource('ratings', RatingController::class);
-
     Route::apiResource('pengiriman', PengirimanController::class);
     Route::put('pengiriman/{id}/terkirim', [PengirimanController::class, 'setTerkirim']);
     Route::put('pengiriman/{id}/dalam-perjalanan', [PengirimanController::class, 'setDalamPerjalanan']);
 
     // Route::middleware('auth:sanctum')->get('/kurirs/by-user', [AkunController::class, 'byUser']);
 // Route::middleware('auth:sanctum')->put('/kurirs/by-user', [AkunController::class, 'updateByUser']);
+
+Route::middleware('auth:sanctum')->get('/laporan-kurir', [LaporanKurirController::class, 'index']);
+        Route::get('/ordered', [LaporanKurirController::class, 'get'])->withoutMiddleware('can:ordered');
 
 
 
