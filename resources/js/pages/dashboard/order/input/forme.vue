@@ -8,48 +8,12 @@ import type { Input } from "@/types";
 import ApiService from "@/core/services/ApiService";
 import { useAuthStore } from "@/stores/auth";
 
-const provinces = ref([]);
-const cities = ref([]);
-const selectedProvince = ref("");
-const selectedCity = ref("");
-
-const asal = ref('')
-const tujuan = ref('')
-const allCities = ref([])
-const filteredKotaAsal = ref([])
-const filteredKotaTujuan = ref([])
-
-// Ambil kota di Jawa Timur (id provinsi 11)
-onMounted(async () => {
-  const res = await axios.get('/api/rajaongkir/cities?province_id=11')
-  allCities.value = res.data
-})
-
-function searchKota(type) {
-  const keyword = (type === 'asal' ? asal.value : tujuan.value).toLowerCase()
-  const filtered = allCities.value.filter(kota =>
-    kota.city_name.toLowerCase().startsWith(keyword)
-  )
-
-  if (type === 'asal') {
-    filteredKotaAsal.value = filtered
-  } else {
-    filteredKotaTujuan.value = filtered
-  }
-}
-
-function selectKota(type, kota) {
-  const namaKota = ${kota.type} ${kota.city_name}
-  if (type === 'asal') {
-    asal.value = namaKota
-    filteredKotaAsal.value = []
-  } else {
-    tujuan.value = namaKota
-    filteredKotaTujuan.value = []
-  }
-}
-
-
+const props = defineProps({
+    selected: {
+        type: String,
+        default: null,
+    },
+});
 
 const emit = defineEmits(["close", "refresh"]);
 
@@ -142,26 +106,6 @@ function submit() {
         });
 }
 
-onMounted(async () => {
-    const { data } = await axios.get("/rajaongkir/provinces");
-    provinces.value = data;
-});
-
-watch(selectedProvince, async (provId) => {
-    if (!provId) return;
-    const { data } = await axios.get("/rajaongkir/cities", {
-        params: { province_id: provId },
-    });
-    cities.value = data;
-});
-
-const props = defineProps({
-    selected: {
-        type: String,
-        default: null,
-    },
-});
-
 // ✅ Ambil data saat component dipasang
 onMounted(() => {
     if (props.selected) {
@@ -202,35 +146,6 @@ watch(
 
         <div class="card-body">
             <div class="row">
-              <div>
-    <label for="asal">Alamat Asal</label>
-    <input
-      id="asal"
-      v-model="asal"
-      @input="searchKota('asal')"
-      class="form-control"
-      autocomplete="off"
-    />
-    <ul v-if="filteredKotaAsal.length && asal">
-      <li v-for="kota in filteredKotaAsal" :key="kota.city_id" @click="selectKota('asal', kota)">
-        {{ kota.type }} {{ kota.city_name }}
-      </li>
-    </ul>
-
-    <label for="tujuan" class="mt-3">Alamat Tujuan</label>
-    <input
-      id="tujuan"
-      v-model="tujuan"
-      @input="searchKota('tujuan')"
-      class="form-control"
-      autocomplete="off"
-    />
-    <ul v-if="filteredKotaTujuan.length && tujuan">
-      <li v-for="kota in filteredKotaTujuan" :key="kota.city_id" @click="selectKota('tujuan', kota)">
-        {{ kota.type }} {{ kota.city_name }}
-      </li>
-    </ul>
-  </div>
                 <div class="col-md-6">
                     <div class="fv-row mb-7">
                         <label class="form-label fw-bold fs-6"
@@ -307,55 +222,14 @@ watch(
                             name="metode_pengiriman"
                             v-model="Input.metode_pengiriman"
                         >
-                            <option value="pick-up">
-                                Pick-up (kurir jemput)
-                            </option>
-                            <option value="drop-off">
-                                Drop-off (pelanggan antar)
-                            </option>
+                            <option value="pick-up">Pick-up (kurir jemput)</option>
+                            <option value="drop-off">Drop-off (pelanggan antar)</option>
                         </Field>
                         <ErrorMessage
                             name="metode_pengiriman"
                             class="text-danger"
                         />
                     </div>
-                </div>
-
-                <div class="col-md-6 mb-7">
-                    <label class="form-label required fw-bold"
-                        >Provinsi Asal</label
-                    >
-                    <select v-model="selectedProvince" class="form-control">
-                        <option disabled value="">Pilih Provinsi</option>
-                        <option
-                            v-for="prov in provinces"
-                            :key="prov.province_id"
-                            :value="prov.province_id"
-                        >
-                            {{ prov.province }}
-                        </option>
-                    </select>
-                </div>
-
-                <div class="col-md-6 mb-7">
-                    <label class="form-label required fw-bold">Kota Asal</label>
-                    <select
-                        v-model="transaksi.alamat_asal"
-                        class="form-control"
-                    >
-                        <option disabled value="">Pilih Kota</option>
-                        <option
-                            v-for="city in cities"
-                            :key="city.city_id"
-                            :value="city.city_name"
-                        >
-                            {{ city.city_name }}
-                        </option>
-                    </select>
-                    <ErrorMessage
-                        name="alamat_asal"
-                        class="text-danger small"
-                    />
                 </div>
             </div>
         </div>
@@ -367,22 +241,3 @@ watch(
         </div>
     </VForm>
 </template>
-
-<style scoped>
-ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border: 1px solid #ccc;
-  max-height: 150px;
-  overflow-y: auto;
-  background: #fff;
-}
-li {
-  padding: 8px;
-  cursor: pointer;
-}
-li:hover {
-  background: #f0f0f0;
-}
-</style>

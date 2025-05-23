@@ -349,8 +349,13 @@ watch(
                                 Pilih Jenis Layanan
                             </option>
                             <option value="JNE">JNE</option>
-                            <option value="POS">POS</option>
+                            <option value="NINA">NINA</option>
+                            <option value="JNT">JNT</option>
+                            <option value="SICEPAT">SICEPAT</option>
+                            <option value="SAP">SAP</option>
+                            <option value="IDE">IDE</option>
                             <option value="TIKI">TIKI</option>
+                            <option value="POS">POS</option>
                         </Field>
                         <ErrorMessage
                             name="jenis_layanan"
@@ -377,7 +382,7 @@ watch(
                 </div>
 
                 <div class="col-12">
-                    <label class="form-label fw-bold fs-6"></label>
+                    <label class="form-label fw-bold fs-6">No Resi</label>
                     <p class="form-control-plaintext">
                         {{
                             Input.no_resi ||
@@ -390,7 +395,7 @@ watch(
 
         <div class="card-footer d-flex">
             <button type="submit" class="btn btn-primary btn-sm ms-auto">
-                Dapatkan No. Resi
+                Simpan
             </button>
         </div>
     </VForm>

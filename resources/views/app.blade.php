@@ -52,6 +52,25 @@
     <span>Loading ...</span>
   </div> --}}
   <!--end::Loading markup-->
+  <!-- Bootstrap 4 -->
+
+
+  
+{{-- <link
+  rel="stylesheet"
+  href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+/>
+
+<!-- Select2 -->
+<link
+  href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css"
+  rel="stylesheet"
+/>
+<link
+  href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.3.2/dist/select2-bootstrap4.min.css"
+  rel="stylesheet"
+/> --}}
+
 
 </body>
 

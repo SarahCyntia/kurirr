@@ -6,7 +6,17 @@ import axios from "@/libs/axios";
 import { toast } from "vue3-toastify";
 import type { Input } from "@/types";
 import ApiService from "@/core/services/ApiService";
-// import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "@/stores/auth";
+import Swal from "sweetalert2";
+import { Field, ErrorMessage, Form as VForm } from "vee-validate";
+// import { ref  } from "vue";
+
+const formData = ref<{
+  riwayat_pengiriman: string[];
+  // ...field lain
+}>({
+  riwayat_pengiriman: [],
+});
 
 const props = defineProps({
     selected: {
@@ -17,47 +27,66 @@ const props = defineProps({
 
 const emit = defineEmits(["close", "refresh"]);
 
-const Input = ref<Input>({} as Input);
+const user = useAuthStore();
+
+const Input = ref({
+    riwayat_pengiriman: "",
+    status: "menunggu", // nilai default
+    id_user: user.user.id,
+});
 
 const photo = ref<any>([]);
 const formRef = ref();
 
 // ✅ Validasi form menggunakan Yup
 const formSchema = Yup.object().shape({
-    nama_barang: Yup.string().required("Nama harus diisi"),
-    alamat_asal: Yup.string().nullable(),
-    alamat_tujuan: Yup.string().nullable(),
-    penerima: Yup.string().required("Nama penerima harus diisi"),
-    berat_paket: Yup.string().nullable(),
-    biaya_pengiriman: Yup.string().nullable(),
-    metode_pengiriman: Yup.string().nullable(),
-    jarak: Yup.number()
-  .transform((value, originalValue) =>
-    String(originalValue).trim() === "" ? null : Number(originalValue)
-  )
-  .when("metode_pengiriman", {
-    is: "pick-up",
-    then: (schema) => schema.required("Jarak harus diisi").min(1, "Minimal 1 km").nullable(),
-    otherwise: (schema) => schema.notRequired().nullable(),
-  }),
+    riwayat_pengiriman: Yup.string().nullable("Riwayat harus diisi"),
+    status: Yup.string().nullable("Status harus diisi"),
 });
-// ✅ Mendapatkan data Input untuk edit
+
+const submitForm = async () => {
+    try {
+        const formData = new FormData();
+        formData.append("riwayat_pengiriman", Input.value.riwayat_pengiriman);
+        formData.append("status", Input.value.status);
+        formData.append("id_user", Input.value.id_user);
+        formData.append("_method", "PUT"); // Laravel butuh ini untuk method PUT
+
+        await axios.post(`/ordered/${props.selected}`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+
+        emit("refresh");
+        emit("close");
+
+        Swal.fire({
+            icon: "success",
+            title: "Berhasil!",
+            text: "Riwayat dan status berhasil diperbarui.",
+            timer: 2000,
+            showConfirmButton: false,
+        });
+    } catch (error: any) {
+        console.error(error);
+        Swal.fire("Gagal", error?.response?.data?.message || "Terjadi kesalahan", "error");
+    }
+};
+
+
+// ✅ Mendapatkan data  Input untuk edit
 function getEdit() {
     block(document.getElementById("form-Input"));
-    ApiService.get("Ordered", props.selected)
+    ApiService.get("Input", props.selected)
         .then(({ data }) => {
             console.log(data);
             Input.value = {
-                nama_barang: data.nama_barang || "",
-                alamat_asal: data.alamat_asal || "",
-                alamat_tujuan: data.alamat_tujuan || "",
-                penerima: data.penerima || "",
-                berat_paket: data.berat_paket || "",
-                jarak: data.jarak|| "",
-                biaya_pengiriman: data.biaya_pengiriman || "1",
-                metode_pengiriman: data.metode_pengiriman || "",
-                status: data.status || "menunggu",
+                riwayat_pengiriman: data.riwayat_pengiriman || "",
+                status: data.status || "menunggu", // atau nilai default lainnya
+                id_user: user.user.id,
             };
+
             console.log(Input.value);
         })
         .catch((err: any) => {
@@ -71,47 +100,44 @@ function getEdit() {
 // ✅ Submit Form (Tambah/Update)
 function submit() {
     const formData = new FormData();
-    formData.append("nama_barang", Input.value.nama_barang);
-    formData.append("alamat_asal", Input.value.alamat_asal);
-    formData.append("alamat_tujuan", Input.value.alamat_tujuan);
-    formData.append("penerima", Input.value.penerima);
-    formData.append("berat_paket", Input.value.berat_paket);
-    formData.append("jarak", Input.value.jarak);
-    formData.append("biaya_pengiriman", Input.value.biaya_pengiriman);
-    formData.append("metode_pengiriman", Input.value.metode_pengiriman);
-    // formData.append("id_user",  Input.value.id_user);
-    formData.append("status", Input.value.status);
+    // const noResi = generateNoResi(); // ⬅️ Simpan no_resi di sini
 
+    formData.append("riwayat_pengiriman", Input.value.riwayat_pengiriman);
+    // formData.append("no_resi", noResi); // ⬅️ Gunakan noResi
+    formData.append('status', Input.value.status);
+    // formData.append("id_user", Input.value.id_user);
     if (props.selected) {
         formData.append("_method", "PUT");
-    } else {
-        // formData.append("tanggal_order", new Date().toISOString());
-        formData.append("status", "menunggu");
     }
 
     block(document.getElementById("form-Input"));
     axios({
         method: "post",
-        url: props.selected ? `/Ordered/${props.selected}` : "/Ordered/store",
+        url: props.selected ? `/input/${props.selected}` : "/input/store",
         data: formData,
         headers: {
             "Content-Type": "multipart/form-data",
         },
-    })
-        .then(() => {
-            emit("close");
-            emit("refresh");
-            toast.success("Data Input berhasil disimpan");
-            formRef.value.resetForm();
-        })
-        .catch((err: any) => {
-            formRef.value.setErrors(err.response.data.errors);
-            toast.error("Gagal menyimpan data" + err.response.data.message);
-        })
-        .finally(() => {
-            unblock(document.getElementById("form-Input"));
-        });
+    }).then(() => {
+    Swal.fire({
+        icon: "success",
+        title: "Berhasil Disimpan!",
+        confirmButtonText: "Oke",
+    });
+    emit("close");
+    emit("refresh");
+    formRef.value.resetForm();
+});
+
+
 }
+
+// function generateNoResi() {
+//     const prefix = "RESI";
+//     const timestamp = Date.now().toString(); // angka unik berdasarkan waktu
+//     const random = Math.floor(1000 + Math.random() * 9000); // angka acak 4 digit
+//     return `${prefix}-${timestamp}-${random}`;
+// }
 
 // ✅ Ambil data saat component dipasang
 onMounted(() => {
@@ -125,64 +151,10 @@ watch(
     () => props.selected,
     () => {
         if (props.selected) {
-            console.log("edit");
             getEdit();
         }
     }
 );
-watch(() => Input.value.jarak, (newVal) => {
-  if (Input.value.metode_pengiriman === "pick-up" && newVal != null) {
-    // Biaya pengiriman per km, misalnya Rp10.000 per km
-    const biayaPerKm = 7000;
-    Input.value.biaya_pengiriman = newVal * biayaPerKm;
-  }
-});
-watch(() => Input.value.berat_paket, (newVal) => {
-  if (Input.value.metode_pengiriman === "drop-off" && newVal != null) {
-    // Biaya pengiriman per km, misalnya Rp10.000 per km
-    const biayaPerKm = 7000;
-    Input.value.biaya_pengiriman = newVal * biayaPerKm;
-  }
-});
-
-// // Reset biaya_pengiriman jika metode berubah
-// watch(() => Input.value.metode_pengiriman, (newMethod) => {
-//   if ((newMethod === "drop-off" || newMethod === "pick-up") && !props.selected) {
-//     Input.value.biaya_pengiriman = null; // Reset biaya pengiriman
-//   }
-// });
-
-// // Pastikan jarak terisi saat pick-up
-// watch(() => Input.value.metode_pengiriman, (newMethod) => {
-//   if (newMethod !== "pick-up") {
-//     Input.value.jarak = null; // Reset jarak jika bukan pick-up
-//   }
-// });
-
-// watch(
-//     () => Input.value.metode_pengiriman,
-//     () => {
-//         if (
-//             Input.value.metode_pengiriman === "drop-off" &&
-//             Input.value.status === "pengambilan paket"
-//         ) {
-//             Input.value.status = "menunggu";
-//         }
-//     }
-// );
-
-watch(() => Input.metode_pengiriman, (newVal) => {
-  if (newVal === "drop-off") {
-    Input.jarak = "";
-  }
-});
-watch(() => Input.metode_pengiriman, (newVal) => {
-  if (newVal === "pick-up") {
-    Input.berat_paket = "";
-  }
-});
-
-
 </script>
 
 <template>
@@ -194,8 +166,9 @@ watch(() => Input.metode_pengiriman, (newVal) => {
         ref="formRef"
     >
         <div class="card-header align-items-center">
-            <!-- <h2 class="mb-0">{{ selected ? "Edit" : "Tambah" }}  Input</h2> -->
-            <h2 class="mb-0">{{ selected ? "Edit" : "Tambah" }} Order</h2>
+            <h2 class="mb-0">
+                {{ props.selected ? "Edit" : "Tambah" }} Orderan
+            </h2>
             <button
                 type="button"
                 class="btn btn-sm btn-light-danger ms-auto"
@@ -208,185 +181,47 @@ watch(() => Input.metode_pengiriman, (newVal) => {
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label class="form-label fw-bold fs-6"
-                            >Nama Barang</label
-                        >
-                        <Field
-                            class="form-control"
-                            type="text"
-                            name="nama_barang"
-                            v-model="Input.nama_barang"
-                            disabled
-                            placeholder="Masukkan Nama Barang"
-                        />
-                        <ErrorMessage name="nama_barang" class="text-danger" />
-                    </div>
-                </div>
-
-                <!-- Alamat -->
-                <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label class="form-label fw-bold fs-6"
-                            >Alamat Asal</label
-                        >
-                        <Field
-                            class="form-control"
-                            type="text"
-                            name="alamat_asal"
-                            v-model="Input.alamat_asal"
-                            disabled
-                            placeholder="Masukkan Alamat Asal"
-                        />
-                        <ErrorMessage name="alamat_asal" class="text-danger" />
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label class="form-label fw-bold fs-6"
-                            >Alamat Tujuan</label
-                        >
-                        <Field
-                            class="form-control"
-                            type="text"
-                            name="alamat_tujuan"
-                            v-model="Input.alamat_tujuan"
-                            disabled
-                            placeholder="Masukkan Alamat Tujuan"
-                        />
-                        <ErrorMessage
-                            name="alamat_tujuan"
-                            class="text-danger"
-                        />
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label class="form-label fw-bold fs-6">Penerima</label>
-                        <Field
-                            class="form-control"
-                            type="text"
-                            name="penerima"
-                            v-model="Input.penerima"
-                            disabled
-                            placeholder="Masukkan Nama Penerima"
-                        />
-                        <ErrorMessage name="penerima" class="text-danger" />
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label class="form-label fw-bold fs-6 required"
-                            >Metode Pengiriman</label
-                        >
-                        <Field
-                            as="select"
-                            class="form-control"
-                            name="metode_pengiriman"
-                            v-model="Input.metode_pengiriman"
-                            disabled
-                        >
-                            <option value="">Pilih Metode</option>
-                            <option value="pick-up">
-                                Pick Up (kurir jemput)
-                            </option>
-                            <option value="drop-off">
-                                Drop Off (pelanggan antar)
-                            </option>
-                        </Field>
-                        <ErrorMessage
-                            name="metode_pengiriman"
-                            class="text-danger"
-                        />
-                    </div>
-                </div>
-
-                <div
-                    class="col-md-6"
-                    v-if="Input.metode_pengiriman === 'drop-off'"
-                >
-                    <div class="fv-row mb-7">
-                        <label class="form-label fw-bold fs-6"
-                            >Berat Paket (kg)</label
-                        >
-                        <Field
-                            class="form-control"
-                            type="number"
-                            name="berat_paket"
-                            v-model="Input.berat_paket"
-                            placeholder="Masukkan Berat Paket"
-                        />
-                        <ErrorMessage name="berat_paket" class="text-danger" />
-                    </div>
-                </div>
-                <div
-                    class="col-md-6"
-                    v-if="Input.metode_pengiriman === 'pick-up'"
-                >
-                    <div class="fv-row mb-7">
-                        <label class="form-label fw-bold fs-6"
-                            >Jarak (km)</label
-                        >
-                        <Field
-                            class="form-control"
-                            type="number"
-                            name="jarak"
-                            v-model="Input.jarak"
-                            placeholder="Masukkan jarak pengiriman"
-                        />
-                        <ErrorMessage name="jarak" class="text-danger" />
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label class="form-label fw-bold fs-6"
-                            >Biaya Pengiriman</label
-                        >
-                        <Field
-                            class="form-control"
-                            type="number"
-                            name="biaya_pengiriman"
-                            v-model="Input.biaya_pengiriman"
-                            placeholder="Masukkan Biaya Pengiriman"
-                        />
-                        <ErrorMessage
-                            name="biaya_pengiriman"
-                            class="text-danger"
-                        />
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label class="form-label fw-bold fs-6 required"
-                            >Status</label
-                        >
-                        <Field
-                            as="select"
-                            class="form-control"
-                            name="status"
-                            v-model="Input.status"
-                        >
-                            <option value="menunggu">Menunggu</option>
-                            <option value="dalam proses" :disabled="Input.metode_pengiriman === 'pick-up'">Dalam Proses</option>
-                            <option
-                                value="pengambilan paket"
-                                :disabled="
-                                    Input.metode_pengiriman === 'drop-off'
-                                "
+                    <div class="col-md-6">
+                        <div class="fv-row mb-7">
+                            <label class="form-label fw-bold fs-6"
+                                >Riwayat Pengiriman</label
                             >
-                                Pengambilan Paket
-                            </option>
-                            <option value="dikirim">Dikirim</option>
-                            <option value="selesai">Selesai</option>
-                        </Field>
-                        <ErrorMessage name="status" class="text-danger" />
+                            <Field
+                                class="form-control"
+                                type="text"
+                                name="riwayat_pengiriman"
+                                v-model="Input.riwayat_pengiriman"
+                                placeholder="Masukkan Riwayat Pengiriman"
+                            />
+                            <ErrorMessage
+                                name="riwayat_pengiriman"
+                                class="text-danger"
+                            />
+                        </div>
+                        <div class="fv-row mb-7">
+                            <label class="form-label fw-bold fs-6 required"
+                                >Status</label
+                            >
+                            <Field
+                                as="select"
+                                class="form-control"
+                                name="status"
+                                v-model="Input.status"
+                            >
+                                <option value="menunggu">Menunggu</option>
+                                <option value="dalam proses">
+                                    Dalam Proses
+                                </option>
+                                <option value="dikirim">Dikirim</option>
+                                <option value="selesai">Selesai</option>
+                            </Field>
+                            <ErrorMessage name="status" class="text-danger" />
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
         <div class="card-footer d-flex">
             <button type="submit" class="btn btn-primary btn-sm ms-auto">
                 Simpan

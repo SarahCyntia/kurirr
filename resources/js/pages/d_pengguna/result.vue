@@ -1,70 +1,53 @@
-<script setup>
-import { ref } from 'vue';
-import { useRoute } from 'vue-router';
-
-const route = useRoute();
-
-const origin = route.query.origin || '';
-const destination = route.query.destination || '';
-const weight = route.query.weight || '';
-const selectedCouriers = route.query.couriers
-  ? route.query.couriers.split(',')
-  : [];
-
-const costs = ref([]);
-
-// Ambil dan parse data ongkir dari query param costs (JSON string)
-if (route.query.costs) {
-  try {
-    costs.value = JSON.parse(decodeURIComponent(route.query.costs));
-  } catch (e) {
-    costs.value = [];
-  }
-}
-
-function formatRupiah(number) {
-  return (
-    "Rp " +
-    number
-      .toString()
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-  );
-}
-</script>
-
 <template>
-  <div class="result-container">
+  <div class="container">
     <h1>Hasil Estimasi Ongkir</h1>
-    <p><strong>Kota Asal:</strong> {{ origin }}</p>
-    <p><strong>Kota Tujuan:</strong> {{ destination }}</p>
-    <p><strong>Berat Paket:</strong> {{ weight }} gram</p>
 
-    <div v-if="costs.length === 0" class="no-results">
-      Maaf, tidak ada data ongkir untuk rute ini.
+    <div v-if="costs.length > 0">
+      <div v-for="(item, index) in costs" :key="index" class="result-item">
+        <strong>{{ item.courier }}</strong>: {{ formatRupiah(item.price) }}
+      </div>
     </div>
-
-    <div v-for="cost in costs" :key="cost.courier" class="result-item">
-      <span>{{ cost.courier }}</span>
-      <span><strong>{{ formatRupiah(cost.price) }}</strong></span>
-    </div>
+    <p v-else>Tidak ada hasil untuk ditampilkan.</p>
   </div>
 </template>
 
+<script setup>
+import { ref, onMounted } from 'vue'
+
+const costs = ref([])
+
+onMounted(() => {
+  const data = localStorage.getItem('shippingResults')
+  if (data) {
+    try {
+      costs.value = JSON.parse(data)
+    } catch (e) {
+      console.error('Gagal parse data ongkir:', e)
+    }
+  }
+})
+
+function formatRupiah(number) {
+  return 'Rp ' + number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+</script>
+
 <style scoped>
-.result-container {
-  padding: 1rem;
-  max-width: 600px;
-  margin: 0 auto;
+.container {
+  padding: 2rem;
+  font-family: 'Poppins', sans-serif;
+  background-color: #f9f9f9;
+  min-height: 100vh;
+}
+h1 {
+  text-align: center;
+  margin-bottom: 2rem;
 }
 .result-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #ccc;
-}
-.no-results {
-  color: red;
-  font-style: italic;
-  margin-top: 1rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 </style>

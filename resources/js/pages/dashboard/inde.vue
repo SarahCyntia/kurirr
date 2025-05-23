@@ -1,241 +1,196 @@
 <template>
-    halo
-</template>
+  <div class="container-fluid mt-5">
+    <div class="row">
+      <!-- ORIGIN -->
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <!-- <h3>ORIGIN</h3> -->
+             <h5 class="card-title">🛫 Asal</h5>
+            <hr />
+            <div class="form-group">
+              <label>PROVINSI ASAL</label>
+              <select v-model="provinceOrigin" class="form-control" @change="fetchCities('origin')">
+                <option value="0">-- pilih provinsi asal --</option>
+                <option v-for="(name, id) in provinces" :key="id" :value="id">
+                  {{ name }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>KOTA ASAL</label>
+              <select v-model="cityOrigin" class="form-control">
+                <option value="">-- pilih kota asal --</option>
+                <option v-for="(name, id) in citiesOrigin" :key="id" :value="id">
+                  {{ name }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
 
-<!-- <template>
-  <div class="dashboard-container">
-    <h1 class="dashboard-title">📦 Laporan Kurir</h1>
+      <!-- DESTINATION -->
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <!-- <h3>DESTINATION</h3> -->
+             <h5 class="card-title">🛬 Tujuan</h5>
+            <hr />
+            <div class="form-group">
+              <label>PROVINSI TUJUAN</label>
+              <select v-model="provinceDestination" class="form-control" @change="fetchCities('destination')">
+                <option value="0">-- pilih provinsi tujuan --</option>
+                <option v-for="(name, id) in provinces" :key="id" :value="id">
+                  {{ name }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>KOTA TUJUAN</label>
+              <select v-model="cityDestination" class="form-control">
+                <option value="">-- pilih kota tujuan --</option>
+                <option v-for="(name, id) in citiesDestination" :key="id" :value="id">
+                  {{ name }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    Filter tanggal
-    <div class="filter-section">
-      <label>
-        Dari:
-        <input type="date" v-model="filter.startDate" />
-      </label>
-      <button @click="filterData" class="btn-primary">Cari</button>
+      <!-- COURIER & WEIGHT -->
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">🚚 Kurir</h5>
+            <!-- <h3>🚚 KURIR</h3> -->
+            <hr />
+            <div class="form-group">
+              <label>KURIR</label>
+              <select v-model="courier" class="form-control">
+                <option value="0">-- pilih kurir --</option>
+                <option value="jne">JNE</option>
+                <option value="pos">POS</option>
+                <option value="tiki">TIKI</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>BERAT (GRAM)</label>
+              <input type="number" v-model.number="weight" class="form-control" placeholder="Masukkan Berat (GRAM)" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BUTTON -->
+      <div class="col-md-3 d-flex align-items-center">
+        <button class="btn btn-primary btn-block" @click="checkOngkir" :disabled="isProcessing">
+          💵 CEK ONGKOS KIRI
+        </button>
+      </div>
     </div>
 
-    Ringkasan
-    <div class="summary-box">
-      <p><strong>Total Paket Diterima:</strong> {{ filteredReports.length }}</p>
+    <!-- HASIL -->
+    <div class="row mt-3" v-if="ongkirResults.length > 0">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-body">
+            <ul class="list-group">
+              <li class="list-group-item" v-for="(cost, index) in ongkirResults" :key="index">
+                <strong>{{ cost.service }}</strong> - Rp. {{ formatRupiah(cost.cost[0].value) }} ({{ cost.cost[0].etd }} hari)
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
-
-    Tabel laporan
-    <table class="report-table">
-      <thead>
-        <tr>
-          <th>Kurir</th>
-          <th>Tanggal Pengambilan</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="item in filteredReports" :key="item.resi">
-          <td>{{ item.kurir }}</td>
-          <td>{{ item.tanggal_pengambilan }}</td>
-          <td>{{ item.status }}</td>
-        </tr>
-      </tbody>
-    </table>
   </div>
 </template>
 
-<script lang="ts" setup>
-import { ref, computed } from 'vue'
+<script>
+import axios from "axios";
 
-import { onMounted } from 'vue'
-import axios from 'axios'
-
-interface Ordered {
-  kurir: string
-  tanggal_pengambilan: string
-  status: string
-}
-
-const report = ref<Ordered[]>([])
-
-onMounted(async () => {
-  try {
-    const response = await axios.get('/api/laporan-kurir', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
+export default {
+  name: "Ongkir",
+  data() {
+    return {
+      provinces: {},
+      provinceOrigin: "0",
+      cityOrigin: "",
+      citiesOrigin: {},
+      provinceDestination: "0",
+      cityDestination: "",
+      citiesDestination: {},
+      courier: "0",
+      weight: null,
+      ongkirResults: [],
+      isProcessing: false,
+    };
+  },
+  created() {
+    this.fetchProvinces();
+  },
+  methods: {
+    fetchProvinces() {
+      axios.get("/provinces").then((res) => {
+        this.provinces = res.data;
+      });
+    },
+    fetchCities(type) {
+      let provinceId = type === "origin" ? this.provinceOrigin : this.provinceDestination;
+      if (provinceId !== "0") {
+        axios.get(`/cities/${provinceId}`).then((res) => {
+          if (type === "origin") {
+            this.citiesOrigin = res.data;
+            this.cityOrigin = "";
+          } else {
+            this.citiesDestination = res.data;
+            this.cityDestination = "";
+          }
+        });
       }
-    })
-    report.value = response.data
-  } catch (error) {
-    console.error('Gagal mengambil data laporan kurir:', error)
-  }
-})
+    },
+    checkOngkir() {
+      if (
+        !this.cityOrigin ||
+        !this.cityDestination ||
+        this.courier === "0" ||
+        !this.weight
+      ) {
+        alert("Semua field harus diisi!");
+        return;
+      }
 
+      this.isProcessing = true;
 
-const userLogin = ref({
-  id: 3,
-  name: 'Andi',
-  role: 'kurir'
-})
-
-interface Ordered {
-  resi: string
-  kurir: string
-  tanggal_pengambilan: string
-  status: string
-}
-
-const reports = ref<Ordered[]>([
- 
-])
-
-const filter = ref({
-  startDate: '',
-  endDate: '',
-})
-
-const filteredReports = computed(() => {
-  const start = filter.value.startDate
-  const end = filter.value.endDate
-  return reports.value.filter((item) => {
-    if (item.kurir !== userLogin.value.name) return false
-    const date = item.tanggal_pengambilan
-    if (start && date < start) return false
-    if (end && date > end) return false
-    return true
-  })
-})
-
-const filterData = () => {
-}
+      axios
+        .post("/ongkir", {
+          city_origin: this.cityOrigin,
+          city_destination: this.cityDestination,
+          courier: this.courier,
+          weight: this.weight,
+        })
+        .then((res) => {
+          this.ongkirResults = res.data[0].costs || [];
+          this.isProcessing = false;
+        })
+        .catch((err) => {
+          console.error(err);
+          this.isProcessing = false;
+        });
+    },
+    formatRupiah(value) {
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+      }).format(value);
+    },
+  },
+};
 </script>
 
 <style scoped>
-.dashboard-container {
-  padding: 2rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f9fafe;
-  border-radius: 8px;
-  max-width: 900px;
-  margin: auto;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-}
-
-.dashboard-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-}
-
-.filter-section {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 1rem;
-  flex-wrap: wrap;
-}
-
-.filter-section label {
-  display: flex;
-  flex-direction: column;
-  font-size: 14px;
-  color: #444;
-}
-
-input[type="date"] {
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-.btn-primary {
-  background-color: #2563eb;
-  color: white;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.btn-primary:hover {
-  background-color: #1e40af;
-}
-
-.summary-box {
-  margin-top: 1rem;
-  background-color: #e2e8f0;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-weight: 500;
-}
-
-.report-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1.5rem;
-  background-color: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-.report-table th,
-.report-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  text-align: left;
-}
-
-.report-table thead {
-  background-color: #f1f5f9;
-  color: #111827;
-}
-
-.report-table tr:hover {
-  background-color: #f9fafb;
-}
-</style> -->
-
-
-<!-- <template>
-<main>
-    <div class="container-fluid px-4">
-        <h1 class="mt-4">Dashboard</h1>
-        <div class="row">
-            <div class="col-xl-3 col-md-6">
-                <div class="card bg-primary text-white mb-4">
-                    <div class="card-body">Primary Card</div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-white stretched-link" href="#">View Details</a>
-                        <div class="small text-white"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card bg-warning text-white mb-4">
-                    <div class="card-body">Warning Card</div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-white stretched-link" href="#">View Details</a>
-                        <div class="small text-white"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card bg-success text-white mb-4">
-                    <div class="card-body">Success Card</div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-white stretched-link" href="#">View Details</a>
-                        <div class="small text-white"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card bg-danger text-white mb-4">
-                    <div class="card-body">Danger Card</div>
-                    <div class="card-footer d-flex align-items-center justify-content-between">
-                        <a class="small text-white stretched-link" href="#">View Details</a>
-                        <div class="small text-white"><i class="fas fa-angle-right"></i></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</main>
-</template> -->
+/* Tambahkan gaya kustom jika perlu */
+</style>

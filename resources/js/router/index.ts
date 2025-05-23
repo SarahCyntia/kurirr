@@ -117,13 +117,13 @@ const routes: Array<RouteRecordRaw> = [
             //     },
             // },
             {
-                path: "/dashboard/transaksi",
-                name: "dashboard.transaksi",
-                component: () => import("@/pages/dashboard/transaksi/index.vue"),
-                meta: {
-                    pageTitle: "Transaksi",
-                    breadcrumbs: ["Transaksi"],
-                },
+                path: "/dashboard/cekresi",
+                name: "dashboard.cekresi",
+                component: () => import("@/pages/dashboard/cekresi/index.vue"),
+                // meta: {
+                //     pageTitle: "Transaksi",
+                //     breadcrumbs: ["Transaksi"],
+                // },
             },
             // {
             //     path: "/dashboard/master/users/roles",
@@ -202,6 +202,12 @@ const routes: Array<RouteRecordRaw> = [
                 name: "dashboard.order.riwayat",
                 component: () =>
                     import("@/pages/dashboard/order/riwayat/inde.vue"),
+            },
+            {
+                path: "/dashboard/orderan",
+                name: "dashboard.orderan",
+                component: () =>
+                    import("@/pages/dashboard/orderan/index.vue"),
             },
         ],
     },

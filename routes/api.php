@@ -21,6 +21,11 @@ use App\Http\Controllers\InputController;
 use App\Http\Controllers\OrderedController;
 use App\Models\Input;
 use App\Http\Controllers\LaporanKurirController;
+use App\Http\Controllers\RajaOngkirController;
+use App\Http\Controllers\CheckOngkirController;
+use App\Http\Controllers\ResiController;
+use App\Http\Controllers\OrderanController;
+use App\Http\Controllers\CekResiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -114,16 +119,22 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::put('/input', [InputController::class, 'update']);
         // Route::put('/input', [InputController::class, 'update'])->withoutMiddleware('can:input');
         Route::post('/input/stores', [InputController::class, 'storePenilaian']);
-        Route::apiResource('/Input', InputController::class)
-            ->except(['index', 'store']);
+        Route::get('/cetak-resi/{no_resi}', [inputController::class, 'cetakResi']);
+        // Route::apiResource('/Input', InputController::class)
+        //     ->except(['index', 'store']);
+        Route::get('/Input/{input}',[InputController::class,'show'])->withoutMiddleware('can:input');
     });
+
     Route::middleware('can:ordered')->group(function () {
         Route::get('/ordered', [OrderedController::class, 'get'])->withoutMiddleware('can:ordered');
         Route::post('/ordered', [OrderedController::class, 'index']);
         Route::post('/ordered/store', [OrderedController::class, 'store']);
         Route::get('/ordered/{Input}', [OrderedController::class, 'show']);
-        Route::put('/ordered', [OrderedController::class, 'update']);
-        // Route::put('/ordered', [OrderedController::class, 'update'])->withoutMiddleware('can:ordered');
+        // Route::put('/ordered', [OrderedController::class, 'update']);
+        Route::put('/input/{id}', [InputController::class, 'update']);
+    //     Route::get('/orders/all', [OrderedController::class, 'allOrders']);
+    //    Route::post('/orders/all', [OrderedController::class, 'allOrders']);
+        Route::put('/ordered', [OrderedController::class, 'update'])->withoutMiddleware('can:ordered');
         Route::apiResource('/Ordered', OrderedController::class)
             ->except(['index', 'store']);
     });
@@ -140,9 +151,36 @@ Route::middleware('auth:sanctum')->get('/laporan-kurir', [LaporanKurirController
 
 
 
+Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces']);
+Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
+
+Route::get('/ongkir', 'CheckOngkirController@index');
+Route::post('/ongkir', 'CheckOngkirController@check_ongkir');
+Route::get('/cities/{province_id}', 'CheckOngkirController@getCities');
+
+Route::get('/provinces', [CheckOngkirController::class, 'getProvinces']);
+    Route::get('/cities/{province_id}', [CheckOngkirController::class, 'getCities']);
+    Route::post('/ongkir', [CheckOngkirController::class, 'checkOngkir']);
 
 
+    Route::get('/cetak-resi/{noResi}', [ResiController::class, 'cetak']);
 
+
+    // Route::middleware('can:orderan')->group(function () {
+    //     Route::get('/orderan', [OrderanController::class, 'get'])->withoutMiddleware('can:orderan');
+    //     Route::post('/orderan', [OrderanController::class, 'index'])->withoutMiddleware('can:input');;
+    //     Route::post('/orderan/store', [OrderanController::class, 'store']);
+    //     Route::get('/orderan/{Input}', [OrderanController::class, 'show']);
+    //     Route::put('/orderan', [OrderanController::class, 'update']);
+    //     Route::put('/orderan', [OrderanController::class, 'update'])->withoutMiddleware('can:orderan');
+    //     Route::apiResource('/orderan', OrderanController::class)
+    //         ->except(['index', 'store']);
+    // });
+
+    
+
+Route::get('/cek-resi/{nomorResi}', [CekResiController::class, 'cekResi']);
+Route::get('/resi/{nomorResi}', [CekResiController::class, 'show']);
 
 
     // Route::middleware('can:kurir')->group(function () {

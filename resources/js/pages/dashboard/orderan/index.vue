@@ -1,4 +1,4 @@
-iy<script setup lang="ts">
+<script setup lang="ts">
 import { ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
 import Form from "./Form.vue";
@@ -30,55 +30,46 @@ const columns = [
     column.accessor("jenis_layanan", { header: "Jenis Layanan" }),
     column.accessor("berat_barang", { header: "Berat Barang" }),
     column.accessor("no_resi", { header: "No Resi" }),
-   column.accessor("status", {
+    column.accessor("status", {
         header: "Status",
-        cell: (cell) => {
-            const status = cell.getValue();
+        cell: ({ getValue }) => {
+            const status = getValue();
             const badgeClass =
-                status === "menunggu"
-                    ? "bg-success"
-                    : status === "dalam proses"
-                    ? "bg-warning"
-                    : status === "pengambilan paket"
-                    ? "bg-danger"
-                    : status === "dikirim"
-                    ? "bg-primary"
-                    : status === "selesai"
-                    ? "bg-info"
-                    : "bg-secondary"; // default kalau selain itu
+                {
+                    menunggu: "bg-success",
+                    "dalam proses": "bg-warning",
+                    "pengambilan paket": "bg-danger",
+                    dikirim: "bg-primary",
+                    selesai: "bg-info",
+                }[status] || "bg-secondary";
 
             const label =
-                status === "menunggu"
-                    ? "Menunggu"
-                    : status === "pengambilan paket"
-                    ? "Pengambilan Paket"
-                    : status === "dalam proses"
-                    ? "Dalam Proses"
-                    : status === "dikirim"
-                    ? "Dikirim"
-                    : status === "selesai"
-                    ? "Selesai"
-                    : "Dibatalkan";
+                {
+                    menunggu: "Menunggu",
+                    "dalam proses": "Dalam Proses",
+                    "pengambilan paket": "Pengambilan Paket",
+                    dikirim: "Dikirim",
+                    selesai: "Selesai",
+                }[status] || "Dibatalkan";
 
             return h("span", { class: `badge ${badgeClass}` }, label);
         },
     }),
-
-      column.display({
-    id: "aksi",
-    header: "Aksi",
-    cell: ({ row }) => {
-      const noResi = row.original.no_resi;
-      return h(
-        "button",
-        {
-          class: "btn btn-sm btn-info",
-          onClick: () => window.open(`/cetak-resi/${noResi}`, "_blank"),
-        },
-        "Cetak Struk"
-      );
-    },
-  }),
+      column.accessor("id",{
+        header: "Order",
+        cell: (cell) =>
+            h(
+                "button",
+                {
+                    class: "btn btn-sm btn-info",
+                    onClick: () => {
+                        selected.value = cell.getValue();
+                        openForm.value = true;
+                    },
+                },
+                "Ambil Order"
+            ),
+    }),
 
 ];
 
@@ -104,15 +95,7 @@ watch(openForm, (val) => {
     <!-- Card List -->
     <div class="card">
         <div class="card-header align-items-center">
-            <h2 class="mb-0">List Input Order</h2>
-            <button
-                type="button"
-                class="btn btn-sm btn-primary ms-auto"
-                v-if="!openForm"
-                @click="openForm = true"
-            >
-                Tambah <i class="la la-plus"></i>
-            </button>
+            <h2 class="mb-0">Orderan</h2>
         </div>
 
         <div class="card-body">

@@ -21,7 +21,7 @@ const columns = [
     column.accessor("no", { header: "No" }),
     column.accessor("nama_pengirim", { header: "Nama Pengirim" }),
     column.accessor("no.telp", { header: "No. Telp" }),
-    column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
+    column.accessor("nama_penerima", { header: "Nama Penerima" }),
     column.accessor("penerima", { header: "Penerima" }),
     column.accessor("metode_pengiriman", { header: "Metode Pengiriman" }),
     column.accessor("tanggal_order", { header: "Tanggal Order" }),

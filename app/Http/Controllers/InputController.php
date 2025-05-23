@@ -3,285 +3,219 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Province;
 use App\Models\Input;
-use App\Models\Pelanggan;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\Console\Input\Input as InputInput;
 
 class InputController extends Controller
 {
-    // Menampilkan semua data  input
+    public function getProvinces()
+    {
+        // $response = Http::withHeaders([
+        //     'key' => env('RAJAONGKIR_API_KEY'),
+        // ])->get('https://api.rajaongkir.com/starter/province');
 
-    // ✅ Middleware auth (jika hanya user login boleh akses)
+        // $provinces = collect($response['rajaongkir'])
+        //     ->pluck('province', 'province_id');
+        $provinces = Province::all()->pluck('name','id');
+
+        return response()->json($provinces);
+    }
+
+    public function getCities($provinceId)
+    {
+        $response = Http::withHeaders([
+            'key' => env('RAJAONGKIR_API_KEY'),
+        ])->get('https://api.rajaongkir.com/starter/city?province=' . $provinceId);
+
+        $cities = collect($response['rajaongkir'])
+            ->pluck('city_name', 'city_id');
+
+        return response()->json($cities);
+    }
+
+    public function hitungOngkir(Request $request)
+    {
+        $response = Http::withHeaders([
+            'key' => config('services.rajaongkir.key')
+        ])->post('https://api.rajaongkir.com/starter/cost', [
+            'origin' => $request->origin,
+            'destination' => $request->destination,
+            'weight' => $request->weight, // dalam gram
+            'courier' => $request->courier, // jne / tiki / pos
+        ]);
+
+        Log::info("Cost", $response['rajaongkir']);
+
+        $cost = $response['rajaongkir']['results'][0]['costs'];
+
+        return response()->json($cost);
+    }
+
+
     public function __construct()
     {
-        $this->middleware('auth'); // Hapus jika tidak pakai login
+        $this->middleware('auth');
     }
-    // Menyimpan pesanan baru dari  input
 
     public function index(Request $request)
     {
-        // Ambil parameter 'per' dari request, default 10 jika tidak ada
-        $per = $request->per ?? 10;
+        $per = $request->input('per', 10);
+        $page = $request->input('page', 1);
 
-        // Ambil parameter 'page', dikurangi 1 agar bisa digunakan untuk penomoran (offset)
-        $page = $request->page ? $request->page - 1 : 0;
+        DB::statement('SET @no := ' . (($page - 1) * $per));
 
-        // Inisialisasi variabel SQL untuk nomor urut
-        DB::statement('SET @no := ' . ($page * $per));
-
-        // Ambil data dari tabel Input dengan filter pencarian dan status jika ada
         $data = Input::when($request->search, function (Builder $query, string $search) {
-            // Jika parameter 'search' ada, filter berdasarkan kolom-kolom tertentu
-            $query->where('nama_barang', 'like', "%$search%")
-                ->orWhere('alamat_asal', 'like', "%$search%")
-                ->orWhere('alamat_tujuan', 'like', "%$search%")
-                ->orWhere('penerima', 'like', "%$search%")
-                ->orWhere('metode_pengiriman', 'like', "%$search%")
-                ->orWhere('biaya_pengiriman', 'like', "%$search%")
-                ->orWhere('tanggal_input', 'like', "%$search%")
-                ->orWhere('tanggal_penerimaan', 'like', "%$search%")
-                ->orWhere('nilai', 'like', "%$search%")
-                ->orWhere('ulasan', 'like', "%$search%")
-                ->orWhere('status', 'like', "%$search%");
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_pengirim', 'like', "%$search%")
+                    ->orWhere('alamat_pengirim', 'like', "%$search%")
+                    ->orWhere('no_telp_pengirim', 'like', "%$search%")
+                    ->orWhere('nama_penerima', 'like', "%$search%")
+                    ->orWhere('alamat_penerima', 'like', "%$search%")
+                    ->orWhere('no_telp_penerima', 'like', "%$search%")
+                    ->orWhere('jenis_barang', 'like', "%$search%")
+                    ->orWhere('ekspedisi', 'like', "%$search%")
+                    ->orWhere('jenis_layanan', 'like', "%$search%")
+                    ->orWhere('berat_barang', 'like', "%$search%");
+            });
         })
-            ->when($request->status, function ($query, $status) {
-                // Jika parameter 'status' ada, filter berdasarkan status tersebut
-                $query->where('status', $status);
-            })
-            ->when($request->has('exclude_status'), function ($query) use ($request) {
-                // Jika parameter 'exclude_status' ada, ambil data yang status-nya bukan nilai itu
-                $query->where('status', '!=', $request->exclude_status);
-            })
-            ->latest() // Urutkan berdasarkan kolom 'created_at' secara descending
-            ->paginate($per); // Paginasi berdasarkan nilai $per
+        // ->orderBy('created_at', 'desc')
+        // ->paginate($per);
+        ->latest()
+            
+            // Paginate hasil query
+            ->paginate($per);
 
-        // Tambahkan nomor urut manual berdasarkan halaman saat ini
         $no = ($data->currentPage() - 1) * $per + 1;
         foreach ($data as $item) {
             $item->no = $no++;
         }
 
-        // Kembalikan hasil sebagai JSON
         return response()->json($data);
     }
 
-    public function store(Request $request)
+    public function get($id)
     {
-        $Input = $request->validate([
-            'nama_barang' => 'required|string|max:255',
-            'alamat_asal' => 'required|string|max:255',
-            'alamat_tujuan' => 'required|string|max:255',
-            'jarak' => 'nullable|numeric|max:255',
-            'penerima' => 'required|string|max:255',
-            'metode_pengiriman' => 'required|string|max:255',
-            'biaya_pengiriman' => 'nullable|string|max:255',
-            'nilai' => 'nullable|string|max:255',
-            'ulasan' => 'nullable|string|max:255',
-            'tanggal_order' => 'nullable|date|before_or_equal:now',
-        ]);
+        $input = Input::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'pengguna'])
+            ->findOrFail($id);
 
-        $id_pelanggan = Pelanggan::where('user_id', $request->id_user)->first('id');
-        Log::info($id_pelanggan->id);
-        Input::create([
-            'nama_barang' => $request->nama_barang,
-            'alamat_asal' => $request->alamat_asal,
-            'alamat_tujuan' => $request->alamat_tujuan,
-            'penerima' => $request->penerima,
-            'metode_pengiriman' => $request->metode_pengiriman,
-            'biaya_pengiriman' => $request->biaya_pengiriman,
-            'nilai' => $request->nilai,
-            'jarak' => $request->jarak,
-            'ulasan' => $request->ulasan,
-            'tanggal_order' => now()->format('Y-m-d H:i:s'),
-            'id_pelanggan' => $id_pelanggan->id,
-        ]);
-
-        // return redirect()->route('input.index')->with('success', 'Input Order berhasil ditambahkan.');
-        return response()->json(['message' => 'data berhasil ditambahkan', 'data' => $Input]);
+        return response()->json($input);
     }
 
-    // Optional: Menampilkan 1 data  input tertentu
-    public function show(Input $Input)
+
+    public function store(Request $request, $id = null)
     {
-        // $data = Input::findOrFail($id);
-        return response()->json([
-            'nama_barang' => $Input->nama_barang,
-            'alamat_asal' => $Input->alamat_asal,
-            'alamat_tujuan' => $Input->alamat_tujuan,
-            'penerima' => $Input->penerima,
-            'metode_pengiriman' => $Input->metode_pengiriman,
-            'jarak' => $Input->jarak,
-            'biaya_pengiriman' => $Input->biaya_pengiriman,
-            'nilai' => $Input->nilai,
-            'ulasan' => $Input->ulasan,
-            // 'status' => $Input->status,
+        $validated = $request->validate([
+            'nama_pengirim' => 'required|string|max:255',
+            'tujuan_provinsi_id' => 'required|exists:provinces,id',
+            'tujuan_kota_id' => 'required|exists:cities,id',
+            'alamat_pengirim' => 'required|string|max:255',
+            'no_telp_pengirim' => 'required|string|max:20',
+
+            'nama_penerima' => 'required|string|max:255',
+            'asal_provinsi_id' => 'required|exists:provinces,id',
+            'asal_kota_id' => 'required|exists:cities,id',
+            'alamat_penerima' => 'required|string|max:255',
+            'no_telp_penerima' => 'required|string|max:20',
+            'jenis_barang' => 'required|string|max:255',
+            'ekspedisi' => 'required|string',
+            'jenis_layanan' => 'required|string|max:255',
+            'biaya' => 'required|integer',
+            'berat_barang' => 'required|numeric|min:1',
+
+            'waktu' => 'nullable|date',
+            'nilai' => 'nullable|integer|min:1|max:5',
+            'status' => 'required|in:menunggu,dalam proses,dikirim,selesai',
+            'ulasan' => 'nullable|string',
         ]);
-    }
 
-    // Optional: Update data status oleh kurir
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'status' => 'required|string',
-            'berat_paket' => 'required|numeric|min:1',
-            'jarak' => 'nullable|numeric|min:1',
-            'biaya_pengiriman' => 'required|numeric|min:0',
-        ]);
+        $input = $id ? Input::findOrFail($id) : new Input();
 
-        $input = Input::where('id', $id)->firstOrFail();
+        $input->fill($validated);
 
-        // if ($transaksi->kurir_id && $transaksi->status !== 'Terkirim') {
-        //     return response()->json([
-        //         'message' => 'Kurir sudah memiliki order yang sedang diproses.'
-        //     ], 400);
-        // }
-        $user = auth()->user();
-        $kurirId = $user->kurir->kurir_id ?? null;
+        $input = new Input($validated);
+        $input->no_resi = 'RESI-' . now()->timestamp . '-' . rand(1000, 9999);
+        $input->status = 'menunggu';
+        $input->save();
 
-        // Cegah kurir mengambil pesanan yang sudah diambil kurir lain
-        // if ($user->role === 'kurir') {
-        //     if ($transaksi->kurir_id && $transaksi->kurir_id != $kurirId) {
-        //         return response()->json([
-        //             'message' => 'Pesanan sudah diambil oleh kurir lain.'
-        //         ], 403);
-        //     }
-        // }
-
-        // $kurir = auth()->user()->kurir;
-
-        // // Cek apakah kurir sudah pegang 1 order yang belum selesai
-        // $masihAktif = Transaksi::where('kurir_id', $kurir->kurir_id)
-        //     ->whereIn('status', ['Penjemputan Barang', 'Sedang Dikirim']) // sesuaikan dengan status aktifmu
-        //     ->exists();
-
-        // if ($masihAktif) {
-        //     return response()->json([
-        //         'message' => 'Kurir hanya bisa mengambil 1 order dalam satu waktu.'
-        //     ], 404);
-        // }
-
-
-        // Update kolom waktu dengan status baru dan timestamp
-        // $waktuLama = $input->waktu ?? '';
-        $input->nilai = $request->nilai;
-        $input->ulasan = $request->ulasan;
-
-        // $waktuBaru = now()->format('d-m-Y H:i:s');
-        // $statusString = $request->status . ' (' . $waktuBaru . ')';
-        // switch ($request->status) {
-        //     case 'dalam proses':
-        //         $input->tanggal_dikemas = now();
-        //         break;
-        //     case 'pengambilan paket':
-        //         $input->tanggal_pengambilan = now();
-        //         break;
-        //     case 'dikirim':
-        //         $input->tanggal_dikirim = now();
-        //         break;
-        //     case 'selesai':
-        //         $input->tanggal_penerimaan = now();
-        //         break;
-        // }
-
-        // Ambil waktu saat ini dalam format 'hari-bulan-tahun jam:menit:detik'
-        $waktuBaru = now()->format('d-m-Y H:i:s');
-        // Gabungkan status permintaan dengan waktu sebagai string keterangan status
-        $statusString = $request->status . ' (' . $waktuBaru . ')';
-        // Cek status pengiriman yang dikirim dari request
-        switch ($request->status) {
-            // Jika status adalah 'dalam proses', set tanggal_dikemas dengan waktu saat ini
-            case 'dalam proses':
-                $input->tanggal_dikemas = now();
-                break;
-
-            // Jika status adalah 'pengambilan paket', set tanggal_pengambilan dengan waktu saat ini
-            case 'pengambilan paket':
-                $input->tanggal_pengambilan = now();
-                break;
-
-            // Jika status adalah 'dikirim', set tanggal_dikirim dengan waktu saat ini
-            case 'dikirim':
-                $input->tanggal_dikirim = now();
-                break;
-
-            // Jika status adalah 'selesai', set tanggal_penerimaan dengan waktu saat ini
-            case 'selesai':
-                $input->tanggal_penerimaan = now();
-                break;
+        if (!$id && empty($input->waktu)) {
+            $input->waktu = now()->format('Y-m-d H:i:s');
         }
 
+        $input->save();
 
+        return response()->json(['message' => 'Berhasil menambahkan input', 'data' => $input]);
+        // return response()->json([
+        //     'message' => 'Input berhasil disimpan',
+        //     'data' => $input,
+        // ]);
+    }
 
+    public function show(Input $input)
+    {
+        return response()->json($input);
+    }
 
-        $input->update([
-            'status' => $request->status,
-            'berat_barang' => $request->berat_barang,
-            'biaya_pengiriman' => $request->biaya_pengiriman,
-            'jarak' => $request->jarak,
-            'biaya' => $request->biaya,
-            'kurir_id' => $request->kurir_id,
-            // 'kurir_id' => $request->kurir->kurir_id,
-            // 'waktu' => $waktuLama ? $waktuLama . '<br>' . $statusString : $statusString,
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status' => 'nullable|string',
+            'riwayat_pengiriman' => 'nullable|string',
+            // 'berat_barang' => 'required|numeric|min:1',
+            // 'jarak' => 'nullable|numeric|min:1',
+            // 'biaya_pengiriman' => 'required|numeric|min:0',
+            // 'kurir_id' => 'nullable|integer|exists:kurirs,id',
         ]);
 
+        $input = Input::findOrFail($id);
+
+        $user = auth()->user();
+        $kurirId = $user->kurir->id ?? null; // Asumsi relasi user->kurir
+
+        $input->status = $validated['status'];
+        $input->riwayat_pengiriman = $validated['riwayat_pengiriman'];
+        // $input->berat_barang = $validated['berat_barang'];
+        // $input->jarak = $validated['jarak'] ?? $input->jarak;
+        // $input->biaya_pengiriman = $validated['biaya_pengiriman'];
+        // $input->kurir_id = $validated['kurir_id'] ?? $kurirId;
         $input->save();
+
         return response()->json([
             'message' => 'Status berhasil diperbarui',
             'status' => $input->status,
         ]);
     }
 
-    // public function updatePenilaian(Request $request, $id)
+    // public function get()
     // {
-    //     $request->validate([
-    //         'nilai' => 'nullable|string',
-    //         'ulasan' => 'nullable|string',
+    //     $data = Input::select(
+    //         'nama_pengirim',
+    //         'alamat_pengirim',
+    //         'no_telp_pengirim',
+    //         'nama_penerima',
+    //         'alamat_penerima',
+    //         'no_telp_penerima',
+    //         'jenis_barang',
+    //         'jenis_layanan',
+    //         'berat_barang'
+    //     )->get();
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $data
     //     ]);
-
-    //     $input = Input::findOrFail($id);
-    //     $input->nilai = $request->nilai;
-    //     $input->ulasan = $request->ulasan;
-    //     $input->save();
-
-    //     return response()->json(['message' => 'Penilaian disimpan.']);
     // }
-    public function get()
-    {
-        return response()->json([
-            'success' => true,
-            'data' => Input::select('nama_barang', 'alamat_asal', 'alamat_tujuan', 'penerima', 'jarak', 'metode_pembayaran', 'biaya_pengiriman', 'status')->get()
-        ]);
-    }
 
-    public function storePenilaian(Request $request)
-    {
-        $request->validate([
-            'id' => 'nullable|integer|exists:inputorder,id',
-            'nilai' => 'nullable|string',
-            'ulasan' => 'nullable|string',
-        ]);
-
-        $input = Input::find($request->id);
-        if (!$input) {
-            return response()->json(['message' => 'Input tidak ditemukan'], 404);
-        }
-
-        $input->nilai = $request->nilai;
-        $input->ulasan = $request->ulasan;
-        $input->save();
-
-        return response()->json(['message' => 'Penilaian disimpan.']);
-    }
     public function destroy(Input $input)
     {
         $input->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Data pesanan berhasil dihapus'
+            'message' => 'Data pesanan berhasil dihapus',
         ]);
     }
 }

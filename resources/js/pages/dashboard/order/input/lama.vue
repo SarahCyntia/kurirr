@@ -1,35 +1,30 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { h, ref, watch, onMounted } from "vue";
 import { useDelete } from "@/libs/hooks";
-// import Form from "./Form.vue";
+import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { Input } from "@/types";
-import { h } from "vue";
+import axios from "axios"; // Pastikan axios sudah terinstall
 
-// Referensi dan variabel
 const column = createColumnHelper<Input>();
 const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
+const inputData = ref<Input | null>(null); // Data  input yang terkait dengan user login
 
-// Delete handler
 const { delete: deleteInput } = useDelete({
-    onSuccess: () => paginateRef.value?.refetch(),
+    // Ganti `delete.input` jadi `deleteInput`
+    onSuccess: () => paginateRef.value.refetch(),
 });
 
-// Kolom tabel
 const columns = [
-    //   column.accessor("no", { header: "No" }),
-    column.accessor("nama_pengirim", { header: "Nama Pengirim" }),
-    column.accessor("alamat_pengirim", { header: "Alamat Pengirim" }),
-    column.accessor("no_telp_pengirim", { header: "No. Telp Pengirim" }),
-    column.accessor("nama_penerima", { header: "Nama Penerima" }),
-    column.accessor("alamat_penerima", { header: "Alamat Penerima" }),
-    column.accessor("no_telp_penerima", { header: "No. Telp Penerima" }),
-    column.accessor("jenis_barang", { header: "Jenis Barang" }),
-    column.accessor("jenis_layanan", { header: "Jenis Layanan" }),
-    column.accessor("berat_barang", { header: "Berat Barang" }),
-    column.accessor("no_resi", { header: "No Resi" }),
+    column.accessor("no", { header: "No" }),
+    column.accessor("nama_barang", { header: "Nama Barang" }),
+    column.accessor("alamat_asal", { header: "Alamat Asal" }),
+    column.accessor("alamat_tujuan", { header: "Alamat Tujuan" }),
+    column.accessor("penerima", { header: "Penerima" }),
+    column.accessor("metode_pengiriman", { header: "Metode Pengiriman" }),
+    column.accessor("tanggal_order", { header: "Tanggal Order" }),
     column.accessor("status", {
         header: "Status",
         cell: (cell) => {
@@ -63,48 +58,49 @@ const columns = [
             return h("span", { class: `badge ${badgeClass}` }, label);
         },
     }),
-
 ];
 
-// Untuk reload data
-const refresh = () => paginateRef.value?.refetch();
+const refresh = () => paginateRef.value.refetch();
 
-// Reset saat form ditutup
 watch(openForm, (val) => {
-    if (!val) selected.value = "";
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (!val) {
+        selected.value = "";
+    }
+    window.scrollTo(0, 0);
 });
 </script>
 
 <template>
-    <!-- Form -->
     <Form
-        v-if="openForm"
         :selected="selected"
         @close="openForm = false"
+        v-if="openForm"
         @refresh="refresh"
     />
 
-    <!-- Card List -->
     <div class="card">
         <div class="card-header align-items-center">
-            <h2 class="mb-0">Data Order</h2>
+            <h2 class="mb-0">List Input Order</h2>
+            <button type="button" class="btn btn-sm btn-primary ms-auto" v-if="!openForm" @click="openForm = true">
+              Tambah
+              <i class="la la-plus"></i>
+          </button>
         </div>
-
         <div class="card-body">
-            <paginate
-                ref="paginateRef"
-                id="table-inputorder"
-                url="/input?status=menunggu"
-                :columns="columns"
-            />
+            <p v-if="inputData">Data input: {{ inputData }}</p>
+            <paginate ref="paginateRef" id="table-inputorder" url="/input?status=menunggu"
+                :columns="columns"/>
+                <!-- <paginate ref="paginateRef" id="table-transaksi" url="/trans?exclude_status=Terkirim"
+                :columns="columns"/> -->
+            <!-- Tanpa spasi -->
         </div>
     </div>
 </template>
 
-<style scoped>
+<style>
 .btn {
-    margin-top: 1rem;
-    padding: 0.5rem 1.5rem;
+  margin-top: 3rem;
+  padding-right: 5rem;
+  padding-left: 5rem;
 }
 </style>
