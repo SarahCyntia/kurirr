@@ -19,7 +19,7 @@ const { delete: deleteInput } = useDelete({
 
 // Kolom tabel
 const columns = [
-    //   column.accessor("no", { header: "No" }),
+    column.accessor("no", { header: "No" }),
     column.accessor("nama_pengirim", { header: "Nama Pengirim" }),
     column.accessor("alamat_pengirim", { header: "Alamat Pengirim" }),
     column.accessor("no_telp_pengirim", { header: "No. Telp Pengirim" }),
@@ -104,7 +104,7 @@ watch(openForm, (val) => {
     <!-- Card List -->
     <div class="card">
         <div class="card-header align-items-center">
-            <h2 class="mb-0">List Input Order</h2>
+            <h2 class="mb-0">List Order</h2>
             <button
                 type="button"
                 class="btn btn-sm btn-primary ms-auto"

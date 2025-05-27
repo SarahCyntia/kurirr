@@ -7,10 +7,19 @@ export interface Input {
     alamat_penerima: string
     no_telp_penerima : string
     jenis_barang : string
+    ekspedisi: string;  
     jenis_layanan : string
     berat_paket : number
     riwayat_pengiriman : string
     no_resi : number
+    penilaian?: number | null;  // Penilaian opsional
+    komentar?: string | null;   // Komentar opsional
+    
+    asal_provinsi_id: number;
+    asal_kota_id: number;
+    tujuan_provinsi_id: number;
+    tujuan_kota_id: number;
+
     created_at: string
     updated_at: string
   }

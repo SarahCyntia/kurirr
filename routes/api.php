@@ -120,8 +120,9 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         // Route::put('/input', [InputController::class, 'update'])->withoutMiddleware('can:input');
         Route::post('/input/stores', [InputController::class, 'storePenilaian']);
         Route::get('/cetak-resi/{no_resi}', [inputController::class, 'cetakResi']);
-        // Route::apiResource('/Input', InputController::class)
-        //     ->except(['index', 'store']);
+        Route::get('/provinces', [InputController::class, 'getProvinces']);
+        Route::get('/cities/{provinceId}', [InputController::class, 'getCities']);
+        Route::post('/cost', [InputController::class, 'hitungOngkir']);
         Route::get('/Input/{input}',[InputController::class,'show'])->withoutMiddleware('can:input');
     });
 

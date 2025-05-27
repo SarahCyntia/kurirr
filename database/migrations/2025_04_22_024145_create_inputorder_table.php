@@ -22,12 +22,6 @@ return new class extends Migration
             $table->enum('status', ['menunggu', 'dalam proses', 'dikirim', 'selesai'])->default('dikirim');
             $table->string('no_resi');
             $table->timestamps();
-
-            // Relasi lokasi
-            $table->foreignId('asal_provinsi_id')->constrained('provinces');
-            $table->foreignId('asal_kota_id')->constrained('cities');
-            $table->foreignId('tujuan_provinsi_id')->constrained('provinces');
-            $table->foreignId('tujuan_kota_id')->constrained('cities');
         });
     }
     // public function up()

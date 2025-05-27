@@ -27,6 +27,7 @@ class PermissionSeeder extends Seeder
             'admin' => ['dashboard', ...$menuMaster, ...$menuWebsite,...$menuOrder],
             'kurir' => ['dashboard', ...$menuWebsite,...$menuOrder],
             'pelanggan' => ['dashboard', ...$menuWebsite,...$menuOrder],
+            'gudang' => ['dashboard','input']
         ];
 
         $insertPermissions = fn ($role) => collect($permissionsByRole[$role])

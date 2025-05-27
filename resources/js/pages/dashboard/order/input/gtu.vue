@@ -35,6 +35,7 @@ const Input = ref({
     jenis_barang: "",
     ekspedisi: "",
     jenis_layanan: "",
+    berat_barang: "",
     // no_resi: "",
     id_user: user.user.id,
     // status: "",
@@ -57,7 +58,7 @@ const emit = defineEmits(["close", "refresh"]);
 const formSchema = Yup.object().shape({
     nama_pengirim: Yup.string().required("Nama Pengirim harus diisi"),
     alamat_pengirim: Yup.string().required("Alamat Pengirim harus diisi"),
-    no_telp_pengirim: Yup.string().required("No.Telpo Pengirim harus diisi"),
+    no_telp_pengirim: Yup.string().required("No. Telp Pengirim harus diisi"),
     nama_penerima: Yup.string().required("Nama Penerima harus diisi"),
     alamat_penerima: Yup.string().required("Alamat Penerima harus diisi"),
     no_telp_penerima: Yup.string().required("No. Telp Penerima harus diisi"),
@@ -76,7 +77,7 @@ const { handleSubmit, errors, resetForm, } = useForm({
         nama_penerima: "",
         alamat_penerima: "",
         no_telp_penerima: "",
-        ekspedisi: "",
+        kurir: "",
         jenis_barang: "",
         jenis_layanan: "",
         berat_barang: "",
@@ -123,25 +124,6 @@ const getSelectedCost = () => {
     return cost;
 };
 
-// const fetchOngkir = async () => {
-//     const isInvalidInput =
-//         provinceOrigin.value === "0" ||
-//         cityOrigin.value === "" ||
-//         provinceDestination.value === "0" ||
-//         cityDestination.value === "" ||
-//         !selectedCourier.value ||
-//         !berat_barang.value ||
-//         berat_barang.value <= 0;
-
-//     if (isInvalidInput) {
-//         console.log("Berat barang:", berat_barang.value);
-//         console.log("Input tidak valid, menghentikan fetch ongkir.");
-
-//         services.value = [];
-//         selectedService.value = "";
-//         biaya.value = 0;
-//         return;
-//     }
 const fetchOngkir = async () => {
     if (
         provinceOrigin.value === "0" || !cityOrigin.value ||
@@ -164,7 +146,6 @@ const fetchOngkir = async () => {
             weight: Math.round(berat_barang.value * 1000), // gram
             courier: selectedCourier.value,
         });
-        console.log("DEBUG: response from /cost", res.data);
         // const resultServices = res.data.rajaongkir.results[0]?.costs || [];
         services.value = res.data.map((s: any) => ({
             service: s.service,
@@ -185,7 +166,7 @@ const fetchOngkir = async () => {
         biaya.value = 0;
         console.log("2", biaya.value)
     } finally {
-        unblock(document.getElementById("form-input"));
+        unblock(document.getElementById("form-transaksii"));
     }
 };
 watch([provinceOrigin, cityOrigin, provinceDestination, cityDestination, selectedCourier, berat_barang], () => {
@@ -193,49 +174,47 @@ watch([provinceOrigin, cityOrigin, provinceDestination, cityDestination, selecte
 });
 watch(selectedService, (val) => {
     const service = services.value.find(s => s.service === val);
-    if (service) {
-        biaya.value = service.cost;
-        getSelectedCost();
-    } else {
-        biaya.value = 0;
-    }
+    biaya.value = service ? service.cost : 0;
+    getSelectedCost();
 });
+// const submitForm = async () => {
+//     if (!isEditMode.value) {
+//         formData.value.no_resi = generateNoResi();
+//     }
 
-
-// watch(selectedService, (val) => {
-//     const service = services.value.find(s => s.service === val);
-//     biaya.value = service ? service.cost : 0;
-//     getSelectedCost();
-// });
+//     await axios.post("/input", formData.value);
+//     emit("refresh");
+//     emit("close");
+// };
 
 // ✅ Mendapatkan data  Input untuk edit
-// function getEdit() {
+function getEdit() {
 
-//     block(document.getElementById("form-Input"));
-//     ApiService.get("Input", props.selected)
-//         .then(({ data }) => {
-//             console.log(data);
-//             Input.value = {
-//                 nama_pengirim: data.nama_pengirim || "",
-//                 alamat_pengirim: data.alamat_pengirim || "",
-//                 no_telp_pengirim: data.no_telp_pengirim || "",
-//                 nama_penerima: data.nama_penerima || "",
-//                 alamat_penerima: data.alamat_penerima || "",
-//                 no_telp_penerima: data.no_telp_penerima || "",
-//                 jenis_barang: data.jenis_barang || "",
-//                 ekspedisi: data.ekspedisi || "",
-//                 jenis_layanan: data.jenis_layanan || "",
-//                 berat_barang: data.berat_barang || "",
-//             };
-//             console.log(Input.value);
-//         })
-//         .catch((err: any) => {
-//             toast.error(err.response.data.message || "Gagal mengambil data");
-//         })
-//         .finally(() => {
-//             unblock(document.getElementById("form-Input"));
-//         });
-// }
+    block(document.getElementById("form-Input"));
+    ApiService.get("Input", props.selected)
+        .then(({ data }) => {
+            console.log(data);
+            Input.value = {
+                nama_pengirim: data.nama_pengirim || "",
+                alamat_pengirim: data.alamat_pengirim || "",
+                no_telp_pengirim: data.no_telp_pengirim || "",
+                nama_penerima: data.nama_penerima || "",
+                alamat_penerima: data.alamat_penerima || "",
+                no_telp_penerima: data.no_telp_penerima || "",
+                jenis_barang: data.jenis_barang || "",
+                ekspedisi: data.ekspedisi || "",
+                jenis_layanan: data.jenis_layanan || "",
+                berat_barang: data.berat_barang || "",
+            };
+            console.log(Input.value);
+        })
+        .catch((err: any) => {
+            toast.error(err.response.data.message || "Gagal mengambil data");
+        })
+        .finally(() => {
+            unblock(document.getElementById("form-Input"));
+        });
+}
 
 // ✅ Submit Form (Tambah/Update)
 function submit() {
@@ -253,6 +232,7 @@ function submit() {
     formData.append("alamat_penerima", Input.value.alamat_penerima);
     formData.append("no_telp_penerima", Input.value.no_telp_penerima);
     formData.append("jenis_barang", Input.value.jenis_barang);
+    formData.append("ekspedisi", Input.value.ekspedisi);
     formData.append("jenis_layanan", selectedService.value);
     formData.append("berat_barang", Input.value.berat_barang);
     formData.append("ekspedisi", selectedCourier.value);
@@ -306,7 +286,6 @@ function generateNoResi() {
     return `${prefix}-${timestamp}-${random}`;
 }
 
-
 // ✅ Ambil data saat component dipasang
 // onMounted(() => {
 //     if (props.selected) {
@@ -317,7 +296,6 @@ function generateNoResi() {
 onMounted(() => {
     fetchProvinces();
 });
-
 
 // ✅ Pantau perubahan selected (Edit Mode)
 // watch(
@@ -350,28 +328,24 @@ onMounted(() => {
                     </div>
                 </div>
                 <div class="col-md-6 ">
-                    <div class="fv-row mb-7">
-                        <label class="form-label required fw-bold">Provinsi Asal</label>
-                        <Field as="select" name="provinceOrigin" v-model="provinceOrigin" class="form-control"
-                            @change="fetchCities('origin')">
-                            <option value="0">-- Pilih Provinsi Asal--</option>
-                            <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
-                        </Field as="select">
-                        <ErrorMessage name="provinceOrigin" class="text-danger small" />
-                    </div>
+                    <label class="form-label required fw-bold">Provinsi Asal</label>
+                    <Field as="select" name="provinceOrigin" v-model="provinceOrigin" class="form-control"
+                        @change="fetchCities('origin')">
+                        <option value="0">-- Pilih Provinsi Asal --</option>
+                        <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
+                    </Field as="select">
+                    <ErrorMessage name="provinceOrigin" class="text-danger small" />
                 </div>
 
                 <!-- Kota Asal -->
                 <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label class="form-label required fw-bold">Kota Asal</label>
-                        <Field as="select" name="cityOrigin" v-model="cityOrigin" class="form-control">
-                            <option value="">-- Pilih Kota Asal --</option>
-                            <option v-for="(name, id) in citiesOrigin" :key="id" :value="id">{{ name }}</option>
-                        </Field as="select">
-                        <ErrorMessage name="cityOrigin" class="text-danger small" />
-                        <!-- <div v-if="ErrorMessage" name="cityOrigin" class="text-danger">{{ errors.cityOrigin }}</div> -->
-                    </div>
+                    <label class="form-label required fw-bold">Kota Asal</label>
+                    <Field as="select" name="cityOrigin" v-model="cityOrigin" class="form-control">
+                        <option value="">-- Pilih Kota Asal --</option>
+                        <option v-for="(name, id) in citiesOrigin" :key="id" :value="id">{{ name }}</option>
+                    </Field as="select">
+                    <ErrorMessage name="cityOrigin" class="text-danger small" />
+                    <!-- <div v-if="ErrorMessage" name="cityOrigin" class="text-danger">{{ errors.cityOrigin }}</div> -->
                 </div>
 
                 <div class="col-md-6">
@@ -399,31 +373,26 @@ onMounted(() => {
                         <ErrorMessage name="nama_penerima" class="text-danger" />
                     </div>
                 </div>
-
                 <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label class="form-label required fw-bold">Provinsi Tujuan</label>
-                        <Field as="select" name="provinceDestination" v-model="provinceDestination" class="form-control"
-                            @change="fetchCities('destination')">
-                            <option value="0">-- Pilih Provinsi Tujuan --</option>
-                            <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
-                        </Field as="select">
-                        <ErrorMessage name="provinceDestination" class="text-danger small" />
-                        <!-- <div v-if="ErrorMessage" name="provinceDestination" class="text-danger">{{ errors.provinceDestination }}</div> -->
-                    </div>
+                    <label class="form-label required fw-bold">Provinsi Tujuan</label>
+                    <Field as="select" name="provinceDestination" v-model="provinceDestination" class="form-control"
+                        @change="fetchCities('destination')">
+                        <option value="0">-- Pilih Provinsi Tujuan --</option>
+                        <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
+                    </Field as="select">
+                    <ErrorMessage name="provinceDestination" class="text-danger small" />
+                    <!-- <div v-if="ErrorMessage" name="provinceDestination" class="text-danger">{{ errors.provinceDestination }}</div> -->
                 </div>
 
                 <!-- Kota Tujuan -->
                 <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label class="form-label required fw-bold">Kota Tujuan</label>
-                        <Field as="select" name="cityDestination" v-model="cityDestination" class="form-control">
-                            <option value="">-- Pilih Kota Tujuan --</option>
-                            <option v-for="(name, id) in citiesDestination" :key="id" :value="id">{{ name }}</option>
-                        </Field as="select">
-                        <ErrorMessage name="cityDestination" class="text-danger small" />
-                        <!-- <div v-if="ErrorMessage" name="cityDestination" class="text-danger">{{ errors.cityDestination }}</div> -->
-                    </div>
+                    <label class="form-label required fw-bold">Kota Tujuan</label>
+                    <Field as="select" name="cityDestination" v-model="cityDestination" class="form-control">
+                        <option value="">-- Pilih Kota Tujuan --</option>
+                        <option v-for="(name, id) in citiesDestination" :key="id" :value="id">{{ name }}</option>
+                    </Field as="select">
+                    <ErrorMessage name="cityDestination" class="text-danger small" />
+                    <!-- <div v-if="ErrorMessage" name="cityDestination" class="text-danger">{{ errors.cityDestination }}</div> -->
                 </div>
 
                 <div class="col-md-6">
@@ -454,17 +423,30 @@ onMounted(() => {
                 </div>
 
                 <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label class="form-label required fw-bold">Ekspedisi</label>
-                        <field as="select" v-model="selectedCourier" class="form-control" name="ekspedisi">
-                            <option value="">-- Pilih Ekspedisi --</option>
-                            <option v-for="c in couriers" :key="c.code" :value="c.code">{{ c.name }}</option>
-                        </Field as="select">
-                        <ErrorMessage name="ekspedisi" class="text-danger small" />
-                        <!-- <div v-if="errors.kurir" class="text-danger">{{ errors.kurir }}</div> -->
-                    </div>
+                    <label class="form-label required fw-bold">Ekspedisi</label>
+                    <field as="select" v-model="selectedCourier" class="form-control" name="ekspedisi">
+                        <option value="">-- Pilih Ekspedisi --</option>
+                        <option v-for="c in couriers" :key="c.code" :value="c.code">{{ c.name }}</option>
+                    </Field as="select">
+                    <ErrorMessage name="ekspedisi" class="text-danger small" />
+                    <!-- <div v-if="errors.kurir" class="text-danger">{{ errors.kurir }}</div> -->
                 </div>
-                
+
+                <div class="col-md-6">
+                    <label for="jenis_layanan" class="form-label required fw-bold">Jenis Layanan</label>
+                    <Field as="select" id="jenis_layanan" name="jenis_layanan" class="form-select"
+                        v-model="selectedService" @change="getSelectedCost">
+                        <option value="">Jenis
+                            layanan</option>
+                        <option v-for="service in services" :key="service.service" :value="service.service">
+                            {{ service.service }} - Rp{{ Number(service.cost).toLocaleString() }} { {{ service.etd }}
+                            Hari }
+                        </option>
+                    </Field as="select">
+                    <ErrorMessage name="jenis_layanan" class="text-danger small" />
+                    <!-- <div v-if="errors.layanan" class="text-danger">{{ errors.layanan }}</div> -->
+                </div>
+
                 <div class="col-md-6">
                     <div class="fv-row mb-7">
                         <label class="form-label fw-bold fs-6">Berat Barang (gram)</label>
@@ -473,31 +455,7 @@ onMounted(() => {
                         <ErrorMessage name="berat_barang" class="text-danger" />
                     </div>
                 </div>
-
-                <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label for="jenis_layanan" class="form-label required fw-bold">Jenis Layanan</label>
-                        <Field as="select" id="jenis_layanan" name="jenis_layanan" class="form-select"
-                            v-model="selectedService" @change="getSelectedCost">
-                            <option value="">Jenis
-                                layanan</option>
-                            <option v-for="service in services" :key="service.service" :value="service.service">
-                                {{ service.service }} - Rp{{ Number(service.cost).toLocaleString() }} { {{ service.etd
-                                }} Hari }
-                            </option>
-                            <!-- <option v-for="service in services" :key="service.service" :value="service.service">
-                                {{ service.service }} - Rp{{ Number(service.cost).toLocaleString() }} { {{ service.etd
-                                }}
-                                Hari }
-                            </option> -->
-                        </Field as="select">
-                        <ErrorMessage name="jenis_layanan" class="text-danger small" />
-                        <!-- <div v-if="errors.layanan" class="text-danger">{{ errors.layanan }}</div> -->
-                    </div>
-                </div>
-
-                
-                <div class="col-md-6" v-if="services.length > 0">
+                <div class="col-md-4 mb-7" v-if="services.length > 0">
                     <label class="form-label fw-bold">Biaya (Rp)</label>
                     <input type="text" name="biaya" class="form-control"
                         :value="biaya ? biaya.toLocaleString('id-ID') : '-'" readonly />

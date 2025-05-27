@@ -20,7 +20,7 @@ class InputController extends Controller
 
         // $provinces = collect($response['rajaongkir'])
         //     ->pluck('province', 'province_id');
-        $provinces = Province::all()->pluck('name','id');
+        $provinces = Province::all()->pluck('name', 'id');
 
         return response()->json($provinces);
     }
@@ -29,31 +29,82 @@ class InputController extends Controller
     {
         $response = Http::withHeaders([
             'key' => env('RAJAONGKIR_API_KEY'),
-        ])->get('https://api.rajaongkir.com/starter/city?province=' . $provinceId);
+        ])->get('https://api.rajaongkir.com/starter/city', [
+                    'province' => $provinceId
+                ]);
 
-        $cities = collect($response['rajaongkir'])
+        $cities = collect($response['rajaongkir']['results'])
             ->pluck('city_name', 'city_id');
 
         return response()->json($cities);
     }
 
+    // public function getCities($provinceId)
+    // {
+    //     $response = Http::withHeaders([
+    //         'key' => env('RAJAONGKIR_API_KEY'),
+    //     ])->get('https://api.rajaongkir.com/starter/city?province=' . $provinceId);
+
+    //     $cities = collect($response['rajaongkir'])
+    //         ->pluck('city_name', 'city_id');
+
+    //     return response()->json($cities);
+    // }
+
+
     public function hitungOngkir(Request $request)
-    {
-        $response = Http::withHeaders([
-            'key' => config('services.rajaongkir.key')
-        ])->post('https://api.rajaongkir.com/starter/cost', [
-            'origin' => $request->origin,
-            'destination' => $request->destination,
-            'weight' => $request->weight, // dalam gram
-            'courier' => $request->courier, // jne / tiki / pos
-        ]);
+{
+    $response = Http::withHeaders([
+        'key' => config('services.rajaongkir.key')
+    ])->post('https://api.rajaongkir.com/starter/cost', [
+        'origin' => $request->origin,
+        'destination' => $request->destination,
+        'weight' => $request->weight,
+        'courier' => $request->courier,
+    ]);
 
-        Log::info("Cost", $response['rajaongkir']);
+    if ($response->successful()) {
+        $results = $response['rajaongkir']['results'] ?? [];
 
-        $cost = $response['rajaongkir']['results'][0]['costs'];
+        if (!empty($results) && isset($results[0]['costs'])) {
+            $costs = $results[0]['costs'];
 
-        return response()->json($cost);
+            $services = collect($costs)->map(function ($item) {
+                return [
+                    'service' => $item['service'],
+                    'description' => $item['description'],
+                    'cost' => $item['cost'][0]['value'] ?? 0,
+                    'etd' => $item['cost'][0]['etd'] ?? '',
+                ];
+            });
+
+            return response()->json($services);
+        } else {
+            return response()->json(['message' => 'Data layanan tidak tersedia'], 404);
+        }
+    } else {
+        return response()->json(['message' => 'Gagal mengambil data ongkir'], $response->status());
     }
+}
+
+
+    // public function hitungOngkir(Request $request)
+    // {
+    //     $response = Http::withHeaders([
+    //         'key' => config('services.rajaongkir.key')
+    //     ])->post('https://api.rajaongkir.com/starter/cost', [
+    //                 'origin' => $request->origin,
+    //                 'destination' => $request->destination,
+    //                 'weight' => $request->weight, // dalam gram
+    //                 'courier' => $request->courier, // jne / tiki / pos
+    //             ]);
+
+    //     Log::info("Cost", $response['rajaongkir']);
+
+    //     $cost = $response['rajaongkir']['results'][0]['costs'];
+
+    //     return response()->json($cost);
+    // }
 
 
     public function __construct()
@@ -82,10 +133,10 @@ class InputController extends Controller
                     ->orWhere('berat_barang', 'like', "%$search%");
             });
         })
-        // ->orderBy('created_at', 'desc')
-        // ->paginate($per);
-        ->latest()
-            
+            // ->orderBy('created_at', 'desc')
+            // ->paginate($per);
+            ->latest()
+
             // Paginate hasil query
             ->paginate($per);
 

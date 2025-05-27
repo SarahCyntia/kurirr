@@ -25,7 +25,35 @@ class Input extends Model
         'jenis_layanan',
         'berat_barang',
         'no_resi',
+        'ekspedisi', 
+        'layanan', 
+        'biaya', 
+        'waktu',
+        'asal_provinsi_id', 
+        'asal_kota_id', 
+        'tujuan_provinsi_id', 
+        'tujuan_kota_id',
     ];
+
+    public function asalProvinsi() {
+        return $this->belongsTo(Province::class, 'asal_provinsi_id');
+    }
+
+    public function asalKota() {
+        return $this->belongsTo(City::class, 'asal_kota_id');
+    }
+
+    public function tujuanProvinsi() {
+        return $this->belongsTo(Province::class, 'tujuan_provinsi_id');
+    }
+
+    public function tujuanKota() {
+        return $this->belongsTo(City::class, 'tujuan_kota_id');
+    }
+
+    public function pengguna() {
+        return $this->belongsTo(User::class, 'pengguna_id');
+    }
 
     // protected $fillable = [
     //     'id_pelanggan',
