@@ -206,40 +206,91 @@ class InputController extends Controller
         $input->riwayat_pengiriman = $validated['riwayat_pengiriman'];
         $waktuBaru = now()->format('d-m-Y H:i:s');
 
+
         // Simpan status dengan waktu sebagai string keterangan (opsional)
         $input->keterangan_status = $request->status . ' (' . $waktuBaru . ')';
+        
+    // Update status
+    $input->status = $request->status;
 
-        // Update tanggal berdasarkan status
-        switch ($request->status) {
-            case 'dalam proses':
+    // ⬇️ LETAKKAN SWITCH DI SINI
+    switch ($request->status) {
+        case 'menunggu':
+            if (!$input->tanggal_order) {
+                $input->tanggal_order = now();
+            }
+            break;
+
+        case 'dalam proses':
+            if (!$input->tanggal_dikemas) {
                 $input->tanggal_dikemas = now();
-                break;
+            }
+            break;
 
-            case 'pengambilan paket':
+        case 'pengambilan paket':
+            if (!$input->tanggal_pengambilan) {
                 $input->tanggal_pengambilan = now();
-                break;
+            }
+            break;
 
-            case 'dikirim':
+        case 'dikirim':
+            if (!$input->tanggal_dikirim) {
                 $input->tanggal_dikirim = now();
-                break;
+            }
+            break;
 
-            case 'selesai':
+        case 'selesai':
+            if (!$input->tanggal_penerimaan) {
                 $input->tanggal_penerimaan = now();
-                break;
-        }
+            }
+            break;
+    }
+
+    $input->save(); // simpan perubahan
+
+    return response()->json([
+        'message' => 'Status berhasil diperbarui.',
+        'data' => $input
+    ]);
+}
+
+
+
+//UPDATE
+
+    //     switch ($request->status) {
+    //         case 'dalam proses':
+    //             $input->tanggal_dikemas = now();
+    //             break;
+
+    //         case 'pengambilan paket':
+    //             $input->tanggal_pengambilan = now();
+    //             break;
+
+    //         case 'dikirim':
+    //             $input->tanggal_dikirim = now();
+    //             break;
+
+    //         case 'selesai':
+    //             $input->tanggal_penerimaan = now();
+    //             break;
+    //     }
+    //     if ($request->status === 'menunggu') {
+    // $input->tanggal_menunggu = now();} // buat kolom ini di database
+
+
 
         // $input->berat_barang = $validated['berat_barang'];
         // $input->jarak = $validated['jarak'] ?? $input->jarak;
         // $input->biaya_pengiriman = $validated['biaya_pengiriman'];
         // $input->kurir_id = $validated['kurir_id'] ?? $kurirId;
-        $input->save();
+        // $input->save();
 
-        return response()->json([
-            'message' => 'Status berhasil diperbarui',
-            'status' => $input->status,
-        ]);
-
-    }
+        // return response()->json([
+        //     'message' => 'Status berhasil diperbarui',
+        //     'status' => $input->status,
+        // ]);
+    
 
     // public function get()
     // {

@@ -104,20 +104,40 @@ class OrderedController extends Controller
 
         // Ambil dan decode riwayat lama (jika ada)
         $riwayat = json_decode($input->riwayat_pengiriman ?? '[]', true);
+          $input = Input::find($id);
+$input->status = $request->status;
 
-         $waktuBaru = now()->format('d-m-Y H:i:s');
-        $statusString = $request->status . ' (' . $waktuBaru . ')';
-        switch ($request->status) {
-            case 'dalam proses':
-                $input->tanggal_dikemas = now();
-                break;
-            case 'dikirim':
-                $input->tanggal_dikirim = now();
-                break;
-            case 'selesai':
-                $input->tanggal_penerimaan = now();
-                break;
-        }
+switch ($request->status) {
+    case 'menunggu':
+        $input->tanggal_menunggu = now();
+        break;
+    case 'dalam proses':
+        $input->tanggal_dikemas = now();
+        break;
+    case 'pengambilan paket':
+        $input->tanggal_pengambilan = now();
+        break;
+    case 'dikirim':
+        $input->tanggal_dikirim = now();
+        break;
+    case 'selesai':
+        $input->tanggal_penerimaan = now();
+        break;
+}
+
+        //  $waktuBaru = now()->format('d-m-Y H:i:s');
+        // $statusString = $request->status . ' (' . $waktuBaru . ')';
+        // switch ($request->status) {
+        //     case 'dalam proses':
+        //         $input->tanggal_dikemas = now();
+        //         break;
+        //     case 'dikirim':
+        //         $input->tanggal_dikirim = now();
+        //         break;
+        //     case 'selesai':
+        //         $input->tanggal_penerimaan = now();
+        //         break;
+        // }
 
         // Tambahkan pesan baru ke array
         if (!empty($validated['riwayat_pengiriman'])) {

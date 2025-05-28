@@ -33,7 +33,7 @@ const Input = ref({
     alamat_penerima: "",
     no_telp_penerima: "",
     jenis_barang: "",
-    ekspedisi: "",
+    ekspedisi: "",  
     jenis_layanan: "",
     // no_resi: "",
     id_user: user.user.id,
@@ -42,9 +42,9 @@ const Input = ref({
 const formRef = ref();
 // Data provinces, cities asal dan tujuan
 const couriers = ref([
-    { code: "JNT", name: "JNE" },
-    { code: "TIKI", name: "TIKI" },
-    { code: "POS", name: "POS Indonesia" },
+    { code: "jne", name: "JNE" },
+    { code: "tiki", name: "TIKI" },
+    { code: "pos", name: "POS Indonesia" },
 ]);
 const selectedCourier = ref("");  // ekspedisi/kurir dipilih
 const services = ref<{ service: string; description: string; cost: number; etd: string }[]>([]);
@@ -216,26 +216,54 @@ function submit() {
             "Content-Type": "multipart/form-data",
         },
     })
-        .then(() => {
-            Swal.fire({
-                icon: "success",
-                title: "Berhasil!",
-                html: `No. Resi berhasil dibuat:<br><strong>${noResi}</strong>`,
-                showCancelButton: true,
-                confirmButtonText: "Oke",
-            }).then(() => {
-                emit("close");
-                emit("refresh");
-                toast.success("Data berhasil disimpan");
-                formRef.value.resetForm(); // Reset form setelah submit
-            }).catch((err: any) => {
-                const message = err.response?.data?.message || "Terjadi kesalahan.";
-                toast.error(message);
-            })
-                .finally(() => {
-                    unblock(document.getElementById("form-input"));
-                });
-        })
+       .then(() => {
+    Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        html: `No. Resi berhasil dibuat:<br><strong>${noResi}</strong>`,
+        showCancelButton: true,
+        confirmButtonText: "Oke",
+        cancelButtonText: "Batal",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Jika tombol "Oke" diklik
+            emit("close");
+            emit("refresh");
+            toast.success("Data berhasil disimpan");
+            formRef.value.resetForm(); // Reset form setelah submit
+        } else if (result.isDismissed) {
+            // Jika tombol "Batal" diklik, tampilkan pesan dan tetap di form
+            toast.info("Anda tetap berada di halaman input.");
+        }
+    }).catch((err: any) => {
+        const message = err.response?.data?.message || "Terjadi kesalahan.";
+        toast.error(message);
+    }).finally(() => {
+        unblock(document.getElementById("form-input"));
+    });
+})
+
+
+        // .then(() => {
+        //     Swal.fire({
+        //         icon: "success",
+        //         title: "Berhasil!",
+        //         html: `No. Resi berhasil dibuat:<br><strong>${noResi}</strong>`,
+        //         showCancelButton: true,
+        //         confirmButtonText: "Oke",
+        //     }).then(() => {
+        //         emit("close");
+        //         emit("refresh");
+        //         toast.success("Data berhasil disimpan");
+        //         formRef.value.resetForm(); // Reset form setelah submit
+        //     }).catch((err: any) => {
+        //         const message = err.response?.data?.message || "Terjadi kesalahan.";
+        //         toast.error(message);
+        //     })
+        //         .finally(() => {
+        //             unblock(document.getElementById("form-input"));
+        //         });
+        // })
 
 }
 

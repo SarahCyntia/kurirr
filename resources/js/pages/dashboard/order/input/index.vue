@@ -34,39 +34,64 @@ const columns = [
     column.accessor("jenis_layanan", { header: "Jenis Layanan" }),
     column.accessor("no_resi", { header: "No Resi" }),
     column.accessor("status", {
-        header: "Status",
-        cell: (cell) => {
-            const status = cell.getValue();
-            const badgeClass =
-                status === "menunggu"
-                    ? "bg-success"
-                    : status === "dalam proses"
-                        ? "bg-warning"
-                        : status === "pengambilan paket"
-                            ? "bg-danger"
-                            : status === "dikirim"
-                                ? "bg-primary"
-                                : status === "selesai"
-                                    ? "bg-info"
-                                    : "bg-secondary"; // default kalau selain itu
+  header: "Status",
+  cell: ({ row, getValue }) => {
+    const status = getValue();
+    const data = row.original;
 
-            const label =
-                status === "menunggu"
-                    ? "Menunggu"
-                    : status === "pengambilan paket"
-                        ? "Pengambilan Paket"
-                        : status === "dalam proses"
-                            ? "Dalam Proses"
-                            : status === "dikirim"
-                                ? "Dikirim"
-                                : status === "selesai"
-                                    ? "Selesai"
-                                    : "Dibatalkan";
+    const badgeClass =
+      status === "menunggu"
+        ? "bg-success"
+        : status === "dalam proses"
+        ? "bg-warning"
+        : status === "pengambilan paket"
+        ? "bg-danger"
+        : status === "dikirim"
+        ? "bg-primary"
+        : status === "selesai"
+        ? "bg-info"
+        : "bg-secondary";
 
+    let label =
+      status === "menunggu"
+        ? "Menunggu"
+        : status === "pengambilan paket"
+        ? "Pengambilan Paket"
+        : status === "dalam proses"
+        ? "Dalam Proses"
+        : status === "dikirim"
+        ? "Dikirim"
+        : status === "selesai"
+        ? "Selesai"
+        : "Dibatalkan";
 
-            return h("span", { class: `badge ${badgeClass}` }, label);
-        },
-    }),
+    // Ambil tanggal dari field yang sesuai dengan status
+    let input: string | null = null;
+    switch (status) {
+      case "menunggu":
+        input = data.tanggal_order;
+        break;
+      case "dalam proses":
+        input = data.tanggal_dikemas;
+        break;
+      case "dikirim":
+        input = data.tanggal_dikirim;
+        break;
+      case "selesai":
+        input = data.tanggal_penerimaan;
+        break;
+    }
+
+    if (input) {
+      const date = new Date(input);
+      const formatted = date.toLocaleString("id-ID");
+      label += ` (${formatted})`;
+    }
+
+    return h("span", { class: `badge ${badgeClass}` }, label);
+  },
+}),
+
     // column.accessor("created_at", {
     //     header: "Tanggal Input",
     //     cell: (cell) => {
@@ -117,7 +142,7 @@ watch(openForm, (val) => {
                 Tambah <i class="la la-plus"></i>
             </button>
         </div>
-
+        
         <div class="card-body">
             <paginate ref="paginateRef" id="table-inputorder" url="/input?status=menunggu" :columns="columns" />
         </div>
