@@ -110,7 +110,7 @@ const showRincian = (data: Input) => {
 
 // Kolom tabel
 const columns = [
-    //   column.accessor("no", { header: "No" }),
+      column.accessor("no", { header: "No" }),
     column.accessor("nama_pengirim", { header: "Nama Pengirim" }),
     column.accessor("alamat_pengirim", { header: "Alamat Pengirim" }),
     column.accessor("no_telp_pengirim", { header: "No. Telp Pengirim" }),
@@ -296,6 +296,8 @@ const submit = async () => {
     emit("refresh");
     emit("close");
 };
+
+
 
 
 // Untuk reload data

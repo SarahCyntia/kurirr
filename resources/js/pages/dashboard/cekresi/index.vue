@@ -1,177 +1,289 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import type { Input } from "@/types";
 import axios from "axios";
+import type { Input } from "@/types";
 
-const nomorResi = ref<string>("");
-const courier = ref<string>("");          // ← deklarasi courier
-const loading = ref<boolean>(false);
-const error = ref<string>("");
-const hasilResi = ref<Input | null>(null);
+// State input user
+const noResi = ref("");
+const ekspedisi = ref("");
+const ekspedisiList = ["JNE", "TIKI", "POS"];
 
-const cekResi = async () => {
-  if (!courier.value) {
-    error.value = "Silakan pilih kurir terlebih dahulu.";
+const result = ref<Input | null>(null);
+const isLoading = ref(false);
+const error = ref("");
+
+// Fungsi cari resi
+const cariResi = async () => {
+  if (!noResi.value || !ekspedisi.value) {
+    error.value = "Silakan isi nomor resi dan pilih ekspedisi.";
+    result.value = null;
     return;
   }
-  if (!nomorResi.value.trim()) {
-    error.value = "Nomor resi tidak boleh kosong.";
-    return;
-  }
 
-  loading.value = true;
+  isLoading.value = true;
   error.value = "";
-  hasilResi.value = null;
+  result.value = null;
 
   try {
-    const response = await axios.get(`/cek-resi/${encodeURIComponent(nomorResi.value)}`, {
+    const response = await axios.get(`/cek-resi`, {
       params: {
-        kurir: courier.value.toLowerCase(),
-      },
-    });
-    hasilResi.value = response.data;
-  } catch (err: any) {
-    console.error(err);
+        no_resi: noResi.value,
+        ekspedisi: ekspedisi.value,
+    },
+});
+result.value = response.data.data;
+} catch (err: any) {
     error.value = err.response?.data?.message || "Resi tidak ditemukan.";
-  } finally {
-    loading.value = false;
-  }
+} finally {
+    isLoading.value = false;
+}
 };
 </script>
-
 <template>
-  <div class="card">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="mb-0">Cek Resi Pengiriman</h1>
+        </div>
+
     <div class="card-body">
-      <!-- Nomor Resi -->
-      <div class="mb-3">
-        <label for="nomorResi" class="form-label">Masukkan Nomor Resi</label>
-        <input
-          v-model="nomorResi"
-          id="nomorResi"
-          type="text"
-          class="form-control"
-          placeholder="Contoh: RESI-123456789-1234"
-        />
+      <div class="row g-2 mb-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Nomor Resi</label>
+          <input
+            v-model="noResi"
+            type="text"
+            class="form-control"
+            placeholder="Masukkan No Resi"
+            @keyup.enter="cariResi"
+          />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Ekspedisi</label>
+          <select v-model="ekspedisi" class="form-select">
+            <option disabled value="">-- Pilih Ekspedisi --</option>
+            <option v-for="item in ekspedisiList" :key="item" :value="item">
+              {{ item }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-danger w-100" @click="cariResi">Cari</button>
+        </div>
       </div>
 
-      <!-- Pilih Kurir -->
-      <div class="mb-3">
-        <label for="courier" class="form-label">Pilih Kurir</label>
-        <select v-model="courier" id="courier" class="form-control">
-          <option value="">-- Pilih Kurir --</option>
-          <option value="jne">JNE</option>
-          <option value="pos">POS</option>
-          <option value="tiki">TIKI</option>
-        </select>
-      </div>
+      <div v-if="isLoading" class="alert alert-info">Sedang mencari...</div>
+      <div v-if="error" class="alert alert-danger">{{ error }}</div>
 
-      <!-- Tombol Cek -->
-      <button
-        class="btn btn-danger"
-        :disabled="loading || !nomorResi.trim() || !courier"
-        @click="cekResi"
-      >
-        {{ loading ? "Mengecek..." : "Lacak Paket" }}
-      </button>
-
-      <!-- Error -->
-      <div v-if="error" class="alert alert-danger mt-3">{{ error }}</div>
-
-      <!-- Hasil -->
-      <div v-if="hasilResi" class="mt-4">
-        <h5>Detail Pengiriman:</h5>
-        <ul class="list-group">
-          <li class="list-group-item"><strong>No Resi:</strong> {{ hasilResi.no_resi }}</li>
-          <li class="list-group-item"><strong>Nama Pengirim:</strong> {{ hasilResi.nama_pengirim }}</li>
-          <li class="list-group-item"><strong>Alamat Pengirim:</strong> {{ hasilResi.alamat_pengirim }}</li>
-          <li class="list-group-item"><strong>Nama Penerima:</strong> {{ hasilResi.nama_penerima }}</li>
-          <li class="list-group-item"><strong>Alamat Penerima:</strong> {{ hasilResi.alamat_penerima }}</li>
-          <li class="list-group-item"><strong>Status:</strong> {{ hasilResi.status }}</li>
-        </ul>
-
-        <h5 class="mt-4">Riwayat Pengiriman</h5>
-        <ul v-if="hasilResi.riwayat_pengiriman" class="list-group">
-          <li
-            v-for="(item, idx) in JSON.parse(hasilResi.riwayat_pengiriman || '[]')"
-            :key="idx"
-            class="list-group-item"
-          >
-            <strong>{{ item.pesan }}</strong><br />
-            <small class="text-muted">{{ item.waktu }}</small>
-          </li>
-        </ul>
-        <p v-else>Tidak ada riwayat pengiriman.</p>
+      <div v-if="result" class="table-responsive">
+        <table class="table table-bordered">
+          <tbody>
+            <tr><th>No Resi</th><td>{{ result.no_resi }}</td></tr>
+            <tr><th>Ekspedisi</th><td>{{ result.ekspedisi }}</td></tr>
+            <tr><th>Nama Pengirim</th><td>{{ result.nama_pengirim }}</td></tr>
+            <tr><th>Nama Penerima</th><td>{{ result.nama_penerima }}</td></tr>
+            <tr><th>Alamat Penerima</th><td>{{ result.alamat_penerima }}</td></tr>
+            <tr><th>Jenis Barang</th><td>{{ result.jenis_barang }}</td></tr>
+            <tr><th>Berat Barang</th><td>{{ result.berat_barang }} kg</td></tr>
+            <tr>
+              <th>Status</th>
+              <td>
+                <span
+                  :class="{
+                    badge: true,
+                    'bg-success': result.status === 'menunggu',
+                    'bg-warning': result.status === 'dalam proses',
+                    'bg-danger': result.status === 'pengambilan paket',
+                    'bg-primary': result.status === 'dikirim',
+                    'bg-info': result.status === 'selesai',
+                    'bg-secondary': !['menunggu','dalam proses','pengambilan paket','dikirim','selesai'].includes(result.status),
+                  }"
+                >
+                  {{
+                    result.status === 'menunggu'
+                      ? 'Menunggu'
+                      : result.status === 'pengambilan paket'
+                      ? 'Pengambilan Paket'
+                      : result.status === 'dalam proses'
+                      ? 'Dalam Proses'
+                      : result.status === 'dikirim'
+                      ? 'Dikirim'
+                      : result.status === 'selesai'
+                      ? 'Selesai'
+                      : 'Dibatalkan'
+                  }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="table table-bordered">
+          <tbody>
+            <h2 class="h2">Status Pengiriman</h2>
+            <tr><th>No Resi</th><td>{{ result.no_resi }}</td></tr>
+            <tr>
+              <th>Status</th>
+              <td>
+                <span
+                  :class="{
+                    badge: true,
+                    'bg-success': result.status === 'menunggu',
+                    'bg-warning': result.status === 'dalam proses',
+                    'bg-danger': result.status === 'pengambilan paket',
+                    'bg-primary': result.status === 'dikirim',
+                    'bg-info': result.status === 'selesai',
+                    'bg-secondary': !['menunggu','dalam proses','pengambilan paket','dikirim','selesai'].includes(result.status),
+                  }"
+                >
+                  {{
+                    result.status === 'menunggu'
+                      ? 'Menunggu'
+                      : result.status === 'pengambilan paket'
+                      ? 'Pengambilan Paket'
+                      : result.status === 'dalam proses'
+                      ? 'Dalam Proses'
+                      : result.status === 'dikirim'
+                      ? 'Dikirim'
+                      : result.status === 'selesai'
+                      ? 'Selesai'
+                      : 'Dibatalkan'
+                  }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 </template>
 <style scoped>
 .card {
-    max-width: 600px;
-    margin: 3rem auto;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    background-color: #f29b9b;
+  max-width: 700px;
+  margin: 3rem auto;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  background-color: #fbd1df; /* Soft pink background */
+  border: 1px solid #f5717c;
 }
 
-.card-header h2 {
-    font-weight: bold;
-    color: #333;
+.card-header h1 {
+  font-weight: bold;
+  color: #b23a48; /* Warna pink gelap */
+  text-align: center;
+
+  margin-bottom: 2rem;
+}
+.h2 {
+  font-weight: bold;
+  color: #8d212e; /* Warna pink gelap */
+  text-align: center;
+  margin-bottom: 2rem;
+  margin-left: 180px;
+  /* margin-right: 100px; */
 }
 
 .form-label {
-    font-weight: 500;
-    margin-bottom: 0.5rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #333;
 }
 
-.form-control {
-    padding: 0.6rem;
-    font-size: 1rem;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+.form-control,
+.form-select {
+  padding: 0.65rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #e83e8c; /* Pink accent */
+  outline: none;
+  box-shadow: 0 0 0 0.15rem rgba(232, 62, 140, 0.25);
 }
 
 .btn-primary {
-    background-color: #0d6efd;
-    border: none;
-    padding: 0.6rem 1.2rem;
-    font-size: 1rem;
-    border-radius: 8px;
-    transition: background-color 0.3s ease;
+  background-color: #e83e8c; /* Pink utama */
+  border: none;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
 }
 
 .btn-primary:hover {
-    background-color: #0b5ed7;
+  background-color: #d63384;
+}
+
+.alert-info,
+.alert-danger {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  margin-top: 1rem;
+}
+
+.alert-info {
+  background-color: #ffe3ec;
+  color: #b23a48;
 }
 
 .alert-danger {
-    padding: 0.75rem 1rem;
-    background-color: #f8d7da;
-    color: #842029;
-    border-radius: 8px;
-    font-weight: 500;
+  background-color: #f8d7da;
+  color: #842029;
 }
 
-.mt-4 {
-    margin-top: 1.5rem;
+.table {
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
 }
 
-.list-group {
-    padding: 0;
-    list-style: none;
-    border-radius: 8px;
-    overflow: hidden;
+.table-bordered th,
+.table-bordered td {
+  vertical-align: middle;
+  background-color: #fff;
 }
 
-.list-group-item {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #ddd;
-    background-color: #f9f9f9;
+.badge {
+  padding: 0.4em 0.75em;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 12px;
+  display: inline-block;
+  text-transform: capitalize;
 }
 
-.list-group-item:last-child {
-    border-bottom: none;
+.bg-success {
+  background-color: #198754;
+  color: white;
+}
+
+.bg-warning {
+  background-color: #ffc107;
+  color: black;
+}
+
+.bg-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.bg-primary {
+  background-color: #bc26c1;
+  color: white;
+}
+
+.bg-info {
+  background-color: #f00dc3;
+  color: black;
+}
+
+.bg-secondary {
+  background-color: #6c757d;
+  color: white;
 }
 
 </style>

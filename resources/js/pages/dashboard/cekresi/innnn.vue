@@ -73,6 +73,8 @@ const cekResi = async () => {
                 {{ loading ? "Mengecek..." : "Lacak Paket" }}
             </button>
 
+            <div v-if="isLoading" class="alert alert-info">Sedang mencari...</div>
+      <div v-if="error" class="alert alert-danger">{{ error }}</div>
             <!-- Error Message -->
             <div v-if="error" class="alert alert-danger mt-3">{{ error }}</div>
 

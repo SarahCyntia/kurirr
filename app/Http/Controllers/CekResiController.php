@@ -8,25 +8,42 @@ use App\Models\Input;
 class CekResiController extends Controller
 {
     // Cek resi berdasarkan nomor dan kurir
-  public function cekResi(Request $request, $nomorResi)
+    public function cekResi(Request $request)
 {
-    $jenisLayanan = strtolower($request->query('kurir')); // ambil query param kurir
-    
-    $validKurir = ['jne', 'pos', 'tiki'];
-    if (!in_array($jenisLayanan, $validKurir)) {
-        return response()->json(['message' => 'Kurir tidak valid.'], 400);
-    }
+    $request->validate([
+        'no_resi' => 'required|string',
+        'ekspedisi' => 'required|string',
+    ]);
 
-    $data = Input::where('no_resi', $nomorResi)
-        ->where('jenis_layanan', $jenisLayanan)
+    $data = Input::where('no_resi', $request->no_resi)
+        ->where('ekspedisi', $request->ekspedisi)
         ->first();
 
     if (!$data) {
         return response()->json(['message' => 'Resi tidak ditemukan.'], 404);
     }
 
-    return response()->json($data);
+    return response()->json(['data' => $data]);
 }
+//   public function cekResi(Request $request, $nomorResi)
+// {
+//     $jenisLayanan = strtolower($request->query('kurir')); // ambil query param kurir
+    
+//     $validKurir = ['jne', 'pos', 'tiki'];
+//     if (!in_array($jenisLayanan, $validKurir)) {
+//         return response()->json(['message' => 'Kurir tidak valid.'], 400);
+//     }
+
+//     $data = Input::where('no_resi', $nomorResi)
+//         ->where('jenis_layanan', $jenisLayanan)
+//         ->first();
+
+//     if (!$data) {
+//         return response()->json(['message' => 'Resi tidak ditemukan.'], 404);
+//     }
+
+//     return response()->json($data);
+// }
 
 
 

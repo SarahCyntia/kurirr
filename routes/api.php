@@ -114,9 +114,9 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     // });
     Route::middleware('can:input')->group(function () {
         // Route::get('/input', [InputController::class, 'get'])->withoutMiddleware('can:input');
-        // Route::post('/input', [InputController::class, 'index'])->withoutMiddleware('can:input');
+        Route::post('/input', [InputController::class, 'index'])->withoutMiddleware('can:input');
         Route::get('/input', [InputController::class, 'get']);
-        Route::post('/input', [InputController::class, 'index']);
+        // Route::post('/input', [InputController::class, 'index']);
         Route::post('/input/store', [InputController::class, 'store']);
         Route::put('/input', [InputController::class, 'update']);
         // Route::put('/input', [InputController::class, 'update'])->withoutMiddleware('can:input');
@@ -184,8 +184,10 @@ Route::get('/provinces', [CheckOngkirController::class, 'getProvinces']);
 
 Route::get('/cek-resi/{nomorResi}', [CekResiController::class, 'cekResi']);
 Route::get('/resi/{nomorResi}', [CekResiController::class, 'show']);
-Route::get('/cek-resi/{noResi}', [ResiController::class, 'cek']);
-// Route::get('/cek-resi/{no_resi}', [TrackingController::class, 'cekResi']);
+Route::get('/cek-resi/{noResi}', [CekResiController::class, 'cek']);
+Route::get('/cek-resi/{no_resi}', [CekResiController::class, 'cekResi']);
+Route::get('/cek-resi', [CekResiController::class, 'cekResi']);
+
 
 
 

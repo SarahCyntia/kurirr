@@ -10,20 +10,24 @@ class ResiController extends Controller
     /**
      * Cetak struk berdasarkan No Resi
      */
-    public function cekResi($nomorResi, Request $request)
+    public function cekResi(Request $request)
 {
-    $ekspedisi = $request->query('kurir'); // contoh: "jne"
+    $request->validate([
+        'no_resi' => 'required|string',
+        'ekspedisi' => 'required|string',
+    ]);
 
-    $data = Input::where('no_resi', $nomorResi)
-        ->where('kurir', $ekspedisi) // ← ini peka huruf besar kecil
+    $data = Input::where('no_resi', $request->no_resi)
+        ->where('ekspedisi', $request->ekspedisi)
         ->first();
-    
+
     if (!$data) {
         return response()->json(['message' => 'Resi tidak ditemukan.'], 404);
     }
 
-    return response()->json($data);
+    return response()->json(['data' => $data]);
 }
+
 
 //     public function cek($nomorResi, Request $request)
 // {

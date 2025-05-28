@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('ekspedisi'); // jne / tiki / pos
             $table->integer('nilai')->nullable(); // rating 1-5
             $table->text('ulasan')->nullable();
+            $table->string('riwayat_pengiriman')->nullable();
 
             // Relasi lokasi
             $table->foreignId('asal_provinsi_id')->constrained('provinces');
