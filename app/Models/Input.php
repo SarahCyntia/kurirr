@@ -51,6 +51,16 @@ class Input extends Model
         return $this->belongsTo(City::class, 'tujuan_kota_id');
     }
 
+    // Input.php
+public function riwayat()
+{
+    return $this->hasMany(Riwayat::class);
+}
+
+// RiwayatPengiriman.php
+
+
+
     // public function pengguna() {
     //     return $this->belongsTo(User::class, 'pengguna_id');
     // }

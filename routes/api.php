@@ -26,6 +26,7 @@ use App\Http\Controllers\CheckOngkirController;
 use App\Http\Controllers\ResiController;
 use App\Http\Controllers\OrderanController;
 use App\Http\Controllers\CekResiController;
+use App\Http\Controllers\RiwayatController;
 
 /*
 |--------------------------------------------------------------------------
@@ -188,6 +189,9 @@ Route::get('/cek-resi/{noResi}', [CekResiController::class, 'cek']);
 Route::get('/cek-resi/{no_resi}', [CekResiController::class, 'cekResi']);
 Route::get('/cek-resi', [CekResiController::class, 'cekResi']);
 
+
+Route::get('/pengiriman/{id}/riwayat', [RiwayatController::class, 'index']);
+Route::post('/pengiriman/{id}/riwayat', [RiwayatController::class, 'store']);
 
 
 
