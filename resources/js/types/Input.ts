@@ -15,7 +15,12 @@ export interface Input {
     biaya : number
     penilaian?: number | null;  // Penilaian opsional
     komentar?: string | null;   // Komentar opsional
-    
+    tanggal_order: Date 
+    tanggal_dikemas: Date 
+    tanggal_dikirim: Date
+    tanggal_penerimaan: Date 
+
+
     asal_provinsi_id: number;
     asal_kota_id: number;
     tujuan_provinsi_id: number;

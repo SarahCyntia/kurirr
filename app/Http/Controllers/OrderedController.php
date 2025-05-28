@@ -35,8 +35,22 @@ class OrderedController extends Controller
                     ->orWhere('riwayat_pengiriman', 'like', "%$search%");
             });
         })
-            ->orderBy('created_at', 'desc')
+            ->when($request->status, function ($query, $status) {
+                $query->where('status', $status);
+            })
+            ->when($request->has('exclude_status'), function ($query) use ($request) {
+                $query->where('status', '!=', $request->exclude_status);
+            })
+            ->latest()
             ->paginate($per);
+
+        // Tambah nomor urut
+        $no = ($data->currentPage() - 1) * $per + 1;
+        foreach ($data as $item) {
+            $item->no = $no++;
+        }
+        // ->orderBy('created_at', 'desc')
+        // ->paginate($per);
 
         return response()->json($data);
     }
@@ -74,73 +88,87 @@ class OrderedController extends Controller
 
     }
     public function update(Request $request, $id)
-        {
-            $request->validate([
-    'status' => 'required|string',
-    'riwayat_pengiriman' => 'nullable|array',
-    'riwayat_pengiriman.*' => 'string',
-]);
+    {
+        $request->validate([
+            'status' => 'required|string',
+            'riwayat_pengiriman' => 'nullable|array',
+            'riwayat_pengiriman.*' => 'string',
+        ]);
 
-            // $validated = $request->validate([
-            //     'status' => 'required|string',
-            //     'riwayat_pengiriman' => 'nullable|string', // hanya 1 pesan log baru
-            // ]);
+        // $validated = $request->validate([
+        //     'status' => 'required|string',
+        //     'riwayat_pengiriman' => 'nullable|string', // hanya 1 pesan log baru
+        // ]);
 
-            $input = Input::findOrFail($id);
+        $input = Input::findOrFail($id);
 
-            // Ambil dan decode riwayat lama (jika ada)
-            $riwayat = json_decode($input->riwayat_pengiriman ?? '[]', true);
+        // Ambil dan decode riwayat lama (jika ada)
+        $riwayat = json_decode($input->riwayat_pengiriman ?? '[]', true);
 
-            // Tambahkan pesan baru ke array
-            if (!empty($validated['riwayat_pengiriman'])) {
-                $riwayat[] = [
-                    'pesan' => $validated['riwayat_pengiriman'],
-                    'waktu' => now()->format('Y-m-d H:i'),
-                ];
-            }
-
-            // Simpan status baru dan riwayat yang sudah diperbarui
-            $input->status = $validated['status'];
-            $input->riwayat_pengiriman = json_encode($riwayat);
-            $input->save();
-
-            return response()->json([
-                'message' => 'Status dan riwayat berhasil diperbarui',
-                'status' => $input->status,
-                'riwayat_pengiriman' => $riwayat
-            ]);
+         $waktuBaru = now()->format('d-m-Y H:i:s');
+        $statusString = $request->status . ' (' . $waktuBaru . ')';
+        switch ($request->status) {
+            case 'dalam proses':
+                $input->tanggal_dikemas = now();
+                break;
+            case 'dikirim':
+                $input->tanggal_dikirim = now();
+                break;
+            case 'selesai':
+                $input->tanggal_penerimaan = now();
+                break;
         }
 
+        // Tambahkan pesan baru ke array
+        if (!empty($validated['riwayat_pengiriman'])) {
+            $riwayat[] = [
+                'pesan' => $validated['riwayat_pengiriman'],
+                'waktu' => now()->format('Y-m-d H:i'),
+            ];
+        }
+
+        // Simpan status baru dan riwayat yang sudah diperbarui
+        // $input->status = $validated['status'];
+        $input->riwayat_pengiriman = json_encode($riwayat);
+        $input->save();
+
+        return response()->json([
+            'message' => 'Status dan riwayat berhasil diperbarui',
+            'status' => $input->status,
+            'riwayat_pengiriman' => $riwayat
+        ]);
+    }
 
 
 
-//    public function update(Request $request, $id)
+
+    //    public function update(Request $request, $id)
 // {
-    
-//     $validated = $request->validate([
+
+    //     $validated = $request->validate([
 //         'status' => 'required|string',
 //         'riwayat_pengiriman' => 'nullable|string', // isi = pesan baru$input = Input::findOrFail($id);
 //     $data = $request->all();
 
-//     $existingRiwayat = $input->riwayat_pengiriman ?? [];
+    //     $existingRiwayat = $input->riwayat_pengiriman ?? [];
 //     $newRiwayat = array_merge($existingRiwayat, $data['riwayat_pengiriman'] ?? []);
 
-//     $data['riwayat_pengiriman'] = $newRiwayat;
+    //     $data['riwayat_pengiriman'] = $newRiwayat;
 
-//     $input->update($data);
+    //     $input->update($data);
 
-//     return response()->json([
+    //     return response()->json([
 //         'message' => 'Data berhasil diperbarui',
 //         'data' => $input,
 //     ]);
 // ]);
 
-//     $input = Input::findOrFail($id);
+    //     $input = Input::findOrFail($id);
 
-//     // Ambil riwayat sebelumnya dan decode
+    //     // Ambil riwayat sebelumnya dan decode
 //     $riwayat = json_decode($input->riwayat_pengiriman ?? '[]', true);
 
-//     // Tambahkan riwayat baru jika ada input pesan
+    //     // Tambahkan riwayat baru jika ada input pesan
 //     if ($validated['riwayat_pengiriman']) {
 //         $riwayat[] = [
 //             'pesan' => $validated['riwayat_pengiriman'],
@@ -148,12 +176,12 @@ class OrderedController extends Controller
 //         ];
 //     }
 
-//     // Simpan kembali status & riwayat ke database
+    //     // Simpan kembali status & riwayat ke database
 //     $input->status = $validated['status'];
 //     $input->riwayat_pengiriman = json_encode($riwayat);
 //     $input->save();
 
-//     return response()->json([
+    //     return response()->json([
 //         'message' => 'Status dan riwayat berhasil diperbarui',
 //         'status' => $input->status,
 //         'riwayat_pengiriman' => $riwayat

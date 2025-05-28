@@ -1,10 +1,12 @@
-iy<script setup lang="ts">
+iy
+<script setup lang="ts">
 import { ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
 import Form from "./Form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import type { Input } from "@/types";
 import { h } from "vue";
+// import { Row } from "element-plus/es/components/table-v2/src/components";
 
 // Referensi dan variabel
 const column = createColumnHelper<Input>();
@@ -31,7 +33,7 @@ const columns = [
     column.accessor("ekspedisi", { header: "Ekspedisi" }),
     column.accessor("jenis_layanan", { header: "Jenis Layanan" }),
     column.accessor("no_resi", { header: "No Resi" }),
-   column.accessor("status", {
+    column.accessor("status", {
         header: "Status",
         cell: (cell) => {
             const status = cell.getValue();
@@ -39,47 +41,57 @@ const columns = [
                 status === "menunggu"
                     ? "bg-success"
                     : status === "dalam proses"
-                    ? "bg-warning"
-                    : status === "pengambilan paket"
-                    ? "bg-danger"
-                    : status === "dikirim"
-                    ? "bg-primary"
-                    : status === "selesai"
-                    ? "bg-info"
-                    : "bg-secondary"; // default kalau selain itu
+                        ? "bg-warning"
+                        : status === "pengambilan paket"
+                            ? "bg-danger"
+                            : status === "dikirim"
+                                ? "bg-primary"
+                                : status === "selesai"
+                                    ? "bg-info"
+                                    : "bg-secondary"; // default kalau selain itu
 
             const label =
                 status === "menunggu"
                     ? "Menunggu"
                     : status === "pengambilan paket"
-                    ? "Pengambilan Paket"
-                    : status === "dalam proses"
-                    ? "Dalam Proses"
-                    : status === "dikirim"
-                    ? "Dikirim"
-                    : status === "selesai"
-                    ? "Selesai"
-                    : "Dibatalkan";
+                        ? "Pengambilan Paket"
+                        : status === "dalam proses"
+                            ? "Dalam Proses"
+                            : status === "dikirim"
+                                ? "Dikirim"
+                                : status === "selesai"
+                                    ? "Selesai"
+                                    : "Dibatalkan";
+
 
             return h("span", { class: `badge ${badgeClass}` }, label);
         },
     }),
+    // column.accessor("created_at", {
+    //     header: "Tanggal Input",
+    //     cell: (cell) => {
+    //         const val = cell.getValue();
+    //         const date = new Date(val);
+    //         return date.toLocaleString("id-ID");
+    //     },
+    // }),
 
-      column.display({
-    id: "aksi",
-    header: "Aksi",
-    cell: ({ row }) => {
-      const noResi = row.original.no_resi;
-      return h(
-        "button",
-        {
-          class: "btn btn-sm btn-info",
-          onClick: () => window.open(`/cetak-resi/${noResi}`, "_blank"),
+
+    column.display({
+        id: "aksi",
+        header: "Aksi",
+        cell: ({ row }) => {
+            const noResi = row.original.no_resi;
+            return h(
+                "button",
+                {
+                    class: "btn btn-sm btn-info",
+                    onClick: () => window.open(`/cetak-resi/${noResi}`, "_blank"),
+                },
+                "Cetak Struk"
+            );
         },
-        "Cetak Struk"
-      );
-    },
-  }),
+    }),
 
 ];
 
@@ -95,34 +107,19 @@ watch(openForm, (val) => {
 
 <template>
     <!-- Form -->
-    <Form
-        v-if="openForm"
-        :selected="selected"
-        @close="openForm = false"
-        @refresh="refresh"
-    />
+    <Form v-if="openForm" :selected="selected" @close="openForm = false" @refresh="refresh" />
 
     <!-- Card List -->
     <div class="card">
         <div class="card-header align-items-center">
             <h2 class="mb-0">List Order</h2>
-            <button
-                type="button"
-                class="btn btn-sm btn-primary ms-auto"
-                v-if="!openForm"
-                @click="openForm = true"
-            >
+            <button type="button" class="btn btn-sm btn-primary ms-auto" v-if="!openForm" @click="openForm = true">
                 Tambah <i class="la la-plus"></i>
             </button>
         </div>
 
         <div class="card-body">
-            <paginate
-                ref="paginateRef"
-                id="table-inputorder"
-                url="/input?status=menunggu"
-                :columns="columns"
-            />
+            <paginate ref="paginateRef" id="table-inputorder" url="/input?status=menunggu" :columns="columns" />
         </div>
     </div>
 </template>

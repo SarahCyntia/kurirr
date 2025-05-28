@@ -344,7 +344,7 @@ watch(openForm, (val) => {
             <paginate
                 ref="paginateRef"
                 id="table-inputorder"
-                url="/input?status=menunggu"
+                url="/input"
                 :columns="columns"
             />
         </div>

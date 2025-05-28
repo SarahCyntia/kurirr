@@ -99,13 +99,18 @@ class InputController extends Controller
                         ->orWhere('biaya', 'like', "%$search%");
                 });
             })
-            // ->orderBy('created_at', 'desc')
-            // ->paginate($per);
-            ->latest()
+            ->when($request->status, function ($query, $status) {
+                // Jika parameter 'status' ada, filter berdasarkan status tersebut
+                $query->where('status', $status);
+            })
+            ->when($request->has('exclude_status'), function ($query) use ($request) {
+                // Jika parameter 'exclude_status' ada, ambil data yang status-nya bukan nilai itu
+                $query->where('status', '!=', $request->exclude_status);
+            })
+            ->latest() // Urutkan berdasarkan kolom 'created_at' secara descending
+            ->paginate($per); // Paginasi berdasarkan nilai $per
 
-            // Paginate hasil query
-            ->paginate($per);
-
+        // Tambahkan nomor urut manual berdasarkan halaman saat ini
         $no = ($data->currentPage() - 1) * $per + 1;
         foreach ($data as $item) {
             $item->no = $no++;
@@ -145,30 +150,31 @@ class InputController extends Controller
             'nilai' => 'nullable|integer|min:1|max:5',
             'status' => 'required|in:menunggu,dalam proses,dikirim,selesai',
             'ulasan' => 'nullable|string',
+            'tanggal_order' => 'nullable|datetime|before_or_equal:now',
         ]);
 
         $input = $id ? Input::findOrFail($id) : new Input(); // ini sudah benar
         if (!$id) {
-        // Loop hingga menghasilkan no_resi yang belum ada di database
-        do {
-            $resi = 'RESI-' . now()->timestamp . '-' . rand(1000, 9999);
-        } while (Input::where('no_resi', $resi)->exists());
+            // Loop hingga menghasilkan no_resi yang belum ada di database
+            do {
+                $resi = 'RESI-' . now()->timestamp . '-' . rand(1000, 9999);
+            } while (Input::where('no_resi', $resi)->exists());
 
-        $input->no_resi = $resi;
-        $input->status = 'menunggu';
+            $input->no_resi = $resi;
+            $input->status = 'menunggu';
 
-        if (empty($input->waktu)) {
-            $input->waktu = now()->format('Y-m-d H:i:s');
+            if (empty($input->waktu)) {
+                $input->waktu = now()->format('Y-m-d H:i:s');
+            }
         }
-    }
 
-    $input->fill($validated);
-    $input->save();
+        $input->fill($validated);
+        $input->save();
 
-    return response()->json([
-        'message' => 'Berhasil menambahkan input',
-        'data' => $input
-    ]);
+        return response()->json([
+            'message' => 'Berhasil menambahkan input',
+            'data' => $input
+        ]);
     }
 
     public function show(Input $input)
@@ -181,6 +187,10 @@ class InputController extends Controller
         $validated = $request->validate([
             'status' => 'nullable|string',
             'riwayat_pengiriman' => 'nullable|string',
+            'tagnggal_order' => 'nullable|datatime',
+            'tanggal_dikemas' => 'nullable|datetime',
+            'tanggal_dikirim' => 'nullable|datetime',
+            'tanggal_penerimaan' => 'nullable|datetime',
             // 'berat_barang' => 'required|numeric|min:1',
             // 'jarak' => 'nullable|numeric|min:1',
             // 'biaya_pengiriman' => 'required|numeric|min:0',
@@ -194,6 +204,30 @@ class InputController extends Controller
 
         $input->status = $validated['status'];
         $input->riwayat_pengiriman = $validated['riwayat_pengiriman'];
+        $waktuBaru = now()->format('d-m-Y H:i:s');
+
+        // Simpan status dengan waktu sebagai string keterangan (opsional)
+        $input->keterangan_status = $request->status . ' (' . $waktuBaru . ')';
+
+        // Update tanggal berdasarkan status
+        switch ($request->status) {
+            case 'dalam proses':
+                $input->tanggal_dikemas = now();
+                break;
+
+            case 'pengambilan paket':
+                $input->tanggal_pengambilan = now();
+                break;
+
+            case 'dikirim':
+                $input->tanggal_dikirim = now();
+                break;
+
+            case 'selesai':
+                $input->tanggal_penerimaan = now();
+                break;
+        }
+
         // $input->berat_barang = $validated['berat_barang'];
         // $input->jarak = $validated['jarak'] ?? $input->jarak;
         // $input->biaya_pengiriman = $validated['biaya_pengiriman'];
@@ -204,6 +238,7 @@ class InputController extends Controller
             'message' => 'Status berhasil diperbarui',
             'status' => $input->status,
         ]);
+
     }
 
     // public function get()

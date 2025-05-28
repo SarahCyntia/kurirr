@@ -42,9 +42,9 @@ const Input = ref({
 const formRef = ref();
 // Data provinces, cities asal dan tujuan
 const couriers = ref([
-    { code: "jne", name: "JNE" },
-    { code: "tiki", name: "TIKI" },
-    { code: "pos", name: "POS Indonesia" },
+    { code: "JNT", name: "JNE" },
+    { code: "TIKI", name: "TIKI" },
+    { code: "POS", name: "POS Indonesia" },
 ]);
 const selectedCourier = ref("");  // ekspedisi/kurir dipilih
 const services = ref<{ service: string; description: string; cost: number; etd: string }[]>([]);
