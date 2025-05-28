@@ -2,18 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Province;
-use App\Models\Transaksii;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Province;
+use App\Models\Input;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class TransaksiiController extends Controller
+class InputController extends Controller
 {
-    // Ambil daftar provinsi dari RajaOngkir
     public function getProvinces()
     {
         // $response = Http::withHeaders([
@@ -22,12 +20,25 @@ class TransaksiiController extends Controller
 
         // $provinces = collect($response['rajaongkir'])
         //     ->pluck('province', 'province_id');
-        $provinces = Province::all()->pluck('name','id');
+        $provinces = Province::all()->pluck('name', 'id');
 
         return response()->json($provinces);
     }
 
-    // Ambil daftar kota berdasarkan provinsi
+    // public function getCities($provinceId)
+    // {
+    //     $response = Http::withHeaders([
+    //         'key' => env('RAJAONGKIR_API_KEY'),
+    //     ])->get('https://api.rajaongkir.com/starter/city', [
+    //                 'province' => $provinceId
+    //             ]);
+
+    //     $cities = collect($response['rajaongkir']['results'])
+    //         ->pluck('city_name', 'city_id');
+
+    //     return response()->json($cities);
+    // }
+
     public function getCities($provinceId)
     {
         $response = Http::withHeaders([
@@ -40,16 +51,53 @@ class TransaksiiController extends Controller
         return response()->json($cities);
     }
 
+
+//     public function hitungOngkir(Request $request)
+// {
+//     $response = Http::withHeaders([
+//         'key' => config('services.rajaongkir.key')
+//     ])->post('https://api.rajaongkir.com/starter/cost', [
+//         'origin' => $request->origin,
+//         'destination' => $request->destination,
+//         'weight' => $request->weight,
+//         'courier' => $request->courier,
+//     ]);
+
+//     if ($response->successful()) {
+//         $results = $response['rajaongkir']['results'] ?? [];
+
+//         if (!empty($results) && isset($results[0]['costs'])) {
+//             $costs = $results[0]['costs'];
+
+//             $services = collect($costs)->map(function ($item) {
+//                 return [
+//                     'service' => $item['service'],
+//                     'description' => $item['description'],
+//                     'cost' => $item['cost'][0]['value'] ?? 0,
+//                     'etd' => $item['cost'][0]['etd'] ?? '',
+//                 ];
+//             });
+
+//             return response()->json($services);
+//         } else {
+//             return response()->json(['message' => 'Data layanan tidak tersedia'], 404);
+//         }
+//     } else {
+//         return response()->json(['message' => 'Gagal mengambil data ongkir'], $response->status());
+//     }
+// }
+
+
     public function hitungOngkir(Request $request)
     {
         $response = Http::withHeaders([
             'key' => config('services.rajaongkir.key')
         ])->post('https://api.rajaongkir.com/starter/cost', [
-            'origin' => $request->origin,
-            'destination' => $request->destination,
-            'weight' => $request->weight, // dalam gram
-            'courier' => $request->courier, // jne / tiki / pos
-        ]);
+                    'origin' => $request->origin,
+                    'destination' => $request->destination,
+                    'weight' => $request->weight, // dalam gram
+                    'courier' => $request->courier, // jne / tiki / pos
+                ]);
 
         Log::info("Cost", $response['rajaongkir']);
 
@@ -58,33 +106,38 @@ class TransaksiiController extends Controller
         return response()->json($cost);
     }
 
-     public function index(Request $request)
+
+    public function __construct()
     {
-        $per = $request->per ?? 10;
-        $page = $request->page ? $request->page - 1 : 0;
+        $this->middleware('auth');
+    }
 
-        // DB::statement('set @no=0+' . ($page - 1) * $per);
-        DB::statement('set @no=0+' . $page * $per);
+    public function index(Request $request)
+    {
+        $per = $request->input('per', 10);
+        $page = $request->input('page', 1);
 
-
-        $data = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'pengguna'])
-            ->when($request->search, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('no_resi', 'like', "%$search%")
-                    ->orWhere('penerima', 'like', "%$search%")
-                    //   ->orWhere('alamat_asal', 'like', "%$search%")
-                    ->orWhere('alamat_tujuan', 'like', "%$search%")
+        DB::statement('SET @no := ' . (($page - 1) * $per));
+        
+        $data = Input::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota',])
+        ->when($request->search, function (Builder $query, string $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_pengirim', 'like', "%$search%")
+                    ->orWhere('alamat_pengirim', 'like', "%$search%")
+                    ->orWhere('no_telp_pengirim', 'like', "%$search%")
+                    ->orWhere('nama_penerima', 'like', "%$search%")
+                    ->orWhere('alamat_penerima', 'like', "%$search%")
+                    ->orWhere('no_telp_penerima', 'like', "%$search%")
+                    ->orWhere('jenis_barang', 'like', "%$search%")
                     ->orWhere('ekspedisi', 'like', "%$search%")
-                    ->orWhere('layanan', 'like', "%$search%");
-                });
-            })
-
-        // $query->orderBy('created_at', 'desc');
-
-        // $data = $query->paginate($per);
-        // Urutkan dari yang terbaru (created_at DESC)
+                    ->orWhere('jenis_layanan', 'like', "%$search%")
+                    ->orWhere('berat_barang', 'like', "%$search%");
+            });
+        })
+            // ->orderBy('created_at', 'desc')
+            // ->paginate($per);
             ->latest()
-            
+
             // Paginate hasil query
             ->paginate($per);
 
@@ -96,98 +149,125 @@ class TransaksiiController extends Controller
         return response()->json($data);
     }
 
-    // Ambil data transaksii berdasarkan id
     public function get($id)
     {
-        $transaksii = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'pengguna'])
+        $input = Input::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'pengguna'])
             ->findOrFail($id);
 
-        return response()->json($transaksii);
+        return response()->json($input);
     }
 
-    // Simpan atau update transaksii
+
     public function store(Request $request, $id = null)
     {
         $validated = $request->validate([
-            'no_resi' => 'required|string|unique:transaksiii,no_resi,' . ($id ?? 'NULL') . ',id',
-
-            'penerima' => 'required|string',
-            'no_hp_penerima' => 'required|string',
+            'nama_pengirim' => 'required|string|max:255',
             'tujuan_provinsi_id' => 'required|exists:provinces,id',
             'tujuan_kota_id' => 'required|exists:cities,id',
-            'alamat_tujuan' => 'required|string',
+            'alamat_pengirim' => 'required|string|max:255',
+            'no_telp_pengirim' => 'required|string|max:20',
 
-
-            'pengguna_id' => 'required|exists:users,id',
-            'nama_barang' => 'required|string',
-            'berat_barang' => 'required|numeric',
-            'ekspedisi' => 'required|string',
-            'layanan' => 'required|string',
-            'biaya' => 'required|integer',
+            'nama_penerima' => 'required|string|max:255',
             'asal_provinsi_id' => 'required|exists:provinces,id',
             'asal_kota_id' => 'required|exists:cities,id',
-            'alamat_asal' => 'required|string',
+            'alamat_penerima' => 'required|string|max:255',
+            'no_telp_penerima' => 'required|string|max:20',
+            'jenis_barang' => 'required|string|max:255',
+            'ekspedisi' => 'required|string',
+            'jenis_layanan' => 'required|string|max:255',
+            'biaya' => 'required|integer',
+            'berat_barang' => 'required|numeric|min:1',
 
             'waktu' => 'nullable|date',
-            'penilaian' => 'nullable|integer|min:1|max:5',
-            'status' => 'required|in:menunggu,diproses,dikirim,selesai',
-            'komentar' => 'nullable|string',
+            'nilai' => 'nullable|integer|min:1|max:5',
+            'status' => 'required|in:menunggu,dalam proses,dikirim,selesai',
+            'ulasan' => 'nullable|string',
         ]);
 
-        $transaksii = $id ? Transaksii::findOrFail($id) : new Transaksii();
+        $input = $id ? Input::findOrFail($id) : new Input();
 
-        $transaksii->fill($validated);
+        $input->fill($validated);
 
-        // Jika transaksii baru, set waktu sekarang jika belum ada waktu
-        if (!$id && empty($transaksii->waktu)) {
-            $transaksii->waktu = now()->format('Y-m-d H:i:s');
+        $input = new Input($validated);
+        $input->no_resi = 'RESI-' . now()->timestamp . '-' . rand(1000, 9999);
+        $input->status = 'menunggu';
+        $input->save();
+
+        if (!$id && empty($input->waktu)) {
+            $input->waktu = now()->format('Y-m-d H:i:s');
         }
 
-        $transaksii->save();
+        $input->save();
 
-        return response()->json(['message' => 'Berhasil menambahkan transaksi', 'data' => $transaksi]);
-
+        return response()->json(['message' => 'Berhasil menambahkan input', 'data' => $input]);
+        // return response()->json([
+        //     'message' => 'Input berhasil disimpan',
+        //     'data' => $input,
+        // ]);
     }
 
+    public function show(Input $input)
+    {
+        return response()->json($input);
+    }
 
-    // Simpan transaksii baru atau update transaksii
-    // public function store(Request $request, $id = null)
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status' => 'nullable|string',
+            'riwayat_pengiriman' => 'nullable|string',
+            // 'berat_barang' => 'required|numeric|min:1',
+            // 'jarak' => 'nullable|numeric|min:1',
+            // 'biaya_pengiriman' => 'required|numeric|min:0',
+            // 'kurir_id' => 'nullable|integer|exists:kurirs,id',
+        ]);
+
+        $input = Input::findOrFail($id);
+
+        $user = auth()->user();
+        $kurirId = $user->kurir->id ?? null; // Asumsi relasi user->kurir
+
+        $input->status = $validated['status'];
+        $input->riwayat_pengiriman = $validated['riwayat_pengiriman'];
+        // $input->berat_barang = $validated['berat_barang'];
+        // $input->jarak = $validated['jarak'] ?? $input->jarak;
+        // $input->biaya_pengiriman = $validated['biaya_pengiriman'];
+        // $input->kurir_id = $validated['kurir_id'] ?? $kurirId;
+        $input->save();
+
+        return response()->json([
+            'message' => 'Status berhasil diperbarui',
+            'status' => $input->status,
+        ]);
+    }
+
+    // public function get()
     // {
-    //     $request->validate([
-    //         'nama_barang' => 'required|string',
-    //         'alamat_asal' => 'required|string',
-    //         'alamat_tujuan' => 'required|string',
-    //         'no_hp_penerima' => 'required|string',
-    //         'penerima' => 'required|string',
-    //         'province_origin' => 'required',
-    //         'city_origin' => 'required',
-    //         'province_destination' => 'required',
-    //         'city_destination' => 'required',
-    //     ]);
-
-    //     $transaksii = $id ? Transaksi::findOrFail($id) : new Transaksi();
-
-    //     $transaksii->pengguna_id = $request->id; // dari FormData
-    //     $transaksii->nama_barang = $request->nama_barang;
-    //     $transaksii->alamat_asal = $request->alamat_asal;
-    //     $transaksii->alamat_tujuan = $request->alamat_tujuan;
-    //     $transaksii->no_hp_penerima = $request->no_hp_penerima;
-    //     $transaksii->penerima = $request->penerima;
-
-    //     $transaksii->province_origin = $request->province_origin;
-    //     $transaksii->city_origin = $request->city_origin;
-    //     $transaksii->province_destination = $request->province_destination;
-    //     $transaksii->city_destination = $request->city_destination;
-
-    //     if (!$id) {
-    //         $transaksii->status = 'belum terkirim';
-    //         $transaksii->waktu = now();
-    //     }
-
-    //     $transaksii->save();
+    //     $data = Input::select(
+    //         'nama_pengirim',
+    //         'alamat_pengirim',
+    //         'no_telp_pengirim',
+    //         'nama_penerima',
+    //         'alamat_penerima',
+    //         'no_telp_penerima',
+    //         'jenis_barang',
+    //         'jenis_layanan',
+    //         'berat_barang'
+    //     )->get();
 
     //     return response()->json([
-    //         'message' => $id ? 'Transaksi berhasil diperbarui' : 'Transaksi berhasil dibuat'
+    //         'success' => true,
+    //         'data' => $data
     //     ]);
     // }
+
+    public function destroy(Input $input)
+    {
+        $input->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data pesanan berhasil dihapus',
+        ]);
+    }
 }

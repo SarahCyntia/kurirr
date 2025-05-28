@@ -52,6 +52,7 @@ const selectedService = ref("");
 const berat_barang = ref<number | null>(null);
 const biaya = ref<number>(0);
 const emit = defineEmits(["close", "refresh"]);
+// const props = defineProps({selected: {type: String, default:null}});
 
 // ✅ Validasi form menggunakan Yup
 const formSchema = Yup.object().shape({
@@ -123,25 +124,6 @@ const getSelectedCost = () => {
     return cost;
 };
 
-// const fetchOngkir = async () => {
-//     const isInvalidInput =
-//         provinceOrigin.value === "0" ||
-//         cityOrigin.value === "" ||
-//         provinceDestination.value === "0" ||
-//         cityDestination.value === "" ||
-//         !selectedCourier.value ||
-//         !berat_barang.value ||
-//         berat_barang.value <= 0;
-
-//     if (isInvalidInput) {
-//         console.log("Berat barang:", berat_barang.value);
-//         console.log("Input tidak valid, menghentikan fetch ongkir.");
-
-//         services.value = [];
-//         selectedService.value = "";
-//         biaya.value = 0;
-//         return;
-//     }
 const fetchOngkir = async () => {
     if (
         provinceOrigin.value === "0" || !cityOrigin.value ||
@@ -191,58 +173,19 @@ const fetchOngkir = async () => {
 watch([provinceOrigin, cityOrigin, provinceDestination, cityDestination, selectedCourier, berat_barang], () => {
     fetchOngkir();
 });
+
 watch(selectedService, (val) => {
     const service = services.value.find(s => s.service === val);
-    if (service) {
-        biaya.value = service.cost;
-        getSelectedCost();
-    } else {
-        biaya.value = 0;
-    }
+    biaya.value = service ? service.cost : 0;
+    getSelectedCost();
 });
-
-
-// watch(selectedService, (val) => {
-//     const service = services.value.find(s => s.service === val);
-//     biaya.value = service ? service.cost : 0;
-//     getSelectedCost();
-// });
-
-// ✅ Mendapatkan data  Input untuk edit
-// function getEdit() {
-
-//     block(document.getElementById("form-Input"));
-//     ApiService.get("Input", props.selected)
-//         .then(({ data }) => {
-//             console.log(data);
-//             Input.value = {
-//                 nama_pengirim: data.nama_pengirim || "",
-//                 alamat_pengirim: data.alamat_pengirim || "",
-//                 no_telp_pengirim: data.no_telp_pengirim || "",
-//                 nama_penerima: data.nama_penerima || "",
-//                 alamat_penerima: data.alamat_penerima || "",
-//                 no_telp_penerima: data.no_telp_penerima || "",
-//                 jenis_barang: data.jenis_barang || "",
-//                 ekspedisi: data.ekspedisi || "",
-//                 jenis_layanan: data.jenis_layanan || "",
-//                 berat_barang: data.berat_barang || "",
-//             };
-//             console.log(Input.value);
-//         })
-//         .catch((err: any) => {
-//             toast.error(err.response.data.message || "Gagal mengambil data");
-//         })
-//         .finally(() => {
-//             unblock(document.getElementById("form-Input"));
-//         });
-// }
 
 // ✅ Submit Form (Tambah/Update)
 function submit() {
     const formData = new FormData();
     const noResi = generateNoResi(); // ⬅️ Simpan no_resi di sini
 
-    formData.append("nama_pengirim", Input.value.nama_pengirim);
+    formData.append("nama_pengirim", Input.nama_pengirim);
     formData.append("asal_provinsi_id", provinceOrigin.value);
     formData.append("asal_kota_id", cityOrigin.value);
     formData.append("alamat_pengirim", Input.value.alamat_pengirim);
@@ -254,7 +197,6 @@ function submit() {
     formData.append("no_telp_penerima", Input.value.no_telp_penerima);
     formData.append("jenis_barang", Input.value.jenis_barang);
     formData.append("jenis_layanan", selectedService.value);
-    formData.append("berat_barang", Input.value.berat_barang);
     formData.append("ekspedisi", selectedCourier.value);
     formData.append("berat_barang", berat_barang.value?.toString() || "0");
     formData.append("no_resi", noResi); // ⬅️ Gunakan noResi
@@ -262,7 +204,6 @@ function submit() {
     if (props.selected) {
         formData.append("_method", "PUT");
     } else {
-        formData.append("waktu", new Date().toISOString());
         formData.append("status", "menunggu");
     }
 
@@ -281,8 +222,7 @@ function submit() {
                 title: "Berhasil!",
                 html: `No. Resi berhasil dibuat:<br><strong>${noResi}</strong>`,
                 showCancelButton: true,
-                confirmButtonText: "Cetak Resi",
-                cancelButtonText: "Tutup",
+                confirmButtonText: "Oke",
             }).then(() => {
                 emit("close");
                 emit("refresh");
@@ -306,28 +246,10 @@ function generateNoResi() {
     return `${prefix}-${timestamp}-${random}`;
 }
 
-
-// ✅ Ambil data saat component dipasang
-// onMounted(() => {
-//     if (props.selected) {
-//         getEdit();
-//     }
-// });
-
 onMounted(() => {
     fetchProvinces();
 });
 
-
-// ✅ Pantau perubahan selected (Edit Mode)
-// watch(
-//     () => props.selected,
-//     () => {
-//         if (props.selected) {
-//             getEdit();
-//         }
-//     }
-// );
 </script>
 
 <template>
@@ -456,7 +378,7 @@ onMounted(() => {
                 <div class="col-md-6">
                     <div class="fv-row mb-7">
                         <label class="form-label required fw-bold">Ekspedisi</label>
-                        <field as="select" v-model="selectedCourier" class="form-control" name="ekspedisi">
+                        <Field as="select" v-model="selectedCourier" class="form-control" name="ekspedisi">
                             <option value="">-- Pilih Ekspedisi --</option>
                             <option v-for="c in couriers" :key="c.code" :value="c.code">{{ c.name }}</option>
                         </Field as="select">
@@ -464,43 +386,39 @@ onMounted(() => {
                         <!-- <div v-if="errors.kurir" class="text-danger">{{ errors.kurir }}</div> -->
                     </div>
                 </div>
-                
+
                 <div class="col-md-6">
                     <div class="fv-row mb-7">
-                        <label class="form-label fw-bold fs-6">Berat Barang (gram)</label>
-                        <Field class="form-control" type="number" name="berat_barang" v-model="Input.berat_barang"
-                            placeholder="Masukkan Berat Barang (gram)" min="0" />
-                        <ErrorMessage name="berat_barang" class="text-danger" />
-                    </div>
+                    <label class="form-label required fw-bold">Berat Barang (Kg)</label>
+                    <Field type="number" v-model="berat_barang" class="form-control" placeholder="Contoh: 0.5" min="0.1"
+                        step="0.1" name="berat_barang" />
+                    <ErrorMessage name="berat_barang" class="text-danger small" />
+                    <!-- <div v-if="errors.berat_barang" class="text-danger">{{ errors.berat_barang }}</div> -->
+                </div>
+                </div>
+    
+                <div class="col-md-6">
+                    <div class="fv-row mb-7">
+                    <label for="jenis_layanan" class="form-label required fw-bold">Jenis Layanan</label>
+                    <Field as="select" id="jenis_layanan" name="jenis_layanan" class="form-select" v-model="selectedService"
+                        @change="getSelectedCost" :disabled="services.length === 0">
+                        <option value="">{{ services.length === 0 ? 'Tidak ada jenis layanan tersedia' : 'Pilih jenis layanan' }}
+                        </option>
+                        <option v-for="service in services" :key="service.service" :value="service.service">
+                            {{ service.service }} - Rp{{ Number(service.cost).toLocaleString() }} { {{ service.etd }}
+                            Hari }
+                        </option>
+                    </Field>
+                    <ErrorMessage name="jenis_layanan" class="text-danger small" />
+                </div>
                 </div>
 
                 <div class="col-md-6">
                     <div class="fv-row mb-7">
-                        <label for="jenis_layanan" class="form-label required fw-bold">Jenis Layanan</label>
-                        <Field as="select" id="jenis_layanan" name="jenis_layanan" class="form-select"
-                            v-model="selectedService" @change="getSelectedCost">
-                            <option value="">Jenis
-                                layanan</option>
-                            <option v-for="service in services" :key="service.service" :value="service.service">
-                                {{ service.service }} - Rp{{ Number(service.cost).toLocaleString() }} { {{ service.etd
-                                }} Hari }
-                            </option>
-                            <!-- <option v-for="service in services" :key="service.service" :value="service.service">
-                                {{ service.service }} - Rp{{ Number(service.cost).toLocaleString() }} { {{ service.etd
-                                }}
-                                Hari }
-                            </option> -->
-                        </Field as="select">
-                        <ErrorMessage name="jenis_layanan" class="text-danger small" />
-                        <!-- <div v-if="errors.layanan" class="text-danger">{{ errors.layanan }}</div> -->
+                        <label class="form-label fw-bold">Biaya (Rp)</label>
+                        <input type="text" name="biaya" class="form-control"
+                        :value="services.length > 0 && biaya ? biaya.toLocaleString('id-ID') : '-'" readonly />
                     </div>
-                </div>
-
-                
-                <div class="col-md-6" v-if="services.length > 0">
-                    <label class="form-label fw-bold">Biaya (Rp)</label>
-                    <input type="text" name="biaya" class="form-control"
-                        :value="biaya ? biaya.toLocaleString('id-ID') : '-'" readonly />
                 </div>
 
 

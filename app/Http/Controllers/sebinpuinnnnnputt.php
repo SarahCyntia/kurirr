@@ -140,35 +140,43 @@ class InputController extends Controller
             'jenis_barang' => 'required|string|max:255',
             'ekspedisi' => 'required|string',
             'jenis_layanan' => 'required|string|max:255',
-            'biaya' => 'nullable|integer',
+            'biaya' => 'required|integer',
             'berat_barang' => 'required|numeric|min:1',
+
+            'waktu' => 'nullable|date',
             'nilai' => 'nullable|integer|min:1|max:5',
             'status' => 'required|in:menunggu,dalam proses,dikirim,selesai',
             'ulasan' => 'nullable|string',
         ]);
 
         $input = $id ? Input::findOrFail($id) : new Input(); // ini sudah benar
+        $input->fill($validated);
         if (!$id) {
-        // Loop hingga menghasilkan no_resi yang belum ada di database
-        do {
-            $resi = 'RESI-' . now()->timestamp . '-' . rand(1000, 9999);
-        } while (Input::where('no_resi', $resi)->exists());
-
-        $input->no_resi = $resi;
-        $input->status = 'menunggu';
-
-        if (empty($input->waktu)) {
-            $input->waktu = now()->format('Y-m-d H:i:s');
+            $input->no_resi = 'RESI-' . now()->timestamp . '-' . rand(1000, 9999);
+            $input->status = 'menunggu';
+            if (empty($input->waktu)) {
+                $input->waktu = now()->format('Y-m-d H:i:s');
+            }
         }
-    }
 
-    $input->fill($validated);
-    $input->save();
+        $input->save();
 
-    return response()->json([
-        'message' => 'Berhasil menambahkan input',
-        'data' => $input
-    ]);
+        // $input = new Input($validated);
+        // $input->no_resi = 'RESI-' . now()->timestamp . '-' . rand(1000, 9999);
+        // $input->status = 'menunggu';
+        // $input->save();
+
+        // if (!$id && empty($input->waktu)) {
+        //     $input->waktu = now()->format('Y-m-d H:i:s');
+        // }
+
+        // $input->save();
+
+        return response()->json(['message' => 'Berhasil menambahkan input', 'data' => $input]);
+        // return response()->json([
+        //     'message' => 'Input berhasil disimpan',
+        //     'data' => $input,
+        // ]);
     }
 
     public function show(Input $input)

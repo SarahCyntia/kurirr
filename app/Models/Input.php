@@ -51,9 +51,9 @@ class Input extends Model
         return $this->belongsTo(City::class, 'tujuan_kota_id');
     }
 
-    public function pengguna() {
-        return $this->belongsTo(User::class, 'pengguna_id');
-    }
+    // public function pengguna() {
+    //     return $this->belongsTo(User::class, 'pengguna_id');
+    // }
 
     // protected $fillable = [
     //     'id_pelanggan',

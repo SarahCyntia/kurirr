@@ -113,15 +113,17 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     //     Route::delete('/order', [OrderController::class, 'destroy']);
     // });
     Route::middleware('can:input')->group(function () {
-        Route::get('/input', [InputController::class, 'get'])->withoutMiddleware('can:input');
-        Route::post('/input', [InputController::class, 'index'])->withoutMiddleware('can:input');
+        // Route::get('/input', [InputController::class, 'get'])->withoutMiddleware('can:input');
+        // Route::post('/input', [InputController::class, 'index'])->withoutMiddleware('can:input');
+        Route::get('/input', [InputController::class, 'get']);
+        Route::post('/input', [InputController::class, 'index']);
         Route::post('/input/store', [InputController::class, 'store']);
         Route::put('/input', [InputController::class, 'update']);
         // Route::put('/input', [InputController::class, 'update'])->withoutMiddleware('can:input');
         Route::post('/input/stores', [InputController::class, 'storePenilaian']);
         Route::get('/cetak-resi/{no_resi}', [inputController::class, 'cetakResi']);
         Route::get('/provinces', [InputController::class, 'getProvinces']);
-        Route::get('/cities/{provinceId}', [InputController::class, 'getCities']);
+        // Route::get('/cities/{provinceId}', [InputController::class, 'getCities']);
         Route::post('/cost', [InputController::class, 'hitungOngkir']);
         Route::get('/Input/{input}',[InputController::class,'show'])->withoutMiddleware('can:input');
     });
@@ -182,6 +184,10 @@ Route::get('/provinces', [CheckOngkirController::class, 'getProvinces']);
 
 Route::get('/cek-resi/{nomorResi}', [CekResiController::class, 'cekResi']);
 Route::get('/resi/{nomorResi}', [CekResiController::class, 'show']);
+Route::get('/cek-resi/{noResi}', [ResiController::class, 'cek']);
+// Route::get('/cek-resi/{no_resi}', [TrackingController::class, 'cekResi']);
+
+
 
 
     // Route::middleware('can:kurir')->group(function () {

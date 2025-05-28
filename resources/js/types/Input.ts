@@ -9,9 +9,10 @@ export interface Input {
     jenis_barang : string
     ekspedisi: string;  
     jenis_layanan : string
-    berat_paket : number
+    berat_barang : number
     riwayat_pengiriman : string
     no_resi : number
+    biaya : number
     penilaian?: number | null;  // Penilaian opsional
     komentar?: string | null;   // Komentar opsional
     

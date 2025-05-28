@@ -27,8 +27,9 @@ const columns = [
     column.accessor("alamat_penerima", { header: "Alamat Penerima" }),
     column.accessor("no_telp_penerima", { header: "No. Telp Penerima" }),
     column.accessor("jenis_barang", { header: "Jenis Barang" }),
-    column.accessor("jenis_layanan", { header: "Jenis Layanan" }),
     column.accessor("berat_barang", { header: "Berat Barang" }),
+    column.accessor("ekspedisi", { header: "Ekspedisi" }),
+    column.accessor("jenis_layanan", { header: "Jenis Layanan" }),
     column.accessor("no_resi", { header: "No Resi" }),
    column.accessor("status", {
         header: "Status",
