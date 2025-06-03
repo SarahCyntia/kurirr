@@ -2,34 +2,76 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Input;
-use App\Models\RiwayatPengiriman;
+use App\Models\Riwayat;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class RiwayatController extends Controller
 {
-    // Tambahkan riwayat baru ke pengiriman tertentu
-    public function store(Request $request, $pengirimanId)
+    public function store(Request $request, $id)
     {
         $request->validate([
             'status' => 'required|string|max:255',
-            'keterangan' => 'required|string',
+            'deskripsi' => 'required|string',
         ]);
 
-        $pengiriman = Pengiriman::findOrFail($pengirimanId);
+        $input = Input::findOrFail($id);
 
-        $pengiriman->riwayat()->create([
+        $input->riwayats()->create([
             'status' => $request->status,
-            'keterangan' => $request->keterangan,
+            'deskripsi' => $request->deskripsi,
         ]);
 
-        return response()->json(['message' => 'Riwayat pengiriman berhasil ditambahkan.']);
+        return redirect()->back()->with('success', 'Riwayat berhasil ditambahkan.');
     }
 
-    // Ambil semua riwayat untuk satu pengiriman
-    public function index($inputorderId)
+    public function tambahRiwayat(Request $request,Input $id){
+        $request->validate([
+            'status' => 'required',
+            'riwayat' => 'required'
+        ]);
+
+        $id->update([
+            'status' => $request->status
+        ]);
+
+        Log::info($id );
+
+        $data = Riwayat::create([
+            'id' => $id->id,
+            'deskripsi' => $request->riwayat
+        ]);
+
+        return response()->json($data);
+
+    }
+
+    public function store(Request $request, $id)
     {
-        $pengiriman = Pengiriman::with('riwayat')->findOrFail($pengirimanId);
-        return response()->json($pengiriman->riwayat);
+        $request->validate([
+            'riwayat' => 'required|string',
+            'status' => 'required|string',
+        ]);
+
+        $order = Order::findOrFail($id);
+
+        // Tambahkan entri baru ke riwayat_pengiriman (asumsinya array atau teks log)
+        $existingRiwayat = $order->riwayat_pengiriman ?? [];
+
+        if (!is_array($existingRiwayat)) {
+            $existingRiwayat = explode("\n", $existingRiwayat); // fallback kalau disimpan sebagai string
+        }
+
+        // Tambahkan riwayat baru ke array
+        $existingRiwayat[] = $request->riwayat;
+
+        // Simpan ke database, bisa berupa JSON atau string tergantung field-nya
+        $order->riwayat_pengiriman = json_encode($existingRiwayat); // jika pakai JSON di kolom DB
+        $order->status = $request->status;
+        $order->save();
+
+        return response()->json(['message' => 'Riwayat pengiriman berhasil ditambahkan.']);
     }
 }

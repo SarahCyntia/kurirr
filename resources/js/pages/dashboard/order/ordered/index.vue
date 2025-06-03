@@ -149,6 +149,7 @@ const columns = [
 // }),
 
     column.accessor("no_resi", { header: "No Resi" }),
+    column.accessor("riwayat", { header: "Riwayat" }),
     column.accessor("status", {
         header: "Status",
         cell: (cell) => {
@@ -228,67 +229,21 @@ const columns = [
             );
         },
     }),
-    column.display({
-        id: "rincian",
-        header: "Riwayat Pengiriman",
-        cell: (cell) =>
-            h(
-                "button",
-                {
-                    class: "btn btn-sm btn-danger",
-                    onClick: () => showRincian(cell.row.original),
-                },
-                "Lihat Detail"
-            ),
-    }),
-//     column.accessor("riwayat_pengiriman", {
-//     header: "Riwayat Pengiriman",
-//     cell: (cell) => {
-//         const row = cell.row.original;
-//         const riwayat = cell.getValue(); // array of string / log
+    column.accessor("waktu", { header: "Waktu" }),
 
-//         const textDefault = Array.isArray(riwayat)
-//             ? riwayat.join("\n")
-//             : (riwayat || "");
-
-//         return h(
-//             "button",
-//             {
-//                 class: "btn btn-sm btn-danger",
-//                 onClick: async () => {
-//                     const { value: updatedText } = await Swal.fire({
-//                         title: "Edit Riwayat Pengiriman",
-//                         html: `
-//                             <textarea id="riwayat-editor" class="swal2-textarea" rows="8" placeholder="Satu log per baris">${textDefault}</textarea>
-//                         `,
-//                         showCancelButton: true,
-//                         confirmButtonText: "Simpan",
-//                         preConfirm: () => {
-//                             const input = document.getElementById("riwayat-editor") as HTMLTextAreaElement;
-//                             return input?.value;
-//                         },
-//                     });
-
-//                     if (updatedText !== undefined) {
-//                         const updatedArray = updatedText
-//                             .split("\n")
-//                             .map((item) => item.trim())
-//                             .filter((item) => item.length > 0);
-
-//                         await axios.put(`/input/${row.id}`, {
-//                             riwayat_pengiriman: updatedArray,
-//                             status: row.status, // jika diperlukan oleh backend
-//                         });
-
-//                         Swal.fire("Berhasil", "Riwayat telah diperbarui", "success");
-//                     }
-//                 },
-//             },
-//             "Edit Riwayat"
-//         );
-//     },
-// }),
-
+    // column.display({
+    //     id: "rincian",
+    //     header: "Riwayat",
+    //     cell: (cell) =>
+    //         h(
+    //             "button",
+    //             {
+    //                 class: "btn btn-sm btn-danger",
+    //                 onClick: () => showRincian(cell.row.original),
+    //             },
+    //             "Lihat Detail"
+    //         ),
+    // }),
     
 ];
 const submit = async () => {

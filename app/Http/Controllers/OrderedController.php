@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Input;
+use App\Models\Riwayat;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -104,26 +105,43 @@ class OrderedController extends Controller
 
         // Ambil dan decode riwayat lama (jika ada)
         $riwayat = json_decode($input->riwayat_pengiriman ?? '[]', true);
-          $input = Input::find($id);
-$input->status = $request->status;
+        $input = Input::find($id);
+        $input->status = $request->status;
 
-switch ($request->status) {
-    case 'menunggu':
-        $input->tanggal_menunggu = now();
-        break;
-    case 'dalam proses':
-        $input->tanggal_dikemas = now();
-        break;
-    case 'pengambilan paket':
-        $input->tanggal_pengambilan = now();
-        break;
-    case 'dikirim':
-        $input->tanggal_dikirim = now();
-        break;
-    case 'selesai':
-        $input->tanggal_penerimaan = now();
-        break;
-}
+        switch ($request->status) {
+            case 'menunggu':
+                $input->tanggal_menunggu = now();
+                break;
+            case 'dalam proses':
+                $input->tanggal_dikemas = now();
+                break;
+            case 'pengambilan paket':
+                $input->tanggal_pengambilan = now();
+                break;
+            case 'dikirim':
+                $input->tanggal_dikirim = now();
+                break;
+            case 'selesai':
+                $input->tanggal_penerimaan = now();
+                break;
+        }
+   $input = InputOrder::findOrFail($id);
+
+    // Update status (jika ada)
+    if ($request->filled('status')) {
+        $input->status = $request->status;
+        $input->save();
+    }
+
+    // Tambahkan ke tabel riwayat
+    if ($request->filled('riwayat_pengiriman')) {
+        Riwayat::create([
+            'inputorder_id' => $input->id,
+            'keterangan' => $request->riwayat_pengiriman,
+            'waktu' => now(), // atau $request->waktu jika pakai waktu manual
+        ]);
+
+
 
         //  $waktuBaru = now()->format('d-m-Y H:i:s');
         // $statusString = $request->status . ' (' . $waktuBaru . ')';
@@ -140,22 +158,22 @@ switch ($request->status) {
         // }
 
         // Tambahkan pesan baru ke array
-        if (!empty($validated['riwayat_pengiriman'])) {
+        if (!empty($validated['riwayat'])) {
             $riwayat[] = [
-                'pesan' => $validated['riwayat_pengiriman'],
+                'pesan' => $validated['riwayat'],
                 'waktu' => now()->format('Y-m-d H:i'),
             ];
         }
 
         // Simpan status baru dan riwayat yang sudah diperbarui
         // $input->status = $validated['status'];
-        $input->riwayat_pengiriman = json_encode($riwayat);
+        $input->riwayat = json_encode($riwayat);
         $input->save();
 
         return response()->json([
             'message' => 'Status dan riwayat berhasil diperbarui',
             'status' => $input->status,
-            'riwayat_pengiriman' => $riwayat
+            'riwayat' => $riwayat
         ]);
     }
 
@@ -221,7 +239,7 @@ switch ($request->status) {
             'jenis_barang',
             'jenis_layanan',
             'berat_barang',
-            'riwayat_pengiriman'
+            'riwayat'
         )->get();
 
         return response()->json([

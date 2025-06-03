@@ -12,8 +12,8 @@ class Riwayat extends Model
     protected $table = 'riwayat';
 
     protected $fillable = [
-        'id_order',
-        // 'status',
+        'id',
+        'status',
         'deskripsi',
     ];
 
@@ -22,6 +22,6 @@ class Riwayat extends Model
      */
     public function input()
     {
-        return $this->belongsTo(Input::class);
+        return $this->belongsTo(Input::class, 'id');
     }
 }

@@ -91,7 +91,8 @@ const columns = [
     return h("span", { class: `badge ${badgeClass}` }, label);
   },
 }),
-
+  column.accessor("riwayat", { header: "Riwayat" }),
+    
     // column.accessor("created_at", {
     //     header: "Tanggal Input",
     //     cell: (cell) => {

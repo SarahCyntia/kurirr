@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Input extends Model
 {
@@ -52,14 +53,13 @@ class Input extends Model
     }
 
     // Input.php
-public function riwayat()
-{
-    return $this->hasMany(Riwayat::class);
-}
 
 // RiwayatPengiriman.php
-
-
+    public function riwayat(): HasMany
+    {
+        return $this->hasMany(Riwayat::class, 'id_riwayat');
+    }
+}
 
     // public function pengguna() {
     //     return $this->belongsTo(User::class, 'pengguna_id');
@@ -85,4 +85,3 @@ public function riwayat()
     //     'jarak',
     // ];
 
-}

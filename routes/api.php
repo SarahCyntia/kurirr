@@ -122,11 +122,14 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::put('/input', [InputController::class, 'update']);
         // Route::put('/input', [InputController::class, 'update'])->withoutMiddleware('can:input');
         Route::post('/input/stores', [InputController::class, 'storePenilaian']);
+        Route::put('/riwayat/store/{id}',[RiwayatController::class,'tambahRiwayat'])->withoutMiddleware('can:input');
         Route::get('/cetak-resi/{no_resi}', [inputController::class, 'cetakResi']);
         Route::get('/provinces', [InputController::class, 'getProvinces']);
         // Route::get('/cities/{provinceId}', [InputController::class, 'getCities']);
         Route::post('/cost', [InputController::class, 'hitungOngkir']);
         Route::get('/Input/{input}',[InputController::class,'show'])->withoutMiddleware('can:input');
+        Route::get('/input/{id}', [InputController::class, 'show'])->name('input.show');
+
     });
 
     Route::middleware('can:ordered')->group(function () {
@@ -188,10 +191,13 @@ Route::get('/resi/{nomorResi}', [CekResiController::class, 'show']);
 Route::get('/cek-resi/{noResi}', [CekResiController::class, 'cek']);
 Route::get('/cek-resi/{no_resi}', [CekResiController::class, 'cekResi']);
 Route::get('/cek-resi', [CekResiController::class, 'cekResi']);
+Route::post('/cek-resi', [ResiController::class, 'cek'])->withoutMiddleware(['auth']);
 
 
-Route::get('/pengiriman/{id}/riwayat', [RiwayatController::class, 'index']);
-Route::post('/pengiriman/{id}/riwayat', [RiwayatController::class, 'store']);
+
+// Route::get('/input/{id}/riwayat', [RiwayatController::class, 'index']);
+// Route::post('/input/{id}/riwayat', [RiwayatController::class, 'store']);
+Route::post('/input/{id}/riwayat', [RiwayatController::class, 'store'])->name('riwayat.store');
 
 
 

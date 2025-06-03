@@ -177,16 +177,38 @@ class InputController extends Controller
         ]);
     }
 
-    public function show(Input $input)
+    // public function show(Input $input)
+    // {
+    //     return response()->json($input);
+    // }use App\Models\Input;
+    public function show($id)
     {
-        return response()->json($input);
+        $inputorder = Input::with('riwayat')->findOrFail($id);
+        return response()->json([
+    'success' => true,
+    'data' => $inputorder,
+    'message' => 'Data berhasil diambil',
+]);
+
+        // return view('inputorder.show', compact('inputorder'));
+        // return response()->json(['message' => 'Update berhasil']);
+
     }
+
+    // public function show($id)
+    // {
+    //     $input = Input::with('riwayat')->findOrFail($id);
+
+    //     return view('inputorder.show', compact('inputorder'));
+    // }
+
+
 
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'status' => 'nullable|string',
-            'riwayat_pengiriman' => 'nullable|string',
+            'riwayat' => 'nullable|string',
             'tagnggal_order' => 'nullable|datatime',
             'tanggal_dikemas' => 'nullable|datetime',
             'tanggal_dikirim' => 'nullable|datetime',
@@ -203,7 +225,7 @@ class InputController extends Controller
         $kurirId = $user->kurir->id ?? null; // Asumsi relasi user->kurir
 
         $input->status = $validated['status'];
-        $input->riwayat_pengiriman = $validated['riwayat_pengiriman'];
+        $input->riwayat = $validated['riwayat'];
         $waktuBaru = now()->format('d-m-Y H:i:s');
 
 
