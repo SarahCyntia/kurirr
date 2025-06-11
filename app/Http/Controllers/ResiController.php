@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Input;
+use App\Models\Riwayat;
 
 class ResiController extends Controller
 {
@@ -28,7 +29,41 @@ class ResiController extends Controller
     return response()->json(['data' => $data]);
 }
 
+public function show($no_resi)
+{
+    $inputorder = Input::where('no_resi', $no_resi)->first();
 
+    if (!$inputorder) {
+        return response()->json([
+            'message' => 'Data tidak ditemukan.'
+        ], 404);
+    }
+
+    // Ambil riwayat berdasarkan no_resi
+    $riwayat = Riwayat::where('no_resi', $no_resi)->orderBy('created_at', 'asc')->get();
+
+    return response()->json([
+        'input' => $inputorder,
+        'riwayat' => $riwayat,
+    ]);
+}
+public function riwayat()
+{
+    return $this->hasMany(Riwayat::class, 'no_resi', 'no_resi');
+}
+
+
+//  public function show($id)
+// {
+//     $inputorder = Input::findOrFail($id);
+//     $riwayat = Riwayat::where('id_riwayat', $id)->orderBy('created_at')->get();
+
+//     return response()->json([
+//         'input' => $inputorder,
+//         'riwayat' => $riwayat,
+//     ]);
+// }
+}
 //     public function cek($nomorResi, Request $request)
 // {
 //     $kurir = $request->query('kurir');
@@ -54,4 +89,4 @@ class ResiController extends Controller
 
     //     return view('resi.cetak', compact('input'));
     // }
-}
+// }

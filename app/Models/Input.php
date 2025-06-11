@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Input extends Model
 {
+    
     use HasFactory;
+    
 
     // Nama tabel jika tidak default "inputs"
     protected $table = 'inputorder';
@@ -55,12 +57,20 @@ class Input extends Model
     // Input.php
 
 // RiwayatPengiriman.php
-    public function riwayat(): HasMany
-    {
-        return $this->hasMany(Riwayat::class, 'id_riwayat');
-    }
+public function riwayat()
+{
+    return $this->hasMany(Riwayat::class, 'id');
 }
-
+    // public function riwayat(): HasMany
+    // {
+    //     return $this->hasMany(Riwayat::class, 'id_riwayat', 'id');
+    // }
+    // public function index()
+    // {
+    //     $data = Input::with('riwayat')->get(); // eager load relasi 'riwayat'
+    //     return response()->json($data);
+    // }
+}
     // public function pengguna() {
     //     return $this->belongsTo(User::class, 'pengguna_id');
     // }

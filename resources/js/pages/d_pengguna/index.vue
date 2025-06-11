@@ -1,283 +1,214 @@
 <template>
   <div class="main">
-    <nav class="nav">
-      <div class="icon">
-        <h2 class="logo">KurirKu</h2>
-      </div>
-      <div class="menu">
-        <ul>
-          <li><a href="/halaman/index.html">Beranda</a></li>
-          <li><a href="/halaman/tentang.html">Tentang</a></li>
-          <li><a href="/halaman/layanan.html">Layanan</a></li>
-          <li><a href="/halaman/kontak.html">Kontak</a></li>
-        </ul>
-      </div>
-      <div class="search">
-        <input v-model="nomorResi" type="search" placeholder="Masukkan nomor resi" />
-        <button class="btn" @click="cekResi">Cek Resi</button>
-        <button class="cn" @click="logout">Logout</button>
-      </div>
-    </nav>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger px-4">
+  <div class="container-fluid d-flex justify-content-between align-items-center">
+    
+    <!-- Dashboard Pengguna di kiri -->
+    <div>
+      <button class="btn btn-pink" :class="{ 'fw-bold': currentTab === 'dashboard' }"
+        @click="currentTab = 'dashboard'">
+        Dashboard Pengguna
+      </button>
+    </div>
 
-    <section class="content">
+    <!-- Tombol lainnya di kanan -->
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-pink" :class="{ 'fw-bold': currentTab === 'ongkir' }"
+        @click="currentTab = 'ongkir'">
+        Check Ongkir
+      </button>
+      <button class="btn btn-pink" :class="{ 'fw-bold': currentTab === 'resi' }"
+        @click="currentTab = 'resi'">
+        Check Resi
+      </button>
+      <!-- <button class="btn btn-pink" :class="{ 'fw-bold': currentTab === 'riwayatt' }"
+        @click="currentTab = 'riwayatt'">
+        Riwayat
+      </button>
+      <button class="btn btn-pink" :class="{ 'fw-bold': currentTab === 'tracking' }"
+        @click="currentTab = 'tracking'">
+        Lacak Barang
+      </button> -->
+    </div>
+    
+  </div>
+</nav>
+
+
+
+    <!-- <section class="content">
       <div class="text">
-        <h1>Layanan Pengiriman <br /><span>Cepat & Terpercaya</span></h1>
+        <h1>
+          Layanan Pengiriman <br />
+          <span>Cepat & Terpercaya</span>
+        </h1>
         <p class="par">
-          Kami siap mengantarkan paket Anda ke seluruh Indonesia dengan aman
-          dan tepat waktu.
+          Kami siap mengantarkan paket Anda ke seluruh Indonesia dengan <strong>aman</strong> dan <strong>tepat waktu</strong>.
         </p>
         <button class="cn">
           <a href="/halaman/kirimpaket.html">Kirim Paket</a>
         </button>
       </div>
-    </section>
+    </section> -->
 
-    <div class="search-result" v-if="hasilResi">
-      <div class="hasil-box">
-        <h3>Informasi Pengiriman</h3>
-        <p><strong>Nama:</strong> {{ hasilResi.nama }}</p>
-        <p><strong>Status:</strong> {{ hasilResi.status }}</p>
-        <p><strong>Lokasi Saat Ini:</strong> {{ hasilResi.lokasi }}</p>
-        <p><strong>Estimasi Tiba:</strong> {{ hasilResi.estimasi }}</p>
-      </div>
-    </div>
-    <p v-if="resNotFound" style="color: red;">Resi tidak ditemukan.</p>
+    <!-- Konten -->
+  <div class="container py-4">
+    <Home v-if="currentTab === 'dashboard'" />
+    <Check v-if="currentTab === 'ongkir'" />
+    <!-- <OrderPage v-if="currentTab === 'order'" /> -->
+    <ResiPage v-if="currentTab === 'resi'" />
+    <!-- <RiwayatPage v-if="currentTab === 'riwayat'" /> -->
+    <!-- <RiwayatPage v-if="currentTab === 'riwayatt'" />
+    <TrackPage v-if="currentTab === 'tracking'" /> -->
   </div>
+
+  </div>
+
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import type { Input } from "@/types";
-import axios from "axios";
+import { ref } from 'vue';
 
-const nomorResi = ref("");
-const loading = ref(false);
-const error = ref("");
-const hasilResi = ref<Input | null>(null);
+import Check from "@/pages/d_pengguna/cekongkir/index.vue";
+import Home from "@/pages/d_pengguna/dashboard/index.vue";
+import ResiPage from "@/pages/dashboard/cekresi/index.vue";
 
-const cekResi = async () => {
-  if (!courier.value) {
-    error.value = "Silakan pilih kurir terlebih dahulu.";
-    return;
-  }
-
-  loading.value = true;
-  error.value = "";
-  hasilResi.value = null;
-
-  try {
-    const response = await axios.get(`/cek-resi/${nomorResi.value}`, {
-      params: {
-        kurir: courier.value.toLowerCase(), // paksa huruf kecil
-      },
-    });
-    hasilResi.value = response.data;
-  } catch (err: any) {
-    error.value = err.response?.data?.message || "Resi tidak ditemukan.";
-  } finally {
-    loading.value = false;
-  }
-};
+const currentTab = ref<'dashboard' | 'ongkir' >('dashboard');
 
 </script>
 <style scoped>
+/* @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap'); */
 
-/* Reset dasar */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
+.btn-outline-light.fw-bold {
+  border: 2px solid rgb(241, 241, 241);
 }
 
-body {
-    background: linear-gradient(135deg, #1d2b64, #f8cdda);
-    color: #fff;
-    min-height: 100vh;
+.btn-pink {
+  color: #fff;
+  border-color: #ff69b4;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-/* Navigasi */
+.btn-pink:hover,
+.btn-pink:focus {
+  background-color: #ff85c1; /* sedikit lebih muda */
+  border-color: #ff85c1;
+  color: #fff;
+}
+
+.btn-pink.fw-bold {
+  box-shadow: 0 0 10px #ff69b4;
+}
+
+
+/* body {
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #ff85c1;
+} */
+
+
+
 .nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 60px;
-    background-color: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 8rem;
+  background: #ff4d6d;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .logo {
-    font-size: 28px;
-    font-weight: bold;
-    color: #f9ca24;
-    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+  font-weight: 700;
+  color: #fff;
+  font-size: 1.8rem;
 }
 
 .menu ul {
-    display: flex;
-    list-style: none;
-    gap: 25px;
+  display: flex;
+  list-style: none;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
 }
 
-.menu ul li a {
-    text-decoration: none;
-    color: white;
-    font-weight: 500;
-    padding: 8px 12px;
-    border-radius: 5px;
-    transition: 0.3s;
+.menu a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+.menu a:hover {
+  color: #ffe8f1;
 }
 
-.menu ul li a:hover {
-    background-color: #f9ca24;
-    color: #1d1d1d;
-}
-
-.search {
-    display: flex;
-    gap: 10px;
-}
-
-.search input {
-    padding: 8px 12px;
-    border: none;
-    border-radius: 6px;
-    outline: none;
-    width: 180px;
-}
-
-.btn {
-    background-color: #f0932b;
-    border: none;
-    padding: 8px 16px;
-    color: white;
-    font-weight: bold;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-.btn:hover {
-    background-color: #e67e22;
-}
-
-/* Konten utama */
 .content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 80px 60px;
-    flex-wrap: wrap;
-}
-
-.text {
-    max-width: 600px;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+  text-align: center;
 }
 
 .text h1 {
-    font-size: 48px;
-    line-height: 1.4;
-    color: #fff;
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #333;
 }
-
-.text h1 span {
-    color: #f9ca24;
+.text span {
+  color: #ff4d6d;
 }
-
-.text .par {
-    font-size: 18px;
-    margin: 20px 0;
-    color: #ecf0f1;
+.par {
+  font-size: 1.2rem;
+  color: #555;
+  margin: 1.5rem 0;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .cn {
-    padding: 12px 25px;
-    background-color: #f0932b;
-    border: none;
-    border-radius: 6px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s ease;
+  background: #ff4d6d;
+  padding: 0.8rem 1.6rem;
+  border: none;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 77, 109, 0.4);
+}
+.cn:hover {
+  transform: translateY(-2px);
+  background-color: #e8435f;
 }
 
 .cn a {
-    text-decoration: none;
-    color: white;
+  color: white;
+  text-decoration: none;
 }
 
-.cn:hover {
-    background-color: #e67e22;
+@media (max-width: 768px) {
+  .nav {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .menu ul {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .text h1 {
+    font-size: 2rem;
+  }
+
+  .par {
+    font-size: 1rem;
+  }
 }
-
-/* Form login */
-.form {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 30px;
-    border-radius: 15px;
-    backdrop-filter: blur(15px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    width: 320px;
-    margin-top: 20px;
-}
-
-.form h2 {
-    margin-bottom: 20px;
-    color: #fff;
-    text-align: center;
-}
-
-.form input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    border: none;
-    border-radius: 8px;
-    background-color: #fff;
-    color: #333;
-    font-size: 14px;
-    outline: none;
-}
-
-.form .btn a {
-    text-decoration: none;
-    color: white;
-}
-
-.link {
-    margin-top: 10px;
-    text-align: center;
-    font-size: 14px;
-}
-
-.link a {
-    color: #f9ca24;
-    text-decoration: none;
-}
-
-.liw {
-    text-align: center;
-    margin-top: 10px;
-    color: #f1f1f1;
-}
-.search-result {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-left: 4px solid #1d2b64;
-    border-radius: 6px;
-    max-width: 400px;
-    font-size: 16px;
-}
-
-.hasil-box h3 {
-    color: #1d2b64;
-    margin-bottom: 10px;
-}
-
-
-
 </style>

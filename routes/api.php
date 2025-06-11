@@ -38,6 +38,14 @@ use App\Http\Controllers\RiwayatController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::get('/cek-resi/{nomorResi}', [CekResiController::class, 'cekResi']);
+Route::get('/resi/{nomorResi}', [CekResiController::class, 'show']);
+Route::get('/cek-resi/{noResi}', [CekResiController::class, 'cek']);
+Route::get('/cek-resi/{no_resi}', [CekResiController::class, 'cekResi']);
+Route::get('/cek-resi', [CekResiController::class, 'cekResi']);
+Route::post('/cek-resi', [ResiController::class, 'cek'])->withoutMiddleware(['auth']);
+
+
 
 // Authentication Route
 Route::middleware(['auth', 'json'])->prefix('auth')->group(function () {
@@ -129,7 +137,8 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::post('/cost', [InputController::class, 'hitungOngkir']);
         Route::get('/Input/{input}',[InputController::class,'show'])->withoutMiddleware('can:input');
         Route::get('/input/{id}', [InputController::class, 'show'])->name('input.show');
-
+        
+        Route::get('/riwayat', [InputController::class, 'index']); // atau OrderController
     });
 
     Route::middleware('can:ordered')->group(function () {
@@ -138,6 +147,12 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::post('/ordered/store', [OrderedController::class, 'store']);
         Route::get('/ordered/{Input}', [OrderedController::class, 'show']);
         // Route::put('/ordered', [OrderedController::class, 'update']);
+        // Kalau di API
+Route::put('/ordered/{id}', [InputController::class, 'update']);
+// // Atau kalau pakai resource
+Route::resource('ordered', InputController::class);
+// Ini akan otomatis buat route PUT untuk update
+
         Route::put('/input/{id}', [InputController::class, 'update']);
     //     Route::get('/orders/all', [OrderedController::class, 'allOrders']);
     //    Route::post('/orders/all', [OrderedController::class, 'allOrders']);
@@ -171,6 +186,13 @@ Route::get('/provinces', [CheckOngkirController::class, 'getProvinces']);
 
 
     Route::get('/cetak-resi/{noResi}', [ResiController::class, 'cetak']);
+    Route::get('/cetak-resi/{noResi}', [InputController::class, 'cetakResi']);
+
+// Route untuk melihat PDF di browser
+Route::get('/cetak-resi/{noResi}', [InputController::class, 'cetakResi'])->name('cetak.resi');
+
+// Route untuk download PDF
+Route::get('/download-resi/{noResi}', [InputController::class, 'downloadResi'])->name('download.resi');
 
 
     // Route::middleware('can:orderan')->group(function () {
@@ -186,18 +208,15 @@ Route::get('/provinces', [CheckOngkirController::class, 'getProvinces']);
 
     
 
-Route::get('/cek-resi/{nomorResi}', [CekResiController::class, 'cekResi']);
-Route::get('/resi/{nomorResi}', [CekResiController::class, 'show']);
-Route::get('/cek-resi/{noResi}', [CekResiController::class, 'cek']);
-Route::get('/cek-resi/{no_resi}', [CekResiController::class, 'cekResi']);
-Route::get('/cek-resi', [CekResiController::class, 'cekResi']);
-Route::post('/cek-resi', [ResiController::class, 'cek'])->withoutMiddleware(['auth']);
 
 
+
+// Route::post('/riwayat/store/{id}', [OrderedController::class, 'storeRiwayat']);
 
 // Route::get('/input/{id}/riwayat', [RiwayatController::class, 'index']);
 // Route::post('/input/{id}/riwayat', [RiwayatController::class, 'store']);
 Route::post('/input/{id}/riwayat', [RiwayatController::class, 'store'])->name('riwayat.store');
+
 
 
 

@@ -2,11 +2,254 @@
 import { onMounted, ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
 import Form from "./Form.vue";
-import { createColumnHelper } from "@tanstack/vue-table";
+import { createColumnHelper, type Row } from "@tanstack/vue-table";
 import type { Input } from "@/types";
 import { h } from "vue";
 import Swal from "sweetalert2";
 import axios from "axios";
+// import { Row } from "@tanstack/vue-table";
+
+interface Riwayat {
+  id: number
+  deskripsi: string
+  created_at: string
+}
+
+// Interface untuk data yang sudah ditampilkan
+interface RiwayatTampil {
+  id: number
+  riwayat: string
+}
+
+// Format tanggal ID
+function formatDate(waktu: string | null | undefined): string {
+  if (!waktu) return "-"; // atau bisa "Tanggal tidak tersedia"
+  
+  const date = new Date(waktu);
+  if (isNaN(date.getTime())) return "-";
+
+  return date.toLocaleString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Jakarta" 
+  });
+}
+
+const statusSteps = ["menunggu", "dalam proses", "dikirim", "selesai"] as const;
+const statusLabels: Record<string, string> = {
+  "menunggu": "Menunggu",
+  "dalam proses": "Dalam Proses",
+  "dikirim": "Dikirim",
+  "selesai": "Selesai"
+};
+const statusIcons: Record<string, "info" | "question" | "warning" | "success"> = {
+  "menunggu": "info",
+  "dalam proses": "question",
+  "dikirim": "warning",
+  "selesai": "success"
+};
+const updateStatus = async (row: Row<Input>) => {
+  const currentStatus = row.original.status;
+  const currentIndex = statusSteps.indexOf(currentStatus);
+
+  if (currentIndex === -1) {
+    console.error("Status tidak valid:", currentStatus);
+    return;
+  }
+  // Cegah update jika status sudah "selesai"
+  if (currentStatus === "selesai") {
+    await Swal.fire({
+      icon: "info",
+      title: "Status Selesai",
+      text: "Pengiriman telah selesai dan tidak dapat diubah lagi.",
+    });
+    return;
+  }
+
+  const nextIndex = currentIndex + 1;
+  const nextStatus = statusSteps[nextIndex];
+  const label = statusLabels[nextStatus];
+  const icon = statusIcons[nextStatus];
+
+  const confirmed = await Swal.fire({
+    icon,
+    title: `Ubah Status ke "${label}"?`,
+    html: `Anda akan mengubah status pengiriman ini menjadi <strong style="text-transform: capitalize;">${label}</strong>.`,
+    showCancelButton: true,
+    confirmButtonText: "Ya, lanjutkan",
+    cancelButtonText: "Batal",
+  }).then((result) => result.isConfirmed);
+
+  if (!confirmed) return;
+
+  // Optimistik update
+  row.original.status = nextStatus;
+
+  try {
+    await axios.put(`/ordered/${row.original.id}`, {
+      status: nextStatus,
+    });
+
+    Swal.fire({
+      icon: "success",
+      title: "Status Diperbarui",
+      text: `Status berhasil diubah menjadi "${label}".`,
+      timer: 1500,
+      showConfirmButton: false,
+    });
+
+    refresh();
+  } catch (error) {
+    console.error("Gagal update status:", error);
+    row.original.status = currentStatus;
+
+    Swal.fire({
+      icon: "error",
+      title: "Gagal",
+      text: "Status tidak berhasil diperbarui. Coba lagi.",
+    });
+  }
+};
+
+
+// List riwayat dari backend
+const riwayatList = ref<Riwayat[]>([])
+
+// List yang sudah pernah ditampilkan
+const riwayatTertampil = ref<RiwayatTampil[]>([])
+
+// Fungsi untuk menampilkan riwayat di SweetAlert
+const showRincian = (data: any) => {
+  // ⛔ Reset data lama
+ console.log(Array.isArray(data.riwayat)); // Harusnya true
+
+
+  riwayatTertampil.value = [];
+
+  const newItems = data.riwayat.map((item: any) => {
+    const formattedText = `${item.deskripsi} (${formatDate(item.created_at)})`;
+    return {
+      id: item.id_riwayat,
+      riwayat: formattedText
+    };
+  });
+
+  // ⛔ Jangan cek alreadyShown — langsung push semua!
+  newItems.forEach(item => {
+    riwayatTertampil.value.push(item);
+  });
+
+  const htmlContent = riwayatTertampil.value
+    .map((item, index) => `
+      <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #ddd;">
+        <strong>${index + 1}.</strong> ${item.riwayat}
+      </div>
+    `)
+    .join('');
+
+  Swal.fire({
+    title: "Detail Riwayat",
+    html: `<div style="text-align: left; padding: 10px;">${htmlContent}</div>`,
+    confirmButtonText: "Tutup",
+    width: 600,
+  });
+};
+
+// const showRincian = (data: any) => {
+//   console.log("data: ",data)
+
+//   // Loop semua item riwayat
+//   const newItems = data.riwayat.map((item: any) => {
+//     const formattedText = `${item.deskripsi} (${formatDate(item.created_at)})`;
+//     return {
+//       id: item.id_riwayat,
+//       riwayat: formattedText
+//     };
+//   });
+
+//   console.log("map : ", newItems)
+
+//   // Tambah hanya jika belum ditampilkan sebelumnya
+//   newItems.forEach(item => {
+//     const alreadyShown = riwayatTertampil.value.some(r => r.id === item.id);
+//     if (!alreadyShown) {
+//       riwayatTertampil.value.push(item);
+//     }
+//   });
+
+//   console.log(riwayatTertampil.value);
+
+//   const htmlContent = riwayatTertampil.value
+//     .map((item, index) => `
+//       <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #ddd;">
+//         <strong>${index + 1}.</strong> ${item.riwayat}
+//       </div>
+//     `)
+//     .join('');
+
+//   Swal.fire({
+//     title: "Detail Riwayat",
+//     html: `<div style="text-align: left; padding: 10px;">${htmlContent}</div>`,
+//     confirmButtonText: "Tutup",
+//     width: 600,
+//   });
+// }
+
+
+// interface RiwayatData {
+//   waktu: string;
+//   riwayat: string;
+// }
+
+// // Tambahkan di atas atau sebelum fungsi showRincian
+// function formatDate(waktu: string): string {
+//   return new Date(waktu).toLocaleString("id-ID", {
+//     day: "numeric",
+//     month: "long",
+//     year: "numeric",
+//     hour: "2-digit",
+//     minute: "2-digit"
+//   });
+// }
+
+// const showRincian = (data: any) => {
+//   let riwayat: RiwayatData[] = [];
+
+//   const raw = data.riwayat; // diasumsikan ini array dari tabel relasi `riwayat`
+
+//   if (Array.isArray(raw)) {
+//     riwayat = raw.map((data: any) => ({
+//       riwayat: data.deskripsi,            // dari kolom 'deskripsi'
+//       waktu: formatDate(data.created_at), // gunakan format tanggal yang rapi
+//     }));
+//   }
+
+//   const htmlContent = riwayat.length
+//     ? riwayat
+//         .map(
+//           (data, idx) => `
+//             <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #ccc;">
+//               <strong>${idx + 1}. ${data.waktu}</strong><br/>
+//               <span>${data.riwayat}</span>
+//             </div>
+//           `
+//         )
+//         .join("")
+//     : "<p>Belum ada riwayat pengiriman.</p>";
+//      console.log("RAW riwayat:", data.riwayat);
+
+//   Swal.fire({
+//     title: "Detail Riwayat Pengiriman",
+//     html: `<div style="text-align: left; max-height: 300px; overflow-y: auto; padding: 10px;">${htmlContent}</div>`,
+//     confirmButtonText: "Tutup",
+//     width: 600,
+//   });
+// };
+
 
 // Referensi dan variabel
 const column = createColumnHelper<Input>();
@@ -14,11 +257,11 @@ const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
 const tambahRiwayat = (logBaru: string) => {
-    if (!formData.value.riwayat_pengiriman) {
-        formData.value.riwayat_pengiriman = [];
+    if (!formData.value.riwayat) {
+        formData.value.riwayat = [];
     }
 
-    formData.value.riwayat_pengiriman.push(logBaru);
+    formData.value.riwayat.push(logBaru);
 };
 
 
@@ -27,35 +270,6 @@ const { delete: deleteInput } = useDelete({
     onSuccess: () => paginateRef.value?.refetch(),
 });
 
-const showRincian = (data: Input) => {
-    Swal.fire({
-        title: "Detail Riwayat",
-        html: `
-            <div style="text-align: left; padding: 20px 20px">
-                <p><b>Riwayat Pengiriman:</b> ${data.riwayat_pengiriman || '-'} <button id="editBtn" style="
-                    margin-top: 10px;
-                    padding: 6px 12px;
-                    background-color: #4CAF50;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                ">Edit</button></p>
-            </div>
-        `,
-        showConfirmButton: true,
-        confirmButtonText: "Tutup",
-        didOpen: () => {
-            const editBtn = document.getElementById("editBtn");
-            if (editBtn) {
-                editBtn.addEventListener("click", () => {
-                    Swal.fire("Edit ditekan!", "Fungsi edit bisa dipanggil di sini.", "info");
-                    // Tambahkan aksi edit di sini, misalnya buka form input baru
-                });
-            }
-        }
-    });
-};
 
 // const showRincian = (data: Input) => {
 //     Swal.fire({
@@ -120,69 +334,41 @@ const columns = [
     column.accessor("jenis_barang", { header: "Jenis Barang" }),
     column.accessor("jenis_layanan", { header: "Jenis Layanan" }),
     column.accessor("berat_barang", { header: "Berat Barang" }),
-    
-//     column.accessor("riwayat_pengiriman", {
-//     header: "Riwayat Pengiriman",
-//     cell: (cell) => {
-//         const riwayat = cell.getValue();
-
-//         return h(
-//             "button",
-//             {
-//                 class: "btn btn-sm btn-danger",
-//                 onClick: () => {
-//                     Swal.fire({
-//                         title: "Riwayat Pengiriman",
-//                         html: Array.isArray(riwayat)
-//                             ? `<ul style="text-align: left;">${riwayat
-//                                   .map((item: string) => `<li>${item}</li>`)
-//                                   .join("")}</ul>`
-//                             : `<p>${riwayat || "Belum ada riwayat."}</p>`,
-//                         icon: "info",
-//                         confirmButtonText: "Tutup",
-//                     });
-//                 },
-//             },
-//             "Lihat Detail"
-//         );  
-//     },
-// }),
 
     column.accessor("no_resi", { header: "No Resi" }),
-    column.accessor("riwayat", { header: "Riwayat" }),
+    // column.accessor("riwayat", { header: "Riwayat" }),
+   column.display({
+  id: "riwayat",
+  header: "Riwayat",
+  cell: (cell) => {
+    console.log("ROW ORIGINAL:", cell.row.original); // 🔍 Debug log
+    return h(
+      "button",
+      {
+        class: "btn btn-sm btn-warning",
+        onClick: () => showRincian(cell.row.original),
+      },
+      "Lihat Riwayat"
+    );
+  },
+}),
+
+
     column.accessor("status", {
-        header: "Status",
-        cell: (cell) => {
-            const status = cell.getValue();
-            const badgeClass =
-                status === "menunggu"
-                    ? "bg-success"
-                    : status === "dalam proses"
-                    ? "bg-warning"
-                    : status === "pengambilan paket"
-                    ? "bg-danger"
-                    : status === "dikirim"
-                    ? "bg-primary"
-                    : status === "selesai"
-                    ? "bg-info"
-                    : "bg-secondary"; // default kalau selain itu
+  header: "Status",
+  cell: ({ row }) => {
+  return h(
+    "button",
+    {
+      class: "badge bg-secondary",
+      onClick: () => updateStatus(row),
+      style: "cursor: pointer; border: none; background: none;",
+    },
+    row.original.status
+  );
+}
+}),
 
-            const label =
-                status === "menunggu"
-                    ? "Menunggu"
-                    : status === "pengambilan paket"
-                    ? "Pengambilan Paket"
-                    : status === "dalam proses"
-                    ? "Dalam Proses"
-                    : status === "dikirim"
-                    ? "Dikirim"
-                    : status === "selesai"
-                    ? "Selesai"
-                    : "Dibatalkan";
-
-            return h("span", { class: `badge ${badgeClass}` }, label);
-        },
-    }),
 
     column.accessor("id", {
         header: "Order",
@@ -230,10 +416,9 @@ const columns = [
         },
     }),
     column.accessor("waktu", { header: "Waktu" }),
-
     // column.display({
     //     id: "rincian",
-    //     header: "Riwayat",
+    //     header: "Detail Input",
     //     cell: (cell) =>
     //         h(
     //             "button",
@@ -244,6 +429,8 @@ const columns = [
     //             "Lihat Detail"
     //         ),
     // }),
+
+    
     
 ];
 const submit = async () => {
@@ -261,15 +448,30 @@ const emit = defineEmits(["close", "refresh"]);
 
 const formData = ref<any>({});
 const isLoading = ref(false);
-
 onMounted(async () => {
-    if (props.selected) {
-        isLoading.value = true;
-        const { data } = await axios.get(`/ordered/${props.selected}`);
-        formData.value = data;
-        isLoading.value = false;
-    }
+  if (props.selected) {
+    isLoading.value = true;
+    const { data } = await axios.get(`/ordered/${props.selected}`);
+
+    // Mapping jika nama dari backend bukan "riwayat"
+    formData.value = {
+      ...data,
+      riwayat: data.riwayat ?? data.riwayat_pengiriman ?? [],
+    };
+
+    isLoading.value = false;
+  }
 });
+
+
+// onMounted(async () => {
+//     if (props.selected) {
+//         isLoading.value = true;
+//         const { data } = await axios.get(`/ordered/${props.selected}`);
+//         formData.value = data;
+//         isLoading.value = false;
+//     }
+// });
 
 
 

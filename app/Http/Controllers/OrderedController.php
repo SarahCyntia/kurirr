@@ -17,6 +17,7 @@ class OrderedController extends Controller
 
     public function index(Request $request)
     {
+        $data = Input::with('riwayat')->get(); // atau Order::with('riwayat')->get();
         $per = $request->input('per', 10);
         $page = $request->input('page', 1);
 
@@ -83,11 +84,20 @@ class OrderedController extends Controller
         ]);
     }
 
-    public function show(Input $input)
-    {
-        return response()->json($input);
+    // public function show(Input $input)
+    // {
+    //     return response()->json($input);
 
-    }
+    // }
+    public function show($id)
+{
+    $inputorder = Input::with(['riwayat' => fn($q) => $q->orderBy('created_at')])->findOrFail($id);
+
+    return response()->json($inputorder);
+    // $input = Input::with('riwayat')->findOrFail($id);
+    // return response()->json($input);
+}
+
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -95,7 +105,7 @@ class OrderedController extends Controller
             'riwayat_pengiriman' => 'nullable|array',
             'riwayat_pengiriman.*' => 'string',
         ]);
-
+   
         // $validated = $request->validate([
         //     'status' => 'required|string',
         //     'riwayat_pengiriman' => 'nullable|string', // hanya 1 pesan log baru
@@ -104,28 +114,27 @@ class OrderedController extends Controller
         $input = Input::findOrFail($id);
 
         // Ambil dan decode riwayat lama (jika ada)
-        $riwayat = json_decode($input->riwayat_pengiriman ?? '[]', true);
+        // $riwayat = json_decode($input->riwayat_pengiriman ?? '[]', true);
         $input = Input::find($id);
         $input->status = $request->status;
-
-        switch ($request->status) {
-            case 'menunggu':
-                $input->tanggal_menunggu = now();
-                break;
-            case 'dalam proses':
-                $input->tanggal_dikemas = now();
-                break;
-            case 'pengambilan paket':
-                $input->tanggal_pengambilan = now();
-                break;
-            case 'dikirim':
-                $input->tanggal_dikirim = now();
-                break;
-            case 'selesai':
-                $input->tanggal_penerimaan = now();
-                break;
-        }
-   $input = InputOrder::findOrFail($id);
+        // switch ($request->status) {
+        //     case 'menunggu':
+        //         $input->tanggal_menunggu = now();
+        //         break;
+        //     case 'dalam proses':
+        //         $input->tanggal_dikemas = now();
+        //         break;
+        //     case 'pengambilan paket':
+        //         $input->tanggal_pengambilan = now();
+        //         break;
+        //     case 'dikirim':
+        //         $input->tanggal_dikirim = now();
+        //         break;
+        //     case 'selesai':
+        //         $input->tanggal_penerimaan = now();
+        //         break;
+        // }
+   $input = Input::findOrFail($id);
 
     // Update status (jika ada)
     if ($request->filled('status')) {
@@ -167,7 +176,12 @@ class OrderedController extends Controller
 
         // Simpan status baru dan riwayat yang sudah diperbarui
         // $input->status = $validated['status'];
-        $input->riwayat = json_encode($riwayat);
+        $input->status = $request->status;
+        // $input->riwayat = json_encode($riwayat);
+        $riwayat = json_decode($_POST['riwayat_pengiriman'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log('JSON Error: ' . json_last_error_msg());
+        }
         $input->save();
 
         return response()->json([
@@ -176,6 +190,30 @@ class OrderedController extends Controller
             'riwayat' => $riwayat
         ]);
     }
+}
+protected $casts = [
+    'riwayat_pengiriman' => 'array',
+];
+// Misalnya ini model Input
+public function riwayat()
+{
+    return $this->hasMany(Riwayat::class, 'id_riwayat', 'id');
+    // 'id' = foreign key di tabel `riwayat`, 'id' = primary key di `input`
+}
+
+public function showRiwayat($id)
+{
+    $input = Input::with('riwayat')->findOrFail($id);
+
+    return response()->json([
+        'riwayat_pengiriman' => $input->riwayat->map(function ($item) {
+            return [
+                'deskripsi' => $item->deskripsi,
+                'created_at' => $item->created_at->toDateTimeString(), // penting!
+            ];
+        }),
+    ]);
+}
 
 
 

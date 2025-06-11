@@ -124,3 +124,84 @@ watch(openForm, (val) => {
         </div>
     </div>
 </template>
+
+<script>
+const statusSteps = ["menunggu", "dalam proses", "dikirim", "selesai"] as const;
+const statusLabels: Record<string, string> = {
+  "menunggu": "Menunggu",
+  "dalam proses": "Dalam Proses",
+  "dikirim": "Dikirim",
+  "selesai": "Selesai"
+};
+const statusIcons: Record<string, "info" | "question" | "warning" | "success"> = {
+  "menunggu": "info",
+  "dalam proses": "question",
+  "dikirim": "warning",
+  "selesai": "success"
+};
+
+const updateStatus = async (row: Row<Input>) => {
+  const currentStatus = row.original.status;
+  const currentIndex = statusSteps.indexOf(currentStatus);
+
+  if (currentIndex === -1) {
+    console.error("Status tidak valid:", currentStatus);
+    return;
+  }
+
+  // Cegah update jika status sudah "selesai"
+  if (currentStatus === "selesai") {
+    await Swal.fire({
+      icon: "info",
+      title: "Status Selesai",
+      text: "Pengiriman telah selesai dan tidak dapat diubah lagi.",
+    });
+    return;
+  }
+
+  const nextIndex = currentIndex + 1;
+  const nextStatus = statusSteps[nextIndex];
+  const label = statusLabels[nextStatus];
+  const icon = statusIcons[nextStatus];
+
+  const confirmed = await Swal.fire({
+    icon,
+    title: `Ubah Status ke "${label}"?`,
+    html: `Anda akan mengubah status pengiriman ini menjadi <strong style="text-transform: capitalize;">${label}</strong>.`,
+    showCancelButton: true,
+    confirmButtonText: "Ya, lanjutkan",
+    cancelButtonText: "Batal",
+  }).then((result) => result.isConfirmed);
+
+  if (!confirmed) return;
+
+  // Optimistik update
+  row.original.status = nextStatus;
+
+  try {
+    await axios.put(`/ordered/${row.original.id}`, {
+      status: nextStatus,
+    });
+
+    Swal.fire({
+      icon: "success",
+      title: "Status Diperbarui",
+      text: `Status berhasil diubah menjadi "${label}".`,
+      timer: 1500,
+      showConfirmButton: false,
+    });
+
+    refresh();
+  } catch (error) {
+    console.error("Gagal update status:", error);
+    row.original.status = currentStatus;
+
+    Swal.fire({
+      icon: "error",
+      title: "Gagal",
+      text: "Status tidak berhasil diperbarui. Coba lagi.",
+    });
+  }
+};
+</script>
+

@@ -5,13 +5,52 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Province;
 use App\Models\Input;
+use App\Models\Riwayat;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class InputController extends Controller
 {
+    public function cetakResi($noResi)
+    {
+        // Ambil data berdasarkan no_resi
+        $data = Input::where('no_resi', $noResi)->first();
+        
+        if (!$data) {
+            abort(404, 'Data tidak ditemukan');
+        }
+        
+        // Generate PDF
+        $pdf = Pdf::loadView('cetak-resi-pdf', compact('data'));
+        
+        // Set ukuran kertas thermal printer (58mm x 200mm)
+        $pdf->setPaper([0, 0, 165, 566], 'portrait'); // 58mm x 200mm dalam points
+        
+        // Return PDF untuk ditampilkan di browser
+        return $pdf->stream("struk-{$noResi}.pdf");
+    }
+    
+    public function downloadResi($noResi)
+    {
+        // Ambil data berdasarkan no_resi
+        $data = Input::where('no_resi', $noResi)->first();
+        
+        if (!$data) {
+            abort(404, 'Data tidak ditemukan');
+        }
+        
+        // Generate PDF
+        $pdf = Pdf::loadView('cetak-resi-pdf', compact('data'));
+        $pdf->setPaper([0, 0, 165, 566], 'portrait');
+        
+        // Return PDF untuk didownload
+        return $pdf->download("struk-{$noResi}.pdf");
+    }
+
     public function getProvinces()
     {
         // $response = Http::withHeaders([
@@ -83,7 +122,7 @@ class InputController extends Controller
 
         DB::statement('SET @no := ' . (($page - 1) * $per));
 
-        $data = Input::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota',])
+        $data = Input::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota','riwayat'])
             ->when($request->search, function (Builder $query, string $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('nama_pengirim', 'like', "%$search%")
@@ -150,7 +189,6 @@ class InputController extends Controller
             'nilai' => 'nullable|integer|min:1|max:5',
             'status' => 'required|in:menunggu,dalam proses,dikirim,selesai',
             'ulasan' => 'nullable|string',
-            'tanggal_order' => 'nullable|datetime|before_or_equal:now',
         ]);
 
         $input = $id ? Input::findOrFail($id) : new Input(); // ini sudah benar
@@ -181,19 +219,30 @@ class InputController extends Controller
     // {
     //     return response()->json($input);
     // }use App\Models\Input;
+
     public function show($id)
-    {
-        $inputorder = Input::with('riwayat')->findOrFail($id);
-        return response()->json([
-    'success' => true,
-    'data' => $inputorder,
-    'message' => 'Data berhasil diambil',
-]);
+{
+    $inputorder = Input::findOrFail($id);
+    $riwayat = Riwayat::where('id_riwayat', $id)->orderBy('created_at')->get();
+
+    return response()->json([
+        'input' => $inputorder,
+        'riwayat' => $riwayat,
+    ]);
+}
+//     public function show($id)
+//     {
+//         $inputorder = Input::with('riwayat')->findOrFail($id);
+//         return response()->json([
+//     'success' => true,
+//     'data' => $inputorder,
+//     'message' => 'Data berhasil diambil',
+// ]);
 
         // return view('inputorder.show', compact('inputorder'));
         // return response()->json(['message' => 'Update berhasil']);
 
-    }
+    
 
     // public function show($id)
     // {
@@ -207,12 +256,13 @@ class InputController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
+            'biaya' => 'nullable|numeric|min:0',
             'status' => 'nullable|string',
             'riwayat' => 'nullable|string',
-            'tagnggal_order' => 'nullable|datatime',
-            'tanggal_dikemas' => 'nullable|datetime',
-            'tanggal_dikirim' => 'nullable|datetime',
-            'tanggal_penerimaan' => 'nullable|datetime',
+            // 'tagnggal_order' => 'nullable|datatime',
+            // 'tanggal_dikemas' => 'nullable|datetime',
+            // 'tanggal_dikirim' => 'nullable|datetime',
+            // 'tanggal_penerimaan' => 'nullable|datetime',
             // 'berat_barang' => 'required|numeric|min:1',
             // 'jarak' => 'nullable|numeric|min:1',
             // 'biaya_pengiriman' => 'required|numeric|min:0',
@@ -226,57 +276,63 @@ class InputController extends Controller
 
         $input->status = $validated['status'];
         $input->riwayat = $validated['riwayat'];
+        // $request->riwayat['riwayat]
         $waktuBaru = now()->format('d-m-Y H:i:s');
 
 
         // Simpan status dengan waktu sebagai string keterangan (opsional)
-        $input->keterangan_status = $request->status . ' (' . $waktuBaru . ')';
+        // $input->keterangan_status = $request->status . ' (' . $waktuBaru . ')';
         
     // Update status
-    $input->status = $request->status;
+    // $input->status = $request->status;
 
     // ⬇️ LETAKKAN SWITCH DI SINI
-    switch ($request->status) {
-        case 'menunggu':
-            if (!$input->tanggal_order) {
-                $input->tanggal_order = now();
-            }
-            break;
+    // switch ($request->status) {
+    //     case 'menunggu':
+    //         if (!$input->tanggal_order) {
+    //             $input->tanggal_order = now();
+    //         }
+    //         break;
 
-        case 'dalam proses':
-            if (!$input->tanggal_dikemas) {
-                $input->tanggal_dikemas = now();
-            }
-            break;
+    //     case 'dalam proses':
+    //         if (!$input->tanggal_dikemas) {
+    //             $input->tanggal_dikemas = now();
+    //         }
+    //         break;
 
-        case 'pengambilan paket':
-            if (!$input->tanggal_pengambilan) {
-                $input->tanggal_pengambilan = now();
-            }
-            break;
+    //     case 'pengambilan paket':
+    //         if (!$input->tanggal_pengambilan) {
+    //             $input->tanggal_pengambilan = now();
+    //         }
+    //         break;
 
-        case 'dikirim':
-            if (!$input->tanggal_dikirim) {
-                $input->tanggal_dikirim = now();
-            }
-            break;
+    //     case 'dikirim':
+    //         if (!$input->tanggal_dikirim) {
+    //             $input->tanggal_dikirim = now();
+    //         }
+    //         break;
 
-        case 'selesai':
-            if (!$input->tanggal_penerimaan) {
-                $input->tanggal_penerimaan = now();
-            }
-            break;
-    }
+    //     case 'selesai':
+    //         if (!$input->tanggal_penerimaan) {
+    //             $input->tanggal_penerimaan = now();
+    //         }
+    //         break;
+    // }
 
     $input->save(); // simpan perubahan
 
     return response()->json([
         'message' => 'Status berhasil diperbarui.',
-        'data' => $input
+        // 'data' => $input
+        'status' => $input->status,
     ]);
 }
 
-
+// public function cetakResi($noResi) {
+//     $data = Input::where('no_resi', $noResi)->first();
+//     if (!$data) abort(404);
+//     return view('cetak-resi', compact('data'));
+// }
 
 //UPDATE
 

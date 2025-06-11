@@ -36,12 +36,13 @@ const Input = ref({
     // tanggal_waktu: "", // 🕒 Tanggal dan waktu pengiriman
 });
 
+
 const photo = ref<any>([]);
 const formRef = ref();
 
 // ✅ Validasi form menggunakan Yup
 const formSchema = Yup.object().shape({
-    riwayat: Yup.string().nullable("Riwayat harus diisi"),
+    riwayat: Yup.string().nullable(),
     status: Yup.string().nullable("Status harus diisi"),
     // tanggal_waktu: Yup.string().nullable("Tanggal dan waktu harus diisi"),
 });
@@ -52,7 +53,6 @@ const submitForm = async () => {
         // formData.append("riwayat_pengiriman", Input.value.riwayat_pengiriman);
         formData.append("riwayat", Input.value.riwayat);
         formData.append("status", Input.value.status);
-        formData.append("id_user", Input.value.id_user);
         formData.append("_method", "PUT"); // Laravel butuh ini untuk method PUT
 
         await axios.post(`/ordered/${props.selected}`, formData, {
@@ -102,45 +102,76 @@ function getEdit() {
 
 // ✅ Submit Form (Tambah/Update)
 function submit() {
-  const now = new Date();
-  const formatted = now.toLocaleString("id-ID", {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
 
-  const riwayatDenganTanggal = `[${formatted}] ${Input.value.riwayat}`;
 
-  const formData = new FormData();
-  formData.append("riwayat", riwayatDenganTanggal);
-  formData.append("status", Input.value.status);
-  if (props.selected) {
-    formData.append("_method", "PUT");
-  }
 
-  block(document.getElementById("form-Input"));
-  axios({
-    method: "post",
-    url: props.selected ? `/riwayat/store/${props.selected}` : "/input/store",
-    data: formData,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  }).then(() => {
-    Swal.fire({
-      icon: "success",
-      title: "Berhasil Disimpan!",
-      confirmButtonText: "Oke",
+    const form = new FormData();
+    form.append("riwayat", Input.value.riwayat);
+    form.append("status", Input.value.status);
+    if (props.selected) {
+        form.append("_method", "PUT");
+    }
+
+    block(document.getElementById("form-Input"));
+    axios({
+        method: "post",
+        url: props.selected ? `/riwayat/store/${props.selected}` : "/input/store",
+        data: form,
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    }).then(() => {
+        Swal.fire({
+            icon: "success",
+            title: "Berhasil Disimpan!",
+            confirmButtonText: "Oke",
+        });
+        emit("close");
+        emit("refresh");
+        formRef.value.resetForm();
     });
-    emit("close");
-    emit("refresh");
-    formRef.value.resetForm();
-  });
 }
+
+// function submit() {
+//   const now = new Date();
+//   const formatted = now.toLocaleString("id-ID", {
+//     weekday: "short",
+//     year: "numeric",
+//     month: "short",
+//     day: "2-digit",
+//     hour: "2-digit",
+//     minute: "2-digit",
+//     second: "2-digit",
+//   });
+
+//   const riwayatDenganTanggal = `[${formatted}] ${Input.value.riwayat}`;
+
+//   const formData = new FormData();
+//   formData.append("riwayat", riwayatDenganTanggal);
+//   formData.append("status", Input.value.status);
+//   if (props.selected) {
+//     formData.append("_method", "PUT");
+//   }
+
+//   block(document.getElementById("form-Input"));
+//   axios({
+//     method: "post",
+//     url: props.selected ? `/riwayat/store/${props.selected}` : "/input/store",
+//     data: formData,
+//     headers: {
+//       "Content-Type": "multipart/form-data",
+//     },
+//   }).then(() => {
+//     Swal.fire({
+//       icon: "success",
+//       title: "Berhasil Disimpan!",
+//       confirmButtonText: "Oke",
+//     });
+//     emit("close");
+//     emit("refresh");
+//     formRef.value.resetForm();
+//   });
+// }
 
 // function submit() {
 //     const formData = new FormData();
@@ -220,7 +251,7 @@ watch(
                                 placeholder="Masukkan Riwayat " />
                             <ErrorMessage name="riwayat" class="text-danger" />
                         </div>
-                        <div class="fv-row mb-7">
+                        <!-- <div class="fv-row mb-7">
                             <label class="form-label fw-bold fs-6 required">Status</label>
                             <Field as="select" class="form-control" name="status" v-model="Input.status">
                                 <option value="menunggu">menunggu</option>
@@ -231,7 +262,7 @@ watch(
                                 <option value="selesai">selesai</option>
                             </Field>
                             <ErrorMessage name="status" class="text-danger" />
-                        </div>
+                        </div> -->
                         <!-- <div class="fv-row mb-7">
                             <label class="form-label fw-bold fs-6">Tanggal & Waktu</label>
                             <Field class="form-control" type="datetime-local" name="tanggal_waktu"

@@ -18,7 +18,31 @@ const openForm = ref<boolean>(false);
 const { delete: deleteInput } = useDelete({
     onSuccess: () => paginateRef.value?.refetch(),
 });
+const printReceipt = (noResi: string) => {
+    const printUrl = `/cetak-resi/${noResi}`;
+    const newWindow = window.open(printUrl, '_blank');
+    
+    // Check jika window berhasil dibuka
+    if (!newWindow) {
+        alert('Pop-up diblokir! Silakan izinkan pop-up untuk website ini.');
+        return;
+    }
+    
+    // Optional: check jika halaman berhasil load
+    newWindow.onload = () => {
+        console.log('Halaman berhasil dimuat');
+    };
+    
+    newWindow.onerror = () => {
+        console.error('Gagal memuat halaman');
+    };
+};
 
+// Fungsi download PDF (opsional)
+const downloadReceipt = (noResi: string) => {
+    const downloadUrl = `/download-resi/${noResi}`;
+    window.open(downloadUrl, '_blank');
+};
 // Kolom tabel
 const columns = [
     column.accessor("no", { header: "No" }),
@@ -33,65 +57,40 @@ const columns = [
     column.accessor("ekspedisi", { header: "Ekspedisi" }),
     column.accessor("jenis_layanan", { header: "Jenis Layanan" }),
     column.accessor("no_resi", { header: "No Resi" }),
-    column.accessor("status", {
+   column.accessor("status", {
   header: "Status",
-  cell: ({ row, getValue }) => {
-    const status = getValue();
+  cell: ({ row }) => {
     const data = row.original;
 
-    const badgeClass =
-      status === "menunggu"
-        ? "bg-success"
-        : status === "dalam proses"
-        ? "bg-warning"
-        : status === "pengambilan paket"
-        ? "bg-danger"
-        : status === "dikirim"
-        ? "bg-primary"
-        : status === "selesai"
-        ? "bg-info"
-        : "bg-secondary";
+    // Klik untuk ganti status ke berikutnya (contoh siklus)
+    function handleClick() {
+      const status = data.status;
 
-    let label =
-      status === "menunggu"
-        ? "Menunggu"
-        : status === "pengambilan paket"
-        ? "Pengambilan Paket"
+      const nextStatus = status === "menunggu"
+        ? "dalam proses"
         : status === "dalam proses"
-        ? "Dalam Proses"
+        ? "dikirim"
         : status === "dikirim"
-        ? "Dikirim"
-        : status === "selesai"
-        ? "Selesai"
-        : "Dibatalkan";
+        ? "selesai"
+        : "menunggu";
 
-    // Ambil tanggal dari field yang sesuai dengan status
-    let input: string | null = null;
-    switch (status) {
-      case "menunggu":
-        input = data.tanggal_order;
-        break;
-      case "dalam proses":
-        input = data.tanggal_dikemas;
-        break;
-      case "dikirim":
-        input = data.tanggal_dikirim;
-        break;
-      case "selesai":
-        input = data.tanggal_penerimaan;
-        break;
+      data.status = nextStatus;
     }
 
-    if (input) {
-      const date = new Date(input);
-      const formatted = date.toLocaleString("id-ID");
-      label += ` (${formatted})`;
-    }
-
-    return h("span", { class: `badge ${badgeClass}` }, label);
+    return h(
+      "button",
+      {
+        class: "badge bg-secondary",
+        onClick: handleClick,
+        style: "cursor: pointer; border: none; background: none;",
+      },
+      data.status
+    );
   },
 }),
-  column.accessor("riwayat", { header: "Riwayat" }),
+
+  // column.accessor("riwayat", { header: "Riwayat" }),
+  column.accessor("waktu", { header: "Waktu" }),
     
     // column.accessor("created_at", {
     //     header: "Tanggal Input",
@@ -102,22 +101,55 @@ const columns = [
     //     },
     // }),
 
-
-    column.display({
-        id: "aksi",
-        header: "Aksi",
-        cell: ({ row }) => {
-            const noResi = row.original.no_resi;
-            return h(
-                "button",
-                {
-                    class: "btn btn-sm btn-info",
-                    onClick: () => window.open(`/cetak-resi/${noResi}`, "_blank"),
-                },
-                "Cetak Struk"
-            );
-        },
-    }),
+// column.display({
+//         id: "aksi",
+//         header: "Aksi",
+//         cell: ({ row }) => {
+//             const noResi = row.original.no_resi;
+//             return h("div", { class: "d-flex gap-2" }, [
+//                 h(
+//                     "button",
+//                     {
+//                         class: "btn btn-sm btn-info",
+//                         onClick: () => printReceipt(noResi),
+//                         title: "Cetak PDF"
+//                     },
+//                     [
+//                         h("i", { class: "la la-file-pdf-o me-1" }),
+//                         "Cetak PDF"
+//                     ]
+//                 ),
+//                 h(
+//                     "button",
+//                     {
+//                         class: "btn btn-sm btn-secondary",
+//                         onClick: () => downloadReceipt(noResi),
+//                         title: "Download PDF"
+//                     },
+//                     [
+//                         h("i", { class: "la la-download me-1" }),
+//                         "Download"
+//                     ]
+//                 )
+//             ]);
+//         },
+//     }),
+    
+    // column.display({
+    //     id: "aksi",
+    //     header: "Aksi",
+    //     cell: ({ row }) => {
+    //         const noResi = row.original.no_resi;
+    //         return h(
+    //             "button",
+    //             {
+    //                 class: "btn btn-sm btn-info",
+    //                 onClick: () => window.open(`/cetak-resi/${noResi}`, "_blank"),
+    //             },
+    //             "Cetak Struk"
+    //         );
+    //     },
+    // }),
 
 ];
 

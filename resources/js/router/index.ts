@@ -16,6 +16,24 @@ declare module "vue-router" {
 }
 
 const routes: Array<RouteRecordRaw> = [
+     {
+                path: "/cekresi",
+                name: "cekresi",
+                component: () => import("@/pages/dashboard/cekresi/index.vue"),
+                // meta: {
+                //     pageTitle: "Transaksi",
+                //     breadcrumbs: ["Transaksi"],
+                // },
+            },
+    {
+        path: "/dashboard_pengguna",
+        name: "d_pengguna",
+        component: () => import("@/pages/d_pengguna/index.vue"),
+        // meta: {
+        //     pageTitle: "Beranda",
+        //     breadcrumbs: ["Beranda"],
+        // },
+    },
 
     {
         path: "/",
@@ -116,15 +134,7 @@ const routes: Array<RouteRecordRaw> = [
             //         breadcrumbs: ["Order"],
             //     },
             // },
-            {
-                path: "/dashboard/cekresi",
-                name: "dashboard.cekresi",
-                component: () => import("@/pages/dashboard/cekresi/index.vue"),
-                // meta: {
-                //     pageTitle: "Transaksi",
-                //     breadcrumbs: ["Transaksi"],
-                // },
-            },
+           
             // {
             //     path: "/dashboard/master/users/roles",
             //     name: "dashboard.master.users.roles",
@@ -211,15 +221,7 @@ const routes: Array<RouteRecordRaw> = [
             },
         ],
     },
-    {
-        path: "/dashboard_pengguna",
-        name: "/d_pengguna",
-        component: () => import("@/pages/d_pengguna/index.vue"),
-        // meta: {
-        //     pageTitle: "Beranda",
-        //     breadcrumbs: ["Beranda"],
-        // },
-    },
+   
     {
         path: "/",
         component: () => import("@/layouts/AuthLayout.vue"),

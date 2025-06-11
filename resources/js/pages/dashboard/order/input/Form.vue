@@ -185,7 +185,7 @@ function submit() {
     const formData = new FormData();
     const noResi = generateNoResi(); // ⬅️ Simpan no_resi di sini
 
-    formData.append("nama_pengirim", Input.nama_pengirim);
+    formData.append("nama_pengirim", Input.value.nama_pengirim);
     formData.append("asal_provinsi_id", provinceOrigin.value);
     formData.append("asal_kota_id", cityOrigin.value);
     formData.append("alamat_pengirim", Input.value.alamat_pengirim);

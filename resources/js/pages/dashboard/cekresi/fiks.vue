@@ -196,7 +196,7 @@ const formatDate = (timestamp?: string) => {
               <tr>
                 <!-- <td>{{ result.riwayat }}</td> -->
                  <!-- <td>{{ result.riwayat?.created_at }}</td> -->
-                  <td>{{ result.riwayat }} {{ formatDate(result.created_at) }} </td>
+                  <td>{{ formatDate(result.riwayat.created_at) }}</td>
                 <!-- <td class="timestamp">{{ result.timestamp }}</td> -->
               </tr>
             </table>
@@ -352,13 +352,6 @@ const formatDate = (timestamp?: string) => {
   vertical-align: middle;
   background-color: #fff;
   padding: 0.75rem 1rem;
-  /* border-radius: 5px; */
-}
-.table-bordered .status-text {
-  vertical-align: middle;
-  background-color: #fff;
-  padding: 0.75rem 1rem;
-  font-size: 3rem;
   /* border-radius: 5px; */
 }
 

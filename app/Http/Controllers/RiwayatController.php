@@ -4,28 +4,29 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Input;
+use App\Models\Order;
 use App\Models\Riwayat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class RiwayatController extends Controller
 {
-    public function store(Request $request, $id)
-    {
-        $request->validate([
-            'status' => 'required|string|max:255',
-            'deskripsi' => 'required|string',
-        ]);
+    // public function store(Request $request, $id)
+    // {
+    //     $request->validate([
+    //         'status' => 'required|string|max:255',
+    //         'deskripsi' => 'required|string',
+    //     ]);
 
-        $input = Input::findOrFail($id);
+    //     $input = Input::findOrFail($id);
 
-        $input->riwayats()->create([
-            'status' => $request->status,
-            'deskripsi' => $request->deskripsi,
-        ]);
+    //     $input->riwayats()->create([
+    //         'status' => $request->status,
+    //         'deskripsi' => $request->deskripsi,
+    //     ]);
 
-        return redirect()->back()->with('success', 'Riwayat berhasil ditambahkan.');
-    }
+    //     return redirect()->back()->with('success', 'Riwayat berhasil ditambahkan.');
+    // }
 
     public function tambahRiwayat(Request $request,Input $id){
         $request->validate([
@@ -74,4 +75,22 @@ class RiwayatController extends Controller
 
         return response()->json(['message' => 'Riwayat pengiriman berhasil ditambahkan.']);
     }
+
+    public function resi()
+{
+    return $this->belongsTo(Input::class, 'no_resi', 'no_resi');
 }
+public function show($no_resi)
+{
+    $input = Input::where('no_resi', $no_resi)->firstOrFail();
+    $riwayat = Riwayat::where('no_resi', $no_resi)->orderBy('created_at')->get();
+
+    return response()->json([
+        'input' => $input,
+        'riwayat' => $riwayat,
+    ]);
+}
+
+}
+$data = Input::with('riwayat')->get();
+return response()->json($data);
