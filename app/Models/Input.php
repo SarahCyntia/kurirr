@@ -61,6 +61,7 @@ public function riwayat()
 {
     return $this->hasMany(Riwayat::class, 'id');
 }
+
     // public function riwayat(): HasMany
     // {
     //     return $this->hasMany(Riwayat::class, 'id_riwayat', 'id');

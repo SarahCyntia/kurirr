@@ -80,7 +80,7 @@ const updateStatus = async (row: Row<Input>) => {
     title: `Ubah Status ke "${label}"?`,
     html: `Anda akan mengubah status pengiriman ini menjadi <strong style="text-transform: capitalize;">${label}</strong>.`,
     showCancelButton: true,
-    confirmButtonText: "Ya, lanjutkan",
+    confirmButtonText: "Ya, ubah",
     cancelButtonText: "Batal",
   }).then((result) => result.isConfirmed);
 
@@ -270,6 +270,7 @@ const { delete: deleteInput } = useDelete({
     onSuccess: () => paginateRef.value?.refetch(),
 });
 
+const changedButtons = ref<Set<number>>(new Set());
 
 // const showRincian = (data: Input) => {
 //     Swal.fire({
@@ -348,7 +349,7 @@ const columns = [
         class: "btn btn-sm btn-warning",
         onClick: () => showRincian(cell.row.original),
       },
-      "Lihat Riwayat"
+      "Detail Riwayat"
     );
   },
 }),
@@ -370,51 +371,99 @@ const columns = [
 }),
 
 
-    column.accessor("id", {
-        header: "Order",
-        cell: (cell) => {
-            const row = cell.row.original;
-            const status = row.status;
-            const label = status === "dalam proses" ? "Tambah" : "Antar";
+column.accessor("id", {
+  header: "Order",
+  cell: (cell) => {
+    const id = cell.getValue() as number;
+    const isChanged = changedButtons.value.has(id);
+    const label = isChanged ? "Tambah" : "Antar";
 
-            return h(
-                "button",
-                {
-                    class: "btn btn-sm btn-info",
-                    onClick: async () => {
-                        selected.value = cell.getValue();
+    return h(
+      "button",
+      {
+        class: "btn btn-sm btn-info",
+        async onClick() {
+          selected.value = id;
 
-                        if (status !== "dalam proses") {
-                            // Konfirmasi sebelum lanjut
-                            const result = await Swal.fire({
-                                title: "Ambil Orderan Ini?",
-                                text: "Yakin ingin mengambil orderan ini untuk dikirim?",
-                                icon: "question",
-                                showCancelButton: true,
-                                confirmButtonText: "Ya, Ambil",
-                                cancelButtonText: "Batal",
-                            });
+          if (isChanged) {
+            // Sudah diklik sebelumnya, langsung buka form
+            openForm.value = true;
+          } else {
+            // Pertama kali diklik: konfirmasi dulu
+            const result = await Swal.fire({
+              title: "Ambil Orderan Ini?",
+              text: "Yakin ingin mengambil orderan ini untuk dikirim?",
+              icon: "question",
+              showCancelButton: true,
+              confirmButtonText: "Ya, Ambil",
+              cancelButtonText: "Batal",
+            });
 
-                            if (!result.isConfirmed) return;
+            if (!result.isConfirmed) return;
 
-                            // Tampilkan notifikasi berhasil
-                            await Swal.fire({
-                                title: "Orderan Diambil",
-                                // text: "Silakan lanjutkan proses pengiriman.",
-                                icon: "success",
-                                confirmButtonText: "OK", // Tambahkan tombol OK
-                                showConfirmButton: true, // Pastikan tombol OK tampil
-                            });
-                        }
+            await Swal.fire({
+              title: "Orderan Diambil",
+              icon: "success",
+              confirmButtonText: "OK",
+            });
 
-                        // Buka form
-                        openForm.value = true;
-                    },
-                },
-                label
-            );
+            // Tambahkan ke daftar yang sudah berubah jadi "Tambah"
+            changedButtons.value.add(id);
+          }
         },
-    }),
+      },
+      label
+    );
+  },
+}),
+
+
+
+    // column.accessor("id", {
+    //     header: "Order",
+    //     cell: (cell) => {
+    //         const row = cell.row.original;
+    //         const status = row.status;
+    //         const label = status === "dalam proses" ? "Tambah" : "Antar";
+
+    //         return h(
+    //             "button",
+    //             {
+    //                 class: "btn btn-sm btn-info",
+    //                 onClick: async () => {
+    //                     selected.value = cell.getValue();
+
+    //                     if (status !== "dalam proses") {
+    //                         // Konfirmasi sebelum lanjut
+    //                         const result = await Swal.fire({
+    //                             title: "Ambil Orderan Ini?",
+    //                             text: "Yakin ingin mengambil orderan ini untuk dikirim?",
+    //                             icon: "question",
+    //                             showCancelButton: true,
+    //                             confirmButtonText: "Ya, Ambil",
+    //                             cancelButtonText: "Batal",
+    //                         });
+
+    //                         if (!result.isConfirmed) return;
+
+    //                         // Tampilkan notifikasi berhasil
+    //                         await Swal.fire({
+    //                             title: "Orderan Diambil",
+    //                             // text: "Silakan lanjutkan proses pengiriman.",
+    //                             icon: "success",
+    //                             confirmButtonText: "OK", // Tambahkan tombol OK
+    //                             showConfirmButton: true, // Pastikan tombol OK tampil
+    //                         });
+    //                     }
+
+    //                     // Buka form
+    //                     openForm.value = true;
+    //                 },
+    //             },
+    //             label
+    //         );
+    //     },
+    // }),
     column.accessor("waktu", { header: "Waktu" }),
     // column.display({
     //     id: "rincian",

@@ -17,6 +17,7 @@ class CekResiController extends Controller
 
     $data = Input::where('no_resi', $request->no_resi)
         ->where('ekspedisi', $request->ekspedisi)
+        ->with('riwayat')
         ->first();
 
     if (!$data) {

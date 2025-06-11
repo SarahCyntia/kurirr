@@ -7,6 +7,7 @@ import type { Input } from "@/types";
 import { h } from "vue";
 import Swal from "sweetalert2";
 import axios from "axios";
+import { SMART_ALIGNMENT } from "element-plus/es/components/virtual-list/src/defaults";
 
 // Referensi dan variabel
 const column = createColumnHelper<Input>();
@@ -27,35 +28,77 @@ const { delete: deleteInput } = useDelete({
     onSuccess: () => paginateRef.value?.refetch(),
 });
 
-const showRincian = (data: Input) => {
-    Swal.fire({
-        title: "Detail Riwayat",
-        html: `
-            <div style="text-align: left; padding: 20px 20px">
-                <p><b>Riwayat Pengiriman:</b> ${data.riwayat_pengiriman || '-'} <button id="editBtn" style="
-                    margin-top: 10px;
-                    padding: 6px 12px;
-                    background-color: #4CAF50;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                ">Edit</button></p>
-            </div>
-        `,
-        showConfirmButton: true,
-        confirmButtonText: "Tutup",
-        didOpen: () => {
-            const editBtn = document.getElementById("editBtn");
-            if (editBtn) {
-                editBtn.addEventListener("click", () => {
-                    Swal.fire("Edit ditekan!", "Fungsi edit bisa dipanggil di sini.", "info");
-                    // Tambahkan aksi edit di sini, misalnya buka form input baru
-                });
-            }
-        }
-    });
+interface Riwayat {
+  id: number
+  deskripsi: string
+  created_at: string
+}
+
+// Interface untuk data yang sudah ditampilkan
+interface RiwayatTampil {
+  id: number
+  riwayat: string
+}
+
+// Format tanggal ID
+function formatDate(waktu: string | null | undefined): string {
+  if (!waktu) return "-"; // atau bisa "Tanggal tidak tersedia"
+  
+  const date = new Date(waktu);
+  if (isNaN(date.getTime())) return "-";
+
+  return date.toLocaleString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Jakarta" 
+  });
+}
+const riwayatList = ref<Riwayat[]>([])
+
+// List yang sudah pernah ditampilkan
+const riwayatTertampil = ref<RiwayatTampil[]>([])
+
+// Fungsi untuk menampilkan riwayat di SweetAlert
+const showRincian = (data: any) => {
+  // ⛔ Reset data lama
+ console.log(Array.isArray(data.riwayat)); // Harusnya true
+
+
+  riwayatTertampil.value = [];
+
+  const newItems = data.riwayat.map((item: any) => {
+    const formattedText = `${item.deskripsi} (${formatDate(item.created_at)})`;
+    return {
+      id: item.id_riwayat,
+      riwayat: formattedText
+    };
+  });
+
+  // ⛔ Jangan cek alreadyShown — langsung push semua!
+  newItems.forEach(item => {
+    riwayatTertampil.value.push(item);
+  });
+
+  const htmlContent = riwayatTertampil.value
+    .map((item, index) => `
+      <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #ddd;">
+        <strong>${index + 1}.</strong> ${item.riwayat}
+      </div>
+    `)
+    .join('');
+
+  Swal.fire({
+    title: "Detail Riwayat",
+    html: `<div style="text-align: left; padding: 10px;">${htmlContent}</div>`,
+    confirmButtonText: "Tutup",
+    width: 600,
+  });
 };
+
 
 // const showRincian = (data: Input) => {
 //     Swal.fire({
@@ -229,18 +272,34 @@ const columns = [
         },
     }),
     column.display({
-        id: "rincian",
-        header: "Riwayat Pengiriman",
-        cell: (cell) =>
-            h(
-                "button",
-                {
-                    class: "btn btn-sm btn-danger",
-                    onClick: () => showRincian(cell.row.original),
-                },
-                "Lihat Detail"
-            ),
-    }),
+  id: "riwayat",
+  header: "Riwayat",
+  cell: (cell) => {
+    console.log("ROW ORIGINAL:", cell.row.original); // 🔍 Debug log
+    return h(
+      "button",
+      {
+        class: "btn btn-sm btn-warning",
+        onClick: () => showRincian(cell.row.original),
+      },
+      "Lihat Riwayat"
+    );
+  },
+}),
+
+    // column.display({
+    //     id: "rincian",
+    //     header: "Riwayat Pengiriman",
+    //     cell: (cell) =>
+    //         h(
+    //             "button",
+    //             {
+    //                 class: "btn btn-sm btn-danger",
+    //                 onClick: () => showRincian(cell.row.original),
+    //             },
+    //             "Lihat Detail"
+    //         ),
+    // }),
 //     column.accessor("riwayat_pengiriman", {
 //     header: "Riwayat Pengiriman",
 //     cell: (cell) => {

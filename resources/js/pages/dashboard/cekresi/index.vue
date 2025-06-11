@@ -61,7 +61,16 @@ const error = ref("");
 //     hour: '2-digit', minute: '2-digit'
 //   });
 // }
-
+// const formatDate = (timestamp?: string) => {
+//   if (!timestamp) return new Date().toLocaleString('id-ID');
+//   return new Date(timestamp).toLocaleString('id-ID', {
+//     day: '2-digit',
+//     month: 'long',
+//     year: 'numeric',
+//     hour: '2-digit',
+//     minute: '2-digit',
+//   });
+// };
 // Fungsi cari resi
 const cariResi = async () => {
   if (!noResi.value || !ekspedisi.value) {
@@ -193,10 +202,11 @@ const formatDate = (timestamp?: string) => {
             <h2 class="h2">Riwayat Pengiriman</h2>
             <div class="shipping-history">
               <table class="table table-bordered">
-              <tr>
-                <!-- <td>{{ result.riwayat }}</td> -->
-                 <!-- <td>{{ result.riwayat?.created_at }}</td> -->
-                  <td>{{ result.riwayat }} {{ formatDate(result.created_at) }} </td>
+                <!-- menggunakan array v-for -->
+              <tr v-for="riwayat in result.riwayat" :key="riwayat?.id_riwayat">
+                <td>{{ riwayat.deskripsi }}</td>
+                 <td>{{ formatDate(riwayat.created_at) }}</td>
+                  <!-- <td>{{ result.riwayat }} {{ formatDate(result.created_at) }} </td> -->
                 <!-- <td class="timestamp">{{ result.timestamp }}</td> -->
               </tr>
             </table>
@@ -355,10 +365,13 @@ const formatDate = (timestamp?: string) => {
   /* border-radius: 5px; */
 }
 .table-bordered .status-text {
-  vertical-align: middle;
+  /* vertical-align: middle; */
+  text-align: justify;
+  text-indent: 30px;
   background-color: #fff;
   padding: 0.75rem 1rem;
-  font-size: 3rem;
+  font-size: 2.5rem;
+  text-transform: uppercase;
   /* border-radius: 5px; */
 }
 

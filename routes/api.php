@@ -44,6 +44,9 @@ Route::get('/cek-resi/{noResi}', [CekResiController::class, 'cek']);
 Route::get('/cek-resi/{no_resi}', [CekResiController::class, 'cekResi']);
 Route::get('/cek-resi', [CekResiController::class, 'cekResi']);
 Route::post('/cek-resi', [ResiController::class, 'cek'])->withoutMiddleware(['auth']);
+Route::get('/cek-resi/{Input}', [OrderedController::class, 'show']);
+
+//  Route::put('/riwayat/store/{id}',[ResiController::class,'lihatRiwayat'])->withoutMiddleware('can:input');
 
 
 
