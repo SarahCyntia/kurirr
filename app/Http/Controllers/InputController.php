@@ -186,7 +186,7 @@ class InputController extends Controller
             'jenis_layanan' => 'required|string|max:255',
             'biaya' => 'nullable|integer',
             'berat_barang' => 'required|numeric|min:1',
-            'nilai' => 'nullable|integer|min:1|max:5',
+            'rating' => 'nullable|integer|min:1|max:5',
             'status' => 'required|in:menunggu,dalam proses,dikirim,selesai',
             'ulasan' => 'nullable|string',
         ]);
@@ -275,8 +275,9 @@ class InputController extends Controller
         $kurirId = $user->kurir->id ?? null; // Asumsi relasi user->kurir
 
         $input->status = $validated['status'];
-        $input->riwayat = $validated['riwayat'];
-        // $request->riwayat['riwayat]
+        // $input->riwayat = $validated['riwayat'];
+        $input->riwayat = $validated['riwayat'] ?? null;
+        // $request->riwayat['riwayat];
         $waktuBaru = now()->format('d-m-Y H:i:s');
 
 
@@ -389,6 +390,66 @@ class InputController extends Controller
     //         'data' => $data
     //     ]);
     // }
+
+
+     public function beriRating(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'no_resi' => 'required|string',
+                'rating' => 'required|integer|min:1|max:5',
+                'ulasan' => 'required|string|max:500'
+            ]);
+
+            // Hapus baris log debug
+            // Log::info('Rating data:', $validated);
+
+            $input = Input::where('no_resi', $validated['no_resi'])->first();
+            
+            if (!$input) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data dengan no resi tersebut tidak ditemukan'
+                ], 404);
+            }
+
+            if (!empty($input->rating)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Rating sudah pernah diberikan'
+                ], 400);
+            }
+
+            $input->update([
+                'rating' => $validated['rating'],
+                'ulasan' => $validated['ulasan'],
+                'tanggal_rating' => now()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Rating berhasil disimpan'
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak valid',
+                'errors' => $e->errors()
+            ], 422);
+            
+        } catch (\Exception $e) {
+            // Atau pakai error_log() biasa
+            error_log('Error saving rating: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
 
     public function destroy(Input $input)
     {

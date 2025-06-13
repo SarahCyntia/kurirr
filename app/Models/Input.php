@@ -36,6 +36,8 @@ class Input extends Model
         'asal_kota_id', 
         'tujuan_provinsi_id', 
         'tujuan_kota_id',
+        'ulasan',
+        'rating',
     ];
 
     public function asalProvinsi() {
@@ -61,6 +63,12 @@ public function riwayat()
 {
     return $this->hasMany(Riwayat::class, 'id');
 }
+
+        // Cast rating ke integer
+    protected $casts = [
+        'rating' => 'integer',
+        'ulasan' => 'string',
+    ];
 
     // public function riwayat(): HasMany
     // {

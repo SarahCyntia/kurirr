@@ -41,11 +41,17 @@ const photo = ref<any>([]);
 const formRef = ref();
 
 // ✅ Validasi form menggunakan Yup
-const formSchema = Yup.object().shape({
-    riwayat: Yup.string().nullable(),
-    status: Yup.string().nullable("Status harus diisi"),
-    // tanggal_waktu: Yup.string().nullable("Tanggal dan waktu harus diisi"),
+// const formSchema = Yup.object().shape({
+//     riwayat: Yup.string().nullable(),
+//     // status: Yup.string().nullable("Status harus diisi"),
+//     // tanggal_waktu: Yup.string().nullable("Tanggal dan waktu harus diisi"),
+// });
+
+const formSchema = Yup.object({
+  riwayat_pengiriman: Yup.array().of(Yup.string()).nullable(),
 });
+
+
 
 const submitForm = async () => {
     try {
@@ -102,9 +108,6 @@ function getEdit() {
 
 // ✅ Submit Form (Tambah/Update)
 function submit() {
-
-
-
     const form = new FormData();
     form.append("riwayat", Input.value.riwayat);
     form.append("status", Input.value.status);

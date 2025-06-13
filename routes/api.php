@@ -38,6 +38,11 @@ use App\Http\Controllers\RiwayatController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::post('/beri-rating', [CekResiController::class, 'store']);
+Route::post('/beri-rating', [InputController::class, 'store']);
+// Di routes/web.php atau routes/api.php
+Route::post('/beri-rating', [InputController::class, 'beriRating']); // Sesuaikan nama controller
+
 Route::get('/cek-resi/{nomorResi}', [CekResiController::class, 'cekResi']);
 Route::get('/resi/{nomorResi}', [CekResiController::class, 'show']);
 Route::get('/cek-resi/{noResi}', [CekResiController::class, 'cek']);

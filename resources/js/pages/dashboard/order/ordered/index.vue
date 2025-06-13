@@ -52,6 +52,13 @@ const statusIcons: Record<string, "info" | "question" | "warning" | "success"> =
   "dikirim": "warning",
   "selesai": "success"
 };
+const statusColors: Record<string, string> = {
+  "menunggu": "bg-info",
+  "dalam proses": "bg-danger",
+  "dikirim": "bg-warning",
+  "selesai": "bg-success",
+};
+
 const updateStatus = async (row: Row<Input>) => {
   const currentStatus = row.original.status;
   const currentIndex = statusSteps.indexOf(currentStatus);
@@ -270,7 +277,13 @@ const { delete: deleteInput } = useDelete({
     onSuccess: () => paginateRef.value?.refetch(),
 });
 
-const changedButtons = ref<Set<number>>(new Set());
+const stored = localStorage.getItem("changedButtons");
+const changedButtons = ref<Set<number>>(new Set(stored ? JSON.parse(stored) : []));
+
+watch(changedButtons, (val) => {
+  localStorage.setItem("changedButtons", JSON.stringify([...val]));
+}, { deep: true });
+// const changedButtons = ref<Set<number>>(new Set());
 
 // const showRincian = (data: Input) => {
 //     Swal.fire({
@@ -355,26 +368,45 @@ const columns = [
 }),
 
 
-    column.accessor("status", {
+//     column.accessor("status", {
+//   header: "Status",
+//   cell: ({ row }) => {
+//   return h(
+//     "button",
+//     {
+//       class: "badge bg-secondary",
+//       onClick: () => updateStatus(row),
+//       style: "cursor: pointer; border: none; background: none;",
+//     },
+//     row.original.status
+//   );
+// }
+// }),
+
+column.accessor("status", {
   header: "Status",
   cell: ({ row }) => {
-  return h(
-    "button",
-    {
-      class: "badge bg-secondary",
-      onClick: () => updateStatus(row),
-      style: "cursor: pointer; border: none; background: none;",
-    },
-    row.original.status
-  );
-}
-}),
+    const status = row.original.status;
+    const badgeClass = statusColors[status] || "bg-secondary"; // fallback kalau tidak ditemukan
 
+    return h(
+      "button",
+      {
+        class: `badge ${badgeClass}`,
+        onClick: () => updateStatus(row),
+        style: "cursor: pointer; border: none;",
+      },
+      status.charAt(0).toUpperCase() + status.slice(1) // Kapitalisasi awal
+    );
+  },
+}),
 
 column.accessor("id", {
   header: "Order",
   cell: (cell) => {
     const id = cell.getValue() as number;
+    const row = cell.row.original; // Ambil seluruh data baris
+    const status = row.status;     // Misalnya ada field status di data
     const isChanged = changedButtons.value.has(id);
     const label = isChanged ? "Tambah" : "Antar";
 
@@ -382,14 +414,13 @@ column.accessor("id", {
       "button",
       {
         class: "btn btn-sm btn-info",
+        disabled: status === "selesai", // ⛔ Tidak bisa diklik jika status selesai
         async onClick() {
           selected.value = id;
 
           if (isChanged) {
-            // Sudah diklik sebelumnya, langsung buka form
             openForm.value = true;
           } else {
-            // Pertama kali diklik: konfirmasi dulu
             const result = await Swal.fire({
               title: "Ambil Orderan Ini?",
               text: "Yakin ingin mengambil orderan ini untuk dikirim?",
@@ -407,7 +438,6 @@ column.accessor("id", {
               confirmButtonText: "OK",
             });
 
-            // Tambahkan ke daftar yang sudah berubah jadi "Tambah"
             changedButtons.value.add(id);
           }
         },
@@ -417,53 +447,50 @@ column.accessor("id", {
   },
 }),
 
+// column.accessor("id", {
+//   header: "Order",
+//   cell: (cell) => {
+//     const id = cell.getValue() as number;
+//     const isChanged = changedButtons.value.has(id);
+//     const label = isChanged ? "Tambah" : "Antar";
 
+//     return h(
+//       "button",
+//       {
+//         class: "btn btn-sm btn-info",
+//         async onClick() {
+//           selected.value = id;
 
-    // column.accessor("id", {
-    //     header: "Order",
-    //     cell: (cell) => {
-    //         const row = cell.row.original;
-    //         const status = row.status;
-    //         const label = status === "dalam proses" ? "Tambah" : "Antar";
+//           if (isChanged) {
+//             openForm.value = true;
+//           } else {
+//             const result = await Swal.fire({
+//               title: "Ambil Orderan Ini?",
+//               text: "Yakin ingin mengambil orderan ini untuk dikirim?",
+//               icon: "question",
+//               showCancelButton: true,
+//               confirmButtonText: "Ya, Ambil",
+//               cancelButtonText: "Batal",
+//             });
 
-    //         return h(
-    //             "button",
-    //             {
-    //                 class: "btn btn-sm btn-info",
-    //                 onClick: async () => {
-    //                     selected.value = cell.getValue();
+//             if (!result.isConfirmed) return;
 
-    //                     if (status !== "dalam proses") {
-    //                         // Konfirmasi sebelum lanjut
-    //                         const result = await Swal.fire({
-    //                             title: "Ambil Orderan Ini?",
-    //                             text: "Yakin ingin mengambil orderan ini untuk dikirim?",
-    //                             icon: "question",
-    //                             showCancelButton: true,
-    //                             confirmButtonText: "Ya, Ambil",
-    //                             cancelButtonText: "Batal",
-    //                         });
+//             await Swal.fire({
+//               title: "Orderan Diambil",
+//               icon: "success",
+//               confirmButtonText: "OK",
+//             });
 
-    //                         if (!result.isConfirmed) return;
+//             // Tambahkan ID ke Set dan tersimpan otomatis
+//             changedButtons.value.add(id);
+//           }
+//         },
+//       },
+//       label
+//     );
+//   },
+// }),
 
-    //                         // Tampilkan notifikasi berhasil
-    //                         await Swal.fire({
-    //                             title: "Orderan Diambil",
-    //                             // text: "Silakan lanjutkan proses pengiriman.",
-    //                             icon: "success",
-    //                             confirmButtonText: "OK", // Tambahkan tombol OK
-    //                             showConfirmButton: true, // Pastikan tombol OK tampil
-    //                         });
-    //                     }
-
-    //                     // Buka form
-    //                     openForm.value = true;
-    //                 },
-    //             },
-    //             label
-    //         );
-    //     },
-    // }),
     column.accessor("waktu", { header: "Waktu" }),
     // column.display({
     //     id: "rincian",

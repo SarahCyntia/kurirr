@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, type Ref } from "vue";
 import { useDelete } from "@/libs/hooks";
 // import Form from "./Form.vue"; 
 import { createColumnHelper } from "@tanstack/vue-table";
@@ -100,97 +100,36 @@ const showRincian = (data: any) => {
 };
 
 
-// const showRincian = (data: Input) => {
-//     Swal.fire({
-//         title: "Detail Riwayat",
-//         html: `
-//             <div style="text-align: left; padding: 20px 20px">
-//                 <label for="riwayatInput"><b>Riwayat Pengiriman:</b></label><br/>
-//                 <input id="riwayatInput" type="text" value="${data.riwayat_pengiriman || ''}" style="
-//                     width: 100%;
-//                     padding: 8px;
-//                     margin-top: 8px;
-//                     margin-bottom: 12px;
-//                     border: 1px solid #ccc;
-//                     border-radius: 4px;
-//                 "/>
-//                 <button id="editBtn" style="
-//                     padding: 10px 20px;
-//                     background-color: #4CAF50;
-//                     color: white;
-//                     border: none;
-//                     border-radius: 4px;
-//                     cursor: pointer;
-//                 ">Simpan Perubahan</button>
-//             </div>
-//         `,
-//         showConfirmButton: true,
-//         confirmButtonText: "Tutup",
-//         didOpen: () => {
-//             const editBtn = document.getElementById("editBtn") as HTMLButtonElement;
-//             const inputEl = document.getElementById("riwayatInput") as HTMLInputElement;
+const showRincians = (data: Input) => {
+  Swal.fire({
+    // title: <strong>Detail Input</strong>,
+    title: "Detail Riwayat",
 
-//             if (editBtn && inputEl) {
-//                 editBtn.addEventListener("click", () => {
-//                     const newValue = inputEl.value;
-
-//                     // Contoh: tampilkan hasil edit (bisa diganti dengan fungsi update ke server)
-//                     Swal.fire({
-//                         title: "Tersimpan!",
-//                         text: `Nilai baru: ${newValue}`,
-//                         icon: "success",
-//                     });
-
-//                     // TODO: kirim ke backend atau update local state di sini
-//                     console.log("Data baru:", newValue);
-//                 });
-//             }
-//         }
-//     });
-// };
-
-
+    html: `
+    <div style="text-align: left;">
+        <p><b>Asal Provinsi :</b> ${data.asal_provinsi_id || '-'}</p>
+        <p><b>Asal Kota :</b> ${data.asal_kota_id || '-'}</p>
+        <p><b>No. Telpon Pengirim :</b> ${data.no_telp_pengirim}</p>
+        <p><b>Tujuan Provinsi :</b> ${data.tujuan_provinsi_id || '-'}</p>
+        <p><b>Tujuan Kota :</b> ${data.tujuan_kota_id|| '-'}</p>
+        <p><b>No. Telpon Penerima :</b> ${data.no_telp_penerima || '-'}</p>
+        <p><b>Jenis Barang :</b> ${data.jenis_barang || '-'}</p>
+        <p><b>Ekspedisi :</b> ${data.ekspedisi || '-'}</p>
+        <p><b>Berat Barang :</b> ${data.berat_barang || '-'}</p>
+        <p><b>Jenis Layanan :</b> ${data.jenis_layanan || '-'}</p>
+      </div>
+    `,
+    confirmButtonText: "Tutup",
+  });
+};
 
 // Kolom tabel
 const columns = [
       column.accessor("no", { header: "No" }),
     column.accessor("nama_pengirim", { header: "Nama Pengirim" }),
     column.accessor("alamat_pengirim", { header: "Alamat Pengirim" }),
-    column.accessor("no_telp_pengirim", { header: "No. Telp Pengirim" }),
     column.accessor("nama_penerima", { header: "Nama Penerima" }),
     column.accessor("alamat_penerima", { header: "Alamat Penerima" }),
-    column.accessor("no_telp_penerima", { header: "No. Telp Penerima" }),
-    column.accessor("jenis_barang", { header: "Jenis Barang" }),
-    column.accessor("jenis_layanan", { header: "Jenis Layanan" }),
-    column.accessor("berat_barang", { header: "Berat Barang" }),
-    
-//     column.accessor("riwayat_pengiriman", {
-//     header: "Riwayat Pengiriman",
-//     cell: (cell) => {
-//         const riwayat = cell.getValue();
-
-//         return h(
-//             "button",
-//             {
-//                 class: "btn btn-sm btn-danger",
-//                 onClick: () => {
-//                     Swal.fire({
-//                         title: "Riwayat Pengiriman",
-//                         html: Array.isArray(riwayat)
-//                             ? `<ul style="text-align: left;">${riwayat
-//                                   .map((item: string) => `<li>${item}</li>`)
-//                                   .join("")}</ul>`
-//                             : `<p>${riwayat || "Belum ada riwayat."}</p>`,
-//                         icon: "info",
-//                         confirmButtonText: "Tutup",
-//                     });
-//                 },
-//             },
-//             "Lihat Detail"
-//         );  
-//     },
-// }),
-
     column.accessor("no_resi", { header: "No Resi" }),
     column.accessor("status", {
         header: "Status",
@@ -226,51 +165,6 @@ const columns = [
         },
     }),
 
-    column.accessor("id", {
-        header: "Order",
-        cell: (cell) => {
-            const row = cell.row.original;
-            const status = row.status;
-            const label = status === "dalam proses" ? "Tambah" : "Antar";
-
-            return h(
-                "button",
-                {
-                    class: "btn btn-sm btn-info",
-                    onClick: async () => {
-                        selected.value = cell.getValue();
-
-                        if (status !== "dalam proses") {
-                            // Konfirmasi sebelum lanjut
-                            const result = await Swal.fire({
-                                title: "Ambil Orderan Ini?",
-                                text: "Yakin ingin mengambil orderan ini untuk dikirim?",
-                                icon: "question",
-                                showCancelButton: true,
-                                confirmButtonText: "Ya, Ambil",
-                                cancelButtonText: "Batal",
-                            });
-
-                            if (!result.isConfirmed) return;
-
-                            // Tampilkan notifikasi berhasil
-                            await Swal.fire({
-                                title: "Orderan Diambil",
-                                // text: "Silakan lanjutkan proses pengiriman.",
-                                icon: "success",
-                                confirmButtonText: "OK", // Tambahkan tombol OK
-                                showConfirmButton: true, // Pastikan tombol OK tampil
-                            });
-                        }
-
-                        // Buka form
-                        openForm.value = true;
-                    },
-                },
-                label
-            );
-        },
-    }),
     column.display({
   id: "riwayat",
   header: "Riwayat",
@@ -287,67 +181,21 @@ const columns = [
   },
 }),
 
-    // column.display({
-    //     id: "rincian",
-    //     header: "Riwayat Pengiriman",
-    //     cell: (cell) =>
-    //         h(
-    //             "button",
-    //             {
-    //                 class: "btn btn-sm btn-danger",
-    //                 onClick: () => showRincian(cell.row.original),
-    //             },
-    //             "Lihat Detail"
-    //         ),
-    // }),
-//     column.accessor("riwayat_pengiriman", {
-//     header: "Riwayat Pengiriman",
-//     cell: (cell) => {
-//         const row = cell.row.original;
-//         const riwayat = cell.getValue(); // array of string / log
-
-//         const textDefault = Array.isArray(riwayat)
-//             ? riwayat.join("\n")
-//             : (riwayat || "");
-
-//         return h(
-//             "button",
-//             {
-//                 class: "btn btn-sm btn-danger",
-//                 onClick: async () => {
-//                     const { value: updatedText } = await Swal.fire({
-//                         title: "Edit Riwayat Pengiriman",
-//                         html: `
-//                             <textarea id="riwayat-editor" class="swal2-textarea" rows="8" placeholder="Satu log per baris">${textDefault}</textarea>
-//                         `,
-//                         showCancelButton: true,
-//                         confirmButtonText: "Simpan",
-//                         preConfirm: () => {
-//                             const input = document.getElementById("riwayat-editor") as HTMLTextAreaElement;
-//                             return input?.value;
-//                         },
-//                     });
-
-//                     if (updatedText !== undefined) {
-//                         const updatedArray = updatedText
-//                             .split("\n")
-//                             .map((item) => item.trim())
-//                             .filter((item) => item.length > 0);
-
-//                         await axios.put(`/input/${row.id}`, {
-//                             riwayat_pengiriman: updatedArray,
-//                             status: row.status, // jika diperlukan oleh backend
-//                         });
-
-//                         Swal.fire("Berhasil", "Riwayat telah diperbarui", "success");
-//                     }
-//                 },
-//             },
-//             "Edit Riwayat"
-//         );
-//     },
-// }),
-
+column.accessor("id", {
+  header: "Detail",
+  cell: (cell) =>
+  h("div", { class: "d-flex gap-2" }, [
+    h(
+      "button",
+      {
+        class: "btn btn-sm btn-icon btn-danger",
+        onClick: () => showRincians(cell.row.original),
+      },
+      h("i", { class: "bi bi-building" })
+      // "Lihat"
+    ),
+  ]),
+}),
     
 ];
 const submit = async () => {
@@ -355,9 +203,6 @@ const submit = async () => {
     emit("refresh");
     emit("close");
 };
-
-
-
 
 // Untuk reload data
 const refresh = () => paginateRef.value?.refetch();const props = defineProps<{ selected: string }>();
@@ -374,8 +219,6 @@ onMounted(async () => {
         isLoading.value = false;
     }
 });
-
-
 
 // Reset saat form ditutup
 watch(openForm, (val) => {
@@ -396,10 +239,10 @@ watch(openForm, (val) => {
     <!-- Card List -->
     <div class="card">
         <div class="card-header align-items-center">
-            <h2 class="mb-0">Orderan</h2>
+            <h2 class="mb-0">Data Order</h2>
         </div>
 
-        <div class="card-body">
+          <div class="card-body">
             <paginate
                 ref="paginateRef"
                 id="table-inputorder"

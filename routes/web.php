@@ -21,3 +21,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/{any}', function () {
     return view('app');
 })->where('any', '^(?!api\/)[\/\w\.-]*');
+
+Route::get('/register', 'RegisterController@index')->name('register.index');
+Route::post('/register', 'RegisterController@store')->name('register.store');
