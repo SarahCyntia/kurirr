@@ -30,6 +30,52 @@ export interface Input {
     updated_at: string
   }
   
+  export interface ApiResponse<T = any> {
+    success: boolean;
+    message: string;
+    data: T;
+    errors?: Record<string, string[]>;
+}
+
+export interface CheckoutResponse {
+    id: string | number;
+    transaction_id: string;
+    status: string;
+}
+
+export interface PaymentResponse {
+    snap_token: string;
+    order_id: string;
+    gross_amount: number;
+}
+
+// vite-env.d.ts - Environment variables types
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+    readonly VITE_MIDTRANS_CLIENT_KEY: string;
+    readonly VITE_API_BASE_URL: string;
+}
+
+interface ImportMeta {
+    readonly env: ImportMetaEnv;
+}
+
+// global.d.ts - Global types
+declare global {
+    interface Window {
+        snap: {
+            pay: (token: string, options: {
+                onSuccess?: (result: any) => void;
+                onPending?: (result: any) => void;
+                onError?: (result: any) => void;
+                onClose?: () => void;
+            }) => void;
+        };
+    }
+}
+
+export {};
 // export interface Input {
 //     id: number
 //     nama_barang: string

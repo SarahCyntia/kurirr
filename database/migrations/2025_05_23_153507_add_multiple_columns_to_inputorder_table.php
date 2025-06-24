@@ -22,7 +22,6 @@ return new class extends Migration
             $table->foreignId('asal_kota_id')->constrained('cities');
             $table->foreignId('tujuan_provinsi_id')->constrained('provinces');
             $table->foreignId('tujuan_kota_id')->constrained('cities');
-            $table->timestamps();
 
         });
     }
@@ -32,9 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('inputorder', function (Blueprint $table) {
-            Schema::dropIfExists('cities');
-        Schema::dropIfExists('provinces');
-        });
+        Schema::dropIfExists('inputorder');
     }
 };

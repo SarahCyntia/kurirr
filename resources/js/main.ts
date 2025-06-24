@@ -90,9 +90,9 @@ app.use(Vue3Toastify, {
     theme: useThemeStore().mode,
 } as ToastContainerOptions);
 
-import CKEditor from "@ckeditor/ckeditor5-vue";
-import "ckeditor5-custom-build/build/ckeditor";
-app.use(CKEditor);
+// import CKEditor from "@ckeditor/ckeditor5-vue";
+// import "ckeditor5-custom-build/build/ckeditor";
+// app.use(CKEditor);
 
 import { Form as VForm, Field, ErrorMessage } from "vee-validate";
 app.component("VForm", VForm);

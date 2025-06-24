@@ -122,13 +122,25 @@ const showRincians = (data: Input) => {
     confirmButtonText: "Tutup",
   });
 };
+// const lihatPenilaian = (data: Input) => {
+//   Swal.fire({
+//     // title: <strong>Detail Input</strong>,
+//     title: "Detail Penilaian",
+
+//     html: `
+//     <div style="text-align: left;">
+//         <p><b>Rating :</b> ${data.rating || '-'}</p>
+//         <p><b>Ulasan :</b> ${data.ulasan || '-'}</p>
+//       </div>
+//     `,
+//     confirmButtonText: "Tutup",
+//   });
+// };
 const lihatPenilaian = (data: Input) => {
   Swal.fire({
-    // title: <strong>Detail Input</strong>,
     title: "Detail Penilaian",
-
     html: `
-    <div style="text-align: left;">
+      <div style="text-align: left;">
         <p><b>Rating :</b> ${data.rating || '-'}</p>
         <p><b>Ulasan :</b> ${data.ulasan || '-'}</p>
       </div>
@@ -136,58 +148,6 @@ const lihatPenilaian = (data: Input) => {
     confirmButtonText: "Tutup",
   });
 };
-
-
-// const showRincian = (data: Input) => {
-//     Swal.fire({
-//         title: "Detail Riwayat",
-//         html: `
-//             <div style="text-align: left; padding: 20px 20px">
-//                 <label for="riwayatInput"><b>Riwayat Pengiriman:</b></label><br/>
-//                 <input id="riwayatInput" type="text" value="${data.riwayat_pengiriman || ''}" style="
-//                     width: 100%;
-//                     padding: 8px;
-//                     margin-top: 8px;
-//                     margin-bottom: 12px;
-//                     border: 1px solid #ccc;
-//                     border-radius: 4px;
-//                 "/>
-//                 <button id="editBtn" style="
-//                     padding: 10px 20px;
-//                     background-color: #4CAF50;
-//                     color: white;
-//                     border: none;
-//                     border-radius: 4px;
-//                     cursor: pointer;
-//                 ">Simpan Perubahan</button>
-//             </div>
-//         `,
-//         showConfirmButton: true,
-//         confirmButtonText: "Tutup",
-//         didOpen: () => {
-//             const editBtn = document.getElementById("editBtn") as HTMLButtonElement;
-//             const inputEl = document.getElementById("riwayatInput") as HTMLInputElement;
-
-//             if (editBtn && inputEl) {
-//                 editBtn.addEventListener("click", () => {
-//                     const newValue = inputEl.value;
-
-//                     // Contoh: tampilkan hasil edit (bisa diganti dengan fungsi update ke server)
-//                     Swal.fire({
-//                         title: "Tersimpan!",
-//                         text: `Nilai baru: ${newValue}`,
-//                         icon: "success",
-//                     });
-
-//                     // TODO: kirim ke backend atau update local state di sini
-//                     console.log("Data baru:", newValue);
-//                 });
-//             }
-//         }
-//     });
-// };
-
-
 
 // Kolom tabel
 const columns = [
@@ -291,82 +251,44 @@ column.accessor("id", {
   ]),
 }),
 column.display({
-id: "penilaian",
-header: "Penilaian",
-cell: (cell) => {
-console.log("ROW ORIGINAL:", cell.row.original); // 🔍 Debug log
-return h(
-  "button",
-  {
-    class: "btn btn-sm btn-secondary",
-    onClick: () => lihatPenilaian(cell.row.original),
+  id: "penilaian",
+  header: "Penilaian",
+  cell: (cell) => {
+    const row = cell.row.original;
+
+    // Penilaian dianggap ada jika ada rating atau ulasan
+    const hasPenilaian =
+      (typeof row.rating === "number" && row.rating > 0) ||
+      (typeof row.ulasan === "string" && row.ulasan.trim() !== "");
+
+    return hasPenilaian
+      ? h(
+          "button",
+          {
+            class: "btn btn-sm btn-secondary",
+            onClick: () => lihatPenilaian(row),
+          },
+          "Lihat Penilaian"
+        )
+      : h("span", { class: "text-muted fst-italic" }, "Belum ada penilaian");
   },
-  "Lihat Penilaian"
-);
-},
 }),
 
-    // column.display({
-    //     id: "rincian",
-    //     header: "Riwayat Pengiriman",
-    //     cell: (cell) =>
-    //         h(
-    //             "button",
-    //             {
-    //                 class: "btn btn-sm btn-danger",
-    //                 onClick: () => showRincian(cell.row.original),
-    //             },
-    //             "Lihat Detail"
-    //         ),
-    // }),
-//     column.accessor("riwayat_pengiriman", {
-//     header: "Riwayat Pengiriman",
-//     cell: (cell) => {
-//         const row = cell.row.original;
-//         const riwayat = cell.getValue(); // array of string / log
-
-//         const textDefault = Array.isArray(riwayat)
-//             ? riwayat.join("\n")
-//             : (riwayat || "");
-
-//         return h(
-//             "button",
-//             {
-//                 class: "btn btn-sm btn-danger",
-//                 onClick: async () => {
-//                     const { value: updatedText } = await Swal.fire({
-//                         title: "Edit Riwayat Pengiriman",
-//                         html: `
-//                             <textarea id="riwayat-editor" class="swal2-textarea" rows="8" placeholder="Satu log per baris">${textDefault}</textarea>
-//                         `,
-//                         showCancelButton: true,
-//                         confirmButtonText: "Simpan",
-//                         preConfirm: () => {
-//                             const input = document.getElementById("riwayat-editor") as HTMLTextAreaElement;
-//                             return input?.value;
-//                         },
-//                     });
-
-//                     if (updatedText !== undefined) {
-//                         const updatedArray = updatedText
-//                             .split("\n")
-//                             .map((item) => item.trim())
-//                             .filter((item) => item.length > 0);
-
-//                         await axios.put(`/input/${row.id}`, {
-//                             riwayat_pengiriman: updatedArray,
-//                             status: row.status, // jika diperlukan oleh backend
-//                         });
-
-//                         Swal.fire("Berhasil", "Riwayat telah diperbarui", "success");
-//                     }
-//                 },
-//             },
-//             "Edit Riwayat"
-//         );
-//     },
+// column.display({
+// id: "penilaian",
+// header: "Penilaian",
+// cell: (cell) => {
+// console.log("ROW ORIGINAL:", cell.row.original); // 🔍 Debug log
+// return h(
+//   "button",
+//   {
+//     class: "btn btn-sm btn-secondary",
+//     onClick: () => lihatPenilaian(cell.row.original),
+//   },
+//   "Lihat Penilaian"
+// );
+// },
 // }),
-
     
 ];
 const submit = async () => {
@@ -374,9 +296,6 @@ const submit = async () => {
     emit("refresh");
     emit("close");
 };
-
-
-
 
 // Untuk reload data
 const refresh = () => paginateRef.value?.refetch();const props = defineProps<{ selected: string }>();

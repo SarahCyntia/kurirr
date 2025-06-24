@@ -44,8 +44,7 @@ const formRef = ref();
 const couriers = ref([
     { code: "jne", name: "JNE" },
     { code: "tiki", name: "TIKI" },
-    // { code: "pos", name: "POS Indonesia" },
-    { code: "pos", name: "POS" },
+    { code: "pos", name: "POS Indonesia" },
 ]);
 const selectedCourier = ref("");  // ekspedisi/kurir dipilih
 const services = ref<{ service: string; description: string; cost: number; etd: string }[]>([]);
@@ -88,60 +87,31 @@ const { handleSubmit, errors, resetForm, } = useForm({
         cityDestination: "",
     }
 });
-// const fetchProvinces = async () => {
-//     try {
-//         const res = await axios.get("/provinces");
-//         provinces.value = res.data.data
-//         console.log(provinces.value)
-//     } catch (error) {
-//         toast.error("Gagal mengambil data provinsi");
-//     }
-// };
-
-// const fetchCities = async (type: "origin" | "destination") => {
-//     const provId = type === "origin" ? provinceOrigin.value : provinceDestination.value;
-//     if (provId === "0") return;
-//     try {
-//         const res = await axios.get(`/cities/${provId}`);
-//         if (type === "origin") {
-//             citiesOrigin.value = res.data;
-//             cityOrigin.value = "";
-//         } else {
-//             citiesDestination.value = res.data;
-//             cityDestination.value = "";
-//         }
-//     } catch (error) {
-//         toast.error("Gagal mengambil data kota");
-//     }
-// };
-
 const fetchProvinces = async () => {
-  try {
-    const res = await axios.get("/provinces");
-    provinces.value = res.data;
-    console.log(provinces.value)
-  } catch {
-    toast.error("Gagal mengambil data provinsi");
-  }
+    try {
+        const res = await axios.get("/provinces");
+        provinces.value = res.data;
+    } catch (error) {
+        toast.error("Gagal mengambil data provinsi");
+    }
 };
 
 const fetchCities = async (type: "origin" | "destination") => {
-  const provId = type === "origin" ? provinceOrigin.value : provinceDestination.value;
-  if (provId === "0") return;
-  try {
-    const res = await axios.get(`/cities/${provId}`);
-    if (type === "origin") {
-      citiesOrigin.value = res.data;
-      cityOrigin.value = "";
-    } else {
-      citiesDestination.value = res.data;
-      cityDestination.value = "";
+    const provId = type === "origin" ? provinceOrigin.value : provinceDestination.value;
+    if (provId === "0") return;
+    try {
+        const res = await axios.get(`/cities/${provId}`);
+        if (type === "origin") {
+            citiesOrigin.value = res.data;
+            cityOrigin.value = "";
+        } else {
+            citiesDestination.value = res.data;
+            cityDestination.value = "";
+        }
+    } catch (error) {
+        toast.error("Gagal mengambil data kota");
     }
-  } catch {
-    toast.error("Gagal mengambil data kota");
-  }
 };
-
 const getSelectedCost = () => {
     console.log('All services:', services.value);
     console.log('Selected service:', selectedService.value);
@@ -203,12 +173,12 @@ const fetchOngkir = async () => {
 watch([provinceOrigin, cityOrigin, provinceDestination, cityDestination, selectedCourier, berat_barang], () => {
     fetchOngkir();
 });
+
 watch(selectedService, (val) => {
     const service = services.value.find(s => s.service === val);
     biaya.value = service ? service.cost : 0;
     getSelectedCost();
 });
-
 
 // ✅ Submit Form (Tambah/Update)
 function submit() {
@@ -229,7 +199,6 @@ function submit() {
     formData.append("jenis_layanan", selectedService.value);
     formData.append("ekspedisi", selectedCourier.value);
     formData.append("berat_barang", berat_barang.value?.toString() || "0");
-    formData.append("biaya", biaya.value?.toString() || "0"); // ⬅️ Tambahkan biaya
     formData.append("no_resi", noResi); // ⬅️ Gunakan noResi
     formData.append("id_user", Input.value.id_user);
     if (props.selected) {
@@ -248,23 +217,13 @@ function submit() {
         },
     })
        .then(() => {
-    // ⬅️ Modifikasi SweetAlert untuk menampilkan biaya
     Swal.fire({
         icon: "success",
         title: "Berhasil!",
-        html: `
-            <div style="text-align: left; max-width: 400px; margin: 0 auto;">
-                <p><strong>No. Resi:</strong> ${noResi}</p>
-                <p><strong>Biaya Pengiriman:</strong> Rp ${biaya.value.toLocaleString('id-ID')}</p>
-                <p><strong>Ekspedisi:</strong> ${selectedCourier.value.toUpperCase()}</p>
-            </div>
-        `,
+        html: `No. Resi berhasil dibuat:<br><strong>${noResi}</strong>`,
         showCancelButton: true,
         confirmButtonText: "Oke",
         cancelButtonText: "Batal",
-        customClass: {
-            popup: 'swal-wide'
-        }
     }).then((result) => {
         if (result.isConfirmed) {
             // Jika tombol "Oke" diklik
@@ -276,18 +235,37 @@ function submit() {
             // Jika tombol "Batal" diklik, tampilkan pesan dan tetap di form
             toast.info("Anda tetap berada di halaman input.");
         }
+    }).catch((err: any) => {
+        const message = err.response?.data?.message || "Terjadi kesalahan.";
+        toast.error(message);
+    }).finally(() => {
+        unblock(document.getElementById("form-input"));
     });
 })
-.catch((err: any) => {
-    const message = err.response?.data?.message || "Terjadi kesalahan.";
-    toast.error(message);
-})
-.finally(() => {
-    unblock(document.getElementById("form-input"));
-});
+
+
+        // .then(() => {
+        //     Swal.fire({
+        //         icon: "success",
+        //         title: "Berhasil!",
+        //         html: `No. Resi berhasil dibuat:<br><strong>${noResi}</strong>`,
+        //         showCancelButton: true,
+        //         confirmButtonText: "Oke",
+        //     }).then(() => {
+        //         emit("close");
+        //         emit("refresh");
+        //         toast.success("Data berhasil disimpan");
+        //         formRef.value.resetForm(); // Reset form setelah submit
+        //     }).catch((err: any) => {
+        //         const message = err.response?.data?.message || "Terjadi kesalahan.";
+        //         toast.error(message);
+        //     })
+        //         .finally(() => {
+        //             unblock(document.getElementById("form-input"));
+        //         });
+        // })
 
 }
-
 
 function generateNoResi() {
     const prefix = "RESI";
@@ -327,9 +305,8 @@ onMounted(() => {
                         <Field as="select" name="provinceOrigin" v-model="provinceOrigin" class="form-control"
                             @change="fetchCities('origin')">
                             <option value="0">-- Pilih Provinsi Asal--</option>
-                            <!-- <option v-for="(prov) in provinces" :key="prov.id" :value="prov.id">{{ prov.name }}</option> -->
-                              <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
-                        </Field>
+                            <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
+                        </Field as="select">
                         <ErrorMessage name="provinceOrigin" class="text-danger small" />
                     </div>
                 </div>
@@ -341,7 +318,7 @@ onMounted(() => {
                         <Field as="select" name="cityOrigin" v-model="cityOrigin" class="form-control">
                             <option value="">-- Pilih Kota Asal --</option>
                             <option v-for="(name, id) in citiesOrigin" :key="id" :value="id">{{ name }}</option>
-                        </Field>
+                        </Field as="select">
                         <ErrorMessage name="cityOrigin" class="text-danger small" />
                         <!-- <div v-if="ErrorMessage" name="cityOrigin" class="text-danger">{{ errors.cityOrigin }}</div> -->
                     </div>
@@ -373,20 +350,7 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div class="col-md-6 ">
-                    <div class="fv-row mb-7">
-                        <label class="form-label required fw-bold">Provinsi Tujuan</label>
-                        <Field as="select" name="provinceDestination" v-model="provinceDestination" class="form-control"
-                            @change="fetchCities('destination')">
-                            <option value="0">-- Pilih Provinsi Tujuan--</option>
-                            <!-- <option v-for="(prov) in provinces" :key="prov.id" :value="prov.id">{{ prov.name }}</option> -->
-                              <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
-                        </Field>
-                        <ErrorMessage name="provinceDestination" class="text-danger small" />
-                    </div>
-                </div>
-
-                <!-- <div class="col-md-6">
+                <div class="col-md-6">
                     <div class="fv-row mb-7">
                         <label class="form-label required fw-bold">Provinsi Tujuan</label>
                         <Field as="select" name="provinceDestination" v-model="provinceDestination" class="form-control"
@@ -395,9 +359,9 @@ onMounted(() => {
                             <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
                         </Field as="select">
                         <ErrorMessage name="provinceDestination" class="text-danger small" />
-                        <div v-if="ErrorMessage" name="provinceDestination" class="text-danger">{{ errors.provinceDestination }}</div>
+                        <!-- <div v-if="ErrorMessage" name="provinceDestination" class="text-danger">{{ errors.provinceDestination }}</div> -->
                     </div>
-                </div> -->
+                </div>
 
                 <!-- Kota Tujuan -->
                 <div class="col-md-6">
@@ -476,7 +440,6 @@ onMounted(() => {
                     <ErrorMessage name="jenis_layanan" class="text-danger small" />
                 </div>
                 </div>
-                
 
                 <div class="col-md-6">
                     <div class="fv-row mb-7">
@@ -506,10 +469,3 @@ onMounted(() => {
         </div>
     </VForm>
 </template>
-
-<style>
-/* Custom CSS untuk SweetAlert yang lebih lebar */
-.swal-wide {
-    width: 600px !important;
-}
-</style>

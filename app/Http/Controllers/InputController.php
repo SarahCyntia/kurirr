@@ -11,45 +11,58 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
-
+use illuminate\Support\Str;
 
 class InputController extends Controller
 {
-    public function cetakResi($noResi)
-    {
-        // Ambil data berdasarkan no_resi
-        $data = Input::where('no_resi', $noResi)->first();
-        
-        if (!$data) {
-            abort(404, 'Data tidak ditemukan');
-        }
-        
-        // Generate PDF
-        $pdf = Pdf::loadView('cetak-resi-pdf', compact('data'));
-        
-        // Set ukuran kertas thermal printer (58mm x 200mm)
-        $pdf->setPaper([0, 0, 165, 566], 'portrait'); // 58mm x 200mm dalam points
-        
-        // Return PDF untuk ditampilkan di browser
-        return $pdf->stream("struk-{$noResi}.pdf");
+    // public function cetakpdf($noResi)
+    // {
+    //     $data = Input::where('no_resi', $noResi)->first();
+
+    //     if (!$data) {
+    //         abort(404, 'Data tidak ditemukan');
+    //     }
+
+    //     // Gunakan view yang sama
+    //     $pdf = Pdf::loadView('cetak-resi-pdf', compact('data'));
+    //     $pdf->setPaper([0, 0, 165, 566], 'portrait'); // 58mm x 200mm
+
+    //     return $pdf->stream("struk-{$noResi}.pdf"); // tampilkan di browser
+    // }
+    public function handleResiPdf($noResi, $mode = 'view')
+{
+    $data = Input::where('no_resi', $noResi)->first();
+
+    if (!$data) {
+        abort(404, 'Data tidak ditemukan');
     }
-    
-    public function downloadResi($noResi)
-    {
-        // Ambil data berdasarkan no_resi
-        $data = Input::where('no_resi', $noResi)->first();
-        
-        if (!$data) {
-            abort(404, 'Data tidak ditemukan');
-        }
-        
-        // Generate PDF
-        $pdf = Pdf::loadView('cetak-resi-pdf', compact('data'));
-        $pdf->setPaper([0, 0, 165, 566], 'portrait');
-        
-        // Return PDF untuk didownload
+
+    $pdf = Pdf::loadView('cetak-resi-pdf', compact('data'));
+    $pdf->setPaper([0, 0, 165, 566], 'portrait');
+
+    if ($mode === 'download') {
         return $pdf->download("struk-{$noResi}.pdf");
     }
+
+    return $pdf->stream("struk-{$noResi}.pdf");
+}
+
+
+    public function downloadResi($noResi)
+    {
+        $data = Input::where('no_resi', $noResi)->first();
+
+        if (!$data) {
+            abort(404, 'Data tidak ditemukan');
+        }
+
+        // Gunakan view yang sama
+        $pdf = Pdf::loadView('cetak-resi-pdf', compact('data'));
+        $pdf->setPaper([0, 0, 165, 566], 'portrait'); // 58mm x 200mm
+
+        return $pdf->download("struk-{$noResi}.pdf"); // download otomatis
+    }
+
 
     public function getProvinces()
     {
@@ -450,6 +463,147 @@ class InputController extends Controller
     }
 
 
+    public function payment(Request $request)
+    {
+        $biaya = $request->input('biaya');
+
+        if (!$biaya || !is_numeric($biaya) || $biaya <= 0) {
+            return response()->json([
+                'message' => 'Biaya ongkir belum valid',
+            ], 400);
+        }
+
+        $order_id = 'ONGKIR-' . now()->timestamp . '-' . Str::random(4);
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $order_id,
+                'gross_amount' => (int) $biaya,
+            ],
+            'item_details' => [
+                [
+                    'id' => $order_id,
+                    'price' => (int) $biaya,
+                    'quantity' => 1,
+                    'name' => 'Biaya Ongkir Transaksi',
+                ]
+            ],
+            'customer_details' => [
+                'first_name' => $request->input('pengirim') ?? 'User',
+                'email' => 'default@email.com',
+            ],
+            'callbacks' => [
+                // 'finish' => url('/payment/success'),
+                'finish' => env('APP_URL') . '/#/payment/success',
+                'unfinish' => url('/payment/failed'),
+                'error' => url('/payment/error'),
+            ]
+        ];
+
+        $auth = base64_encode(env('MIDTRANS_SERVER_KEY'));
+        $response = Http::withHeaders([
+            'Accept' => 'application/json',
+            'Authorization' => "Basic $auth",
+        ])->withBody(json_encode($params), 'application/json')
+        ->post('https://app.sandbox.midtrans.com/snap/v1/transactions');
+
+        $data = json_decode($response->body());
+
+        if (!isset($data->redirect_url)) {
+            return response()->json([
+                'message' => 'Gagal membuat link pembayaran Midtrans',
+                'error' => $data,
+            ], 500);
+        }
+
+        return response()->json([
+            'redirect_url' => $data->redirect_url,
+            'order_id' => $order_id,
+        ]);
+    }
+public function createSnap(Request $request)
+{
+    $validated = $request->validate([
+        'pengirim' => 'required|string',
+        'penerima' => 'required|string',
+        'alamat_asal' => 'required|string',
+        'alamat_tujuan' => 'required|string',
+        'berat_barang' => 'required|numeric',
+        'biaya' => 'required|numeric|min:1000',
+        'kurir_id' => 'required|exists:kurir,id',
+    ]);
+
+    $orderId = 'ORDER-' . Str::uuid();
+
+    $payload = [
+        'transaction_details' => [
+            'order_id' => $orderId,
+            'gross_amount' => (int) $validated['biaya'],
+        ],
+        'item_details' => [[
+            'id' => 'ongkir',
+            'price' => (int) $validated['biaya'],
+            'quantity' => 1,
+            'name' => 'Ongkir Kurir',
+        ]],
+        'customer_details' => [
+            'first_name' => $validated['pengirim'],
+            'email' => 'user@example.com',
+        ],
+        'callbacks' => [
+            'finish' => url('/payment/callback'),
+        ],
+        'custom_field1' => json_encode($validated), // simpan data sementara
+    ];
+
+    $auth = base64_encode(env('MIDTRANS_SERVER_KEY'));
+
+    $res = Http::withHeaders([
+        'Authorization' => "Basic $auth",
+        'Content-Type' => 'application/json',
+    ])->post('https://app.sandbox.midtrans.com/snap/v1/transactions', $payload);
+
+    $body = json_decode($res->body());
+
+    if (isset($body->token)) {
+        return response()->json([
+            'snap_token' => $body->token,
+        ]);
+    }
+
+    return response()->json([
+        'message' => 'Gagal membuat token pembayaran',
+        'error' => $body,
+    ], 500);
+}
+
+public function handleCallback(Request $request)
+{
+    $notif = $request->all();
+
+    if (
+        isset($notif['transaction_status']) &&
+        $notif['transaction_status'] === 'settlement'
+    ) {
+        // Ambil data form dari custom_field1
+        $data = json_decode($notif['custom_field1'], true);
+
+        // Simpan transaksi ke DB
+        $trans = new Input();
+        $trans->fill($data);
+        $trans->status = 'dibayar';
+        $trans->save();
+
+        // Simpan riwayat pembayaran
+        $pay = new Input();
+        $pay->Input_id = $trans->id;
+        $pay->external_id = $notif['order_id'];
+        $pay->status = 'success';
+        $pay->save();
+    }
+
+    return response()->json(['message' => 'Callback diproses']);
+}
 
     public function destroy(Input $input)
     {

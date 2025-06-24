@@ -20,11 +20,11 @@ interface RiwayatTampil {
   id: number
   riwayat: string
 }
-
+const inputData = ref<Input | null>(null); 
 // Format tanggal ID
 function formatDate(waktu: string | null | undefined): string {
   if (!waktu) return "-"; // atau bisa "Tanggal tidak tersedia"
-  
+
   const date = new Date(waktu);
   if (isNaN(date.getTime())) return "-";
 
@@ -35,7 +35,7 @@ function formatDate(waktu: string | null | undefined): string {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-    timeZone: "Asia/Jakarta" 
+    timeZone: "Asia/Jakarta"
   });
 }
 
@@ -132,7 +132,7 @@ const riwayatTertampil = ref<RiwayatTampil[]>([])
 // Fungsi untuk menampilkan riwayat di SweetAlert
 const showRincian = (data: any) => {
   // ⛔ Reset data lama
- console.log(Array.isArray(data.riwayat)); // Harusnya true
+  console.log(Array.isArray(data.riwayat)); // Harusnya true
 
 
   riwayatTertampil.value = [];
@@ -264,17 +264,17 @@ const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
 const tambahRiwayat = (logBaru: string) => {
-    if (!formData.value.riwayat) {
-        formData.value.riwayat = [];
-    }
+  if (!formData.value.riwayat) {
+    formData.value.riwayat = [];
+  }
 
-    formData.value.riwayat.push(logBaru);
+  formData.value.riwayat.push(logBaru);
 };
 
 
 // Delete handler
 const { delete: deleteInput } = useDelete({
-    onSuccess: () => paginateRef.value?.refetch(),
+  onSuccess: () => paginateRef.value?.refetch(),
 });
 
 const stored = localStorage.getItem("changedButtons");
@@ -338,188 +338,207 @@ watch(changedButtons, (val) => {
 
 // Kolom tabel
 const columns = [
-      column.accessor("no", { header: "No" }),
-    column.accessor("nama_pengirim", { header: "Nama Pengirim" }),
-    column.accessor("alamat_pengirim", { header: "Alamat Pengirim" }),
-    column.accessor("no_telp_pengirim", { header: "No. Telp Pengirim" }),
-    column.accessor("nama_penerima", { header: "Nama Penerima" }),
-    column.accessor("alamat_penerima", { header: "Alamat Penerima" }),
-    column.accessor("no_telp_penerima", { header: "No. Telp Penerima" }),
-    column.accessor("jenis_barang", { header: "Jenis Barang" }),
-    column.accessor("jenis_layanan", { header: "Jenis Layanan" }),
-    column.accessor("berat_barang", { header: "Berat Barang" }),
+  column.accessor("no", { header: "No" }),
+  column.accessor("nama_pengirim", { header: "Nama Pengirim" }),
+  column.accessor("alamat_pengirim", { header: "Alamat Pengirim" }),
+  column.accessor("no_telp_pengirim", { header: "No. Telp Pengirim" }),
+  column.accessor("nama_penerima", { header: "Nama Penerima" }),
+  column.accessor("alamat_penerima", { header: "Alamat Penerima" }),
+  column.accessor("no_telp_penerima", { header: "No. Telp Penerima" }),
+  column.accessor("jenis_barang", { header: "Jenis Barang" }),
+  column.accessor("jenis_layanan", { header: "Jenis Layanan" }),
+  column.accessor("berat_barang", { header: "Berat Barang" }),
 
-    column.accessor("no_resi", { header: "No Resi" }),
-    // column.accessor("riwayat", { header: "Riwayat" }),
-   column.display({
+  column.accessor("no_resi", { header: "No Resi" }),
+  column.display({
   id: "riwayat",
   header: "Riwayat",
   cell: (cell) => {
-    console.log("ROW ORIGINAL:", cell.row.original); // 🔍 Debug log
-    return h(
-      "button",
-      {
-        class: "btn btn-sm btn-warning",
-        onClick: () => showRincian(cell.row.original),
-      },
-      "Detail Riwayat"
-    );
+    const row = cell.row.original;
+    const hasRiwayat = row.riwayat && row.riwayat.length > 0;
+
+    return hasRiwayat
+      ? h(
+          "button",
+          {
+            class: "btn btn-sm btn-warning",
+            onClick: () => showRincian(row),
+          },
+          "Detail Riwayat"
+        )
+      : h("span", { class: "text-muted fst-italic" }, "Belum ada riwayat");
   },
 }),
 
+  // column.display({
+  //   id: "riwayat",
+  //   header: "Riwayat",
+  //   cell: (cell) => {
+  //     console.log("ROW ORIGINAL:", cell.row.original); // 🔍 Debug log
+  //     return h(
+  //       "button",
+  //       {
+  //         class: "btn btn-sm btn-warning",
+  //         onClick: () => showRincian(cell.row.original),
+  //       },
+  //       "Detail Riwayat"
+  //     );
+  //   },
+  // }),
 
-//     column.accessor("status", {
-//   header: "Status",
-//   cell: ({ row }) => {
-//   return h(
-//     "button",
-//     {
-//       class: "badge bg-secondary",
-//       onClick: () => updateStatus(row),
-//       style: "cursor: pointer; border: none; background: none;",
-//     },
-//     row.original.status
-//   );
-// }
-// }),
 
-column.accessor("status", {
-  header: "Status",
-  cell: ({ row }) => {
-    const status = row.original.status;
-    const badgeClass = statusColors[status] || "bg-secondary"; // fallback kalau tidak ditemukan
+  //     column.accessor("status", {
+  //   header: "Status",
+  //   cell: ({ row }) => {
+  //   return h(
+  //     "button",
+  //     {
+  //       class: "badge bg-secondary",
+  //       onClick: () => updateStatus(row),
+  //       style: "cursor: pointer; border: none; background: none;",
+  //     },
+  //     row.original.status
+  //   );
+  // }
+  // }),
 
-    return h(
-      "button",
-      {
-        class: `badge ${badgeClass}`,
-        onClick: () => updateStatus(row),
-        style: "cursor: pointer; border: none;",
-      },
-      status.charAt(0).toUpperCase() + status.slice(1) // Kapitalisasi awal
-    );
-  },
-}),
+  column.accessor("status", {
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.original.status;
+      const badgeClass = statusColors[status] || "bg-secondary"; // fallback kalau tidak ditemukan
 
-column.accessor("id", {
-  header: "Order",
-  cell: (cell) => {
-    const id = cell.getValue() as number;
-    const row = cell.row.original; // Ambil seluruh data baris
-    const status = row.status;     // Misalnya ada field status di data
-    const isChanged = changedButtons.value.has(id);
-    const label = isChanged ? "Tambah" : "Antar";
-
-    return h(
-      "button",
-      {
-        class: "btn btn-sm btn-info",
-        disabled: status === "selesai", // ⛔ Tidak bisa diklik jika status selesai
-        async onClick() {
-          selected.value = id;
-
-          if (isChanged) {
-            openForm.value = true;
-          } else {
-            const result = await Swal.fire({
-              title: "Ambil Orderan Ini?",
-              text: "Yakin ingin mengambil orderan ini untuk dikirim?",
-              icon: "question",
-              showCancelButton: true,
-              confirmButtonText: "Ya, Ambil",
-              cancelButtonText: "Batal",
-            });
-
-            if (!result.isConfirmed) return;
-
-            await Swal.fire({
-              title: "Orderan Diambil",
-              icon: "success",
-              confirmButtonText: "OK",
-            });
-
-            changedButtons.value.add(id);
-          }
+      return h(
+        "button",
+        {
+          class: `badge ${badgeClass}`,
+          onClick: () => updateStatus(row),
+          style: "cursor: pointer; border: none;",
         },
-      },
-      label
-    );
-  },
-}),
+        status.charAt(0).toUpperCase() + status.slice(1) // Kapitalisasi awal
+      );
+    },
+  }),
 
-// column.accessor("id", {
-//   header: "Order",
-//   cell: (cell) => {
-//     const id = cell.getValue() as number;
-//     const isChanged = changedButtons.value.has(id);
-//     const label = isChanged ? "Tambah" : "Antar";
+  column.accessor("id", {
+    header: "Order",
+    cell: (cell) => {
+      const id = cell.getValue() as number;
+      const row = cell.row.original; // Ambil seluruh data baris
+      const status = row.status;     // Misalnya ada field status di data
+      const isChanged = changedButtons.value.has(id);
+      const label = isChanged ? "Tambah" : "Antar";
 
-//     return h(
-//       "button",
-//       {
-//         class: "btn btn-sm btn-info",
-//         async onClick() {
-//           selected.value = id;
+      return h(
+        "button",
+        {
+          class: "btn btn-sm btn-info",
+          disabled: status === "selesai", // ⛔ Tidak bisa diklik jika status selesai
+          async onClick() {
+            selected.value = id;
 
-//           if (isChanged) {
-//             openForm.value = true;
-//           } else {
-//             const result = await Swal.fire({
-//               title: "Ambil Orderan Ini?",
-//               text: "Yakin ingin mengambil orderan ini untuk dikirim?",
-//               icon: "question",
-//               showCancelButton: true,
-//               confirmButtonText: "Ya, Ambil",
-//               cancelButtonText: "Batal",
-//             });
+            if (isChanged) {
+              openForm.value = true;
+            } else {
+              const result = await Swal.fire({
+                title: "Ambil Orderan Ini?",
+                text: "Yakin ingin mengambil orderan ini untuk dikirim?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Ya, Ambil",
+                cancelButtonText: "Batal",
+              });
 
-//             if (!result.isConfirmed) return;
+              if (!result.isConfirmed) return;
 
-//             await Swal.fire({
-//               title: "Orderan Diambil",
-//               icon: "success",
-//               confirmButtonText: "OK",
-//             });
+              await Swal.fire({
+                title: "Orderan Diambil",
+                icon: "success",
+                confirmButtonText: "OK",
+              });
 
-//             // Tambahkan ID ke Set dan tersimpan otomatis
-//             changedButtons.value.add(id);
-//           }
-//         },
-//       },
-//       label
-//     );
-//   },
-// }),
+              changedButtons.value.add(id);
+            }
+          },
+        },
+        label
+      );
+    },
+  }),
 
-    column.accessor("waktu", { header: "Waktu" }),
-    // column.display({
-    //     id: "rincian",
-    //     header: "Detail Input",
-    //     cell: (cell) =>
-    //         h(
-    //             "button",
-    //             {
-    //                 class: "btn btn-sm btn-danger",
-    //                 onClick: () => showRincian(cell.row.original),
-    //             },
-    //             "Lihat Detail"
-    //         ),
-    // }),
+  // column.accessor("id", {
+  //   header: "Order",
+  //   cell: (cell) => {
+  //     const id = cell.getValue() as number;
+  //     const isChanged = changedButtons.value.has(id);
+  //     const label = isChanged ? "Tambah" : "Antar";
 
-    
-    
+  //     return h(
+  //       "button",
+  //       {
+  //         class: "btn btn-sm btn-info",
+  //         async onClick() {
+  //           selected.value = id;
+
+  //           if (isChanged) {
+  //             openForm.value = true;
+  //           } else {
+  //             const result = await Swal.fire({
+  //               title: "Ambil Orderan Ini?",
+  //               text: "Yakin ingin mengambil orderan ini untuk dikirim?",
+  //               icon: "question",
+  //               showCancelButton: true,
+  //               confirmButtonText: "Ya, Ambil",
+  //               cancelButtonText: "Batal",
+  //             });
+
+  //             if (!result.isConfirmed) return;
+
+  //             await Swal.fire({
+  //               title: "Orderan Diambil",
+  //               icon: "success",
+  //               confirmButtonText: "OK",
+  //             });
+
+  //             // Tambahkan ID ke Set dan tersimpan otomatis
+  //             changedButtons.value.add(id);
+  //           }
+  //         },
+  //       },
+  //       label
+  //     );
+  //   },
+  // }),
+
+  column.accessor("waktu", { header: "Waktu" }),
+  // column.display({
+  //     id: "rincian",
+  //     header: "Detail Input",
+  //     cell: (cell) =>
+  //         h(
+  //             "button",
+  //             {
+  //                 class: "btn btn-sm btn-danger",
+  //                 onClick: () => showRincian(cell.row.original),
+  //             },
+  //             "Lihat Detail"
+  //         ),
+  // }),
+
+
+
 ];
 const submit = async () => {
-    await axios.put(`/ordered/${props.selected}`, formData.value);
-    emit("refresh");
-    emit("close");
+  await axios.put(`/ordered/${props.selected}`, formData.value);
+  emit("refresh");
+  emit("close");
 };
 
 
 
 
 // Untuk reload data
-const refresh = () => paginateRef.value?.refetch();const props = defineProps<{ selected: string }>();
+const refresh = () => paginateRef.value?.refetch(); const props = defineProps<{ selected: string }>();
 const emit = defineEmits(["close", "refresh"]);
 
 const formData = ref<any>({});
@@ -553,40 +572,46 @@ onMounted(async () => {
 
 // Reset saat form ditutup
 watch(openForm, (val) => {
-    if (!val) selected.value = "";
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  if (!val) selected.value = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
 });
 </script>
 
 <template>
-    <!-- Form -->
-    <Form
-        v-if="openForm"
-        :selected="selected"
-        @close="openForm = false"
-        @refresh="refresh"
-    />
+  <!-- Form -->
+  <Form v-if="openForm" :selected="selected" @close="openForm = false" @refresh="refresh" />
 
-    <!-- Card List -->
-    <div class="card">
-        <div class="card-header align-items-center">
-            <h2 class="mb-0">Orderan</h2>
+  <!-- Card List -->
+  <div class="card">
+    <div class="card-header align-items-center">
+      <h2 class="mb-0">Orderan</h2>
+    </div>
+    
+    <div class="card-body">
+            <p v-if="inputData">Data input: {{ inputData }}</p>
+            <paginate
+                ref="paginateRef"
+                id="table-inputorder"
+                url="/input?exclude_status=selesai"
+                :columns="columns"
+            />
+            <!-- Tanpa spasi -->
         </div>
-
-        <div class="card-body">
+    <!-- <div class="card-body">
             <paginate
                 ref="paginateRef"
                 id="table-inputorder"
                 url="/input"
                 :columns="columns"
             />
-        </div>
-    </div>
+        </div> -->
+
+  </div>
 </template>
 
 <style scoped>
 .btn {
-    margin-top: 1rem;
-    padding: 0.5rem 1.5rem;
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
 }
 </style>

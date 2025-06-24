@@ -44,8 +44,7 @@ const formRef = ref();
 const couriers = ref([
     { code: "jne", name: "JNE" },
     { code: "tiki", name: "TIKI" },
-    // { code: "pos", name: "POS Indonesia" },
-    { code: "pos", name: "POS" },
+    { code: "pos", name: "POS Indonesia" },
 ]);
 const selectedCourier = ref("");  // ekspedisi/kurir dipilih
 const services = ref<{ service: string; description: string; cost: number; etd: string }[]>([]);
@@ -88,60 +87,31 @@ const { handleSubmit, errors, resetForm, } = useForm({
         cityDestination: "",
     }
 });
-// const fetchProvinces = async () => {
-//     try {
-//         const res = await axios.get("/provinces");
-//         provinces.value = res.data.data
-//         console.log(provinces.value)
-//     } catch (error) {
-//         toast.error("Gagal mengambil data provinsi");
-//     }
-// };
-
-// const fetchCities = async (type: "origin" | "destination") => {
-//     const provId = type === "origin" ? provinceOrigin.value : provinceDestination.value;
-//     if (provId === "0") return;
-//     try {
-//         const res = await axios.get(`/cities/${provId}`);
-//         if (type === "origin") {
-//             citiesOrigin.value = res.data;
-//             cityOrigin.value = "";
-//         } else {
-//             citiesDestination.value = res.data;
-//             cityDestination.value = "";
-//         }
-//     } catch (error) {
-//         toast.error("Gagal mengambil data kota");
-//     }
-// };
-
 const fetchProvinces = async () => {
-  try {
-    const res = await axios.get("/provinces");
-    provinces.value = res.data;
-    console.log(provinces.value)
-  } catch {
-    toast.error("Gagal mengambil data provinsi");
-  }
+    try {
+        const res = await axios.get("/provinces");
+        provinces.value = res.data;
+    } catch (error) {
+        toast.error("Gagal mengambil data provinsi");
+    }
 };
 
 const fetchCities = async (type: "origin" | "destination") => {
-  const provId = type === "origin" ? provinceOrigin.value : provinceDestination.value;
-  if (provId === "0") return;
-  try {
-    const res = await axios.get(`/cities/${provId}`);
-    if (type === "origin") {
-      citiesOrigin.value = res.data;
-      cityOrigin.value = "";
-    } else {
-      citiesDestination.value = res.data;
-      cityDestination.value = "";
+    const provId = type === "origin" ? provinceOrigin.value : provinceDestination.value;
+    if (provId === "0") return;
+    try {
+        const res = await axios.get(`/cities/${provId}`);
+        if (type === "origin") {
+            citiesOrigin.value = res.data;
+            cityOrigin.value = "";
+        } else {
+            citiesDestination.value = res.data;
+            cityDestination.value = "";
+        }
+    } catch (error) {
+        toast.error("Gagal mengambil data kota");
     }
-  } catch {
-    toast.error("Gagal mengambil data kota");
-  }
 };
-
 const getSelectedCost = () => {
     console.log('All services:', services.value);
     console.log('Selected service:', selectedService.value);
@@ -203,12 +173,64 @@ const fetchOngkir = async () => {
 watch([provinceOrigin, cityOrigin, provinceDestination, cityDestination, selectedCourier, berat_barang], () => {
     fetchOngkir();
 });
+
 watch(selectedService, (val) => {
     const service = services.value.find(s => s.service === val);
     biaya.value = service ? service.cost : 0;
     getSelectedCost();
 });
 
+// ✅ Fungsi untuk menangani pembayaran
+const handlePayment = async (noResi: string) => {
+    try {
+        // Tampilkan loading
+        Swal.fire({
+            title: 'Memproses Pembayaran...',
+            text: 'Mohon tunggu sebentar',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Simulasi API call untuk pembayaran
+        // Ganti dengan endpoint pembayaran yang sesuai
+        const paymentData = {
+            no_resi: noResi,
+            biaya: biaya.value,
+            // tambahkan data pembayaran lainnya sesuai kebutuhan
+        };
+
+        // Contoh API call pembayaran
+        const response = await axios.post('/payment/process', paymentData);
+        
+        if (response.data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Pembayaran Berhasil!',
+                html: `
+                    <p>No. Resi: <strong>${noResi}</strong></p>
+                    <p>Total Biaya: <strong>Rp ${biaya.value.toLocaleString('id-ID')}</strong></p>
+                    <p>Status: <strong>Dibayar</strong></p>
+                `,
+                confirmButtonText: 'OK'
+            }).then(() => {
+                emit("close");
+                emit("refresh");
+                toast.success("Pembayaran berhasil!");
+            });
+        } else {
+            throw new Error(response.data.message || 'Pembayaran gagal');
+        }
+    } catch (error: any) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Pembayaran Gagal',
+            text: error.response?.data?.message || error.message || 'Terjadi kesalahan saat memproses pembayaran',
+            confirmButtonText: 'OK'
+        });
+    }
+};
 
 // ✅ Submit Form (Tambah/Update)
 function submit() {
@@ -229,9 +251,10 @@ function submit() {
     formData.append("jenis_layanan", selectedService.value);
     formData.append("ekspedisi", selectedCourier.value);
     formData.append("berat_barang", berat_barang.value?.toString() || "0");
-    formData.append("biaya", biaya.value?.toString() || "0"); // ⬅️ Tambahkan biaya
     formData.append("no_resi", noResi); // ⬅️ Gunakan noResi
     formData.append("id_user", Input.value.id_user);
+    formData.append("biaya", biaya.value.toString()); // Tambahkan biaya
+    
     if (props.selected) {
         formData.append("_method", "PUT");
     } else {
@@ -247,47 +270,65 @@ function submit() {
             "Content-Type": "multipart/form-data",
         },
     })
-       .then(() => {
-    // ⬅️ Modifikasi SweetAlert untuk menampilkan biaya
-    Swal.fire({
-        icon: "success",
-        title: "Berhasil!",
-        html: `
-            <div style="text-align: left; max-width: 400px; margin: 0 auto;">
-                <p><strong>No. Resi:</strong> ${noResi}</p>
-                <p><strong>Biaya Pengiriman:</strong> Rp ${biaya.value.toLocaleString('id-ID')}</p>
-                <p><strong>Ekspedisi:</strong> ${selectedCourier.value.toUpperCase()}</p>
-            </div>
-        `,
-        showCancelButton: true,
-        confirmButtonText: "Oke",
-        cancelButtonText: "Batal",
-        customClass: {
-            popup: 'swal-wide'
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Jika tombol "Oke" diklik
-            emit("close");
-            emit("refresh");
-            toast.success("Data berhasil disimpan");
-            formRef.value.resetForm(); // Reset form setelah submit
-        } else if (result.isDismissed) {
-            // Jika tombol "Batal" diklik, tampilkan pesan dan tetap di form
-            toast.info("Anda tetap berada di halaman input.");
-        }
+    .then(() => {
+        Swal.fire({
+            icon: "success",
+            title: "Berhasil!",
+            html: `
+                <div class="text-center">
+                    <p>No. Resi berhasil dibuat:</p>
+                    <h4 class="text-primary"><strong>${noResi}</strong></h4>
+                    <hr>
+                    <p>Total Biaya: <strong>Rp ${biaya.value.toLocaleString('id-ID')}</strong></p>
+                    <p>Silakan pilih tindakan selanjutnya:</p>
+                </div>
+            `,
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: '<i class="fas fa-credit-card"></i> Bayar Sekarang',
+            denyButtonText: '<i class="fas fa-clock"></i> Bayar Nanti',
+            cancelButtonText: '<i class="fas fa-times"></i> Batal',
+            confirmButtonColor: '#28a745',
+            denyButtonColor: '#ffc107',
+            cancelButtonColor: '#dc3545',
+            customClass: {
+                popup: 'swal-wide'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Jika tombol "Bayar Sekarang" diklik
+                handlePayment(noResi);
+            } else if (result.isDenied) {
+                // Jika tombol "Bayar Nanti" diklik
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Resi Tersimpan',
+                    html: `
+                        <p>No. Resi: <strong>${noResi}</strong></p>
+                        <p>Status: <strong>Menunggu Pembayaran</strong></p>
+                        <p>Anda dapat melakukan pembayaran kapan saja melalui menu pembayaran.</p>
+                    `,
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    emit("close");
+                    emit("refresh");
+                    toast.success("Data berhasil disimpan. Silakan lakukan pembayaran nanti.");
+                    formRef.value.resetForm();
+                });
+            } else if (result.isDismissed) {
+                // Jika tombol "Batal" diklik
+                toast.info("Anda tetap berada di halaman input.");
+            }
+        });
+    })
+    .catch((err: any) => {
+        const message = err.response?.data?.message || "Terjadi kesalahan.";
+        toast.error(message);
+    })
+    .finally(() => {
+        unblock(document.getElementById("form-input"));
     });
-})
-.catch((err: any) => {
-    const message = err.response?.data?.message || "Terjadi kesalahan.";
-    toast.error(message);
-})
-.finally(() => {
-    unblock(document.getElementById("form-input"));
-});
-
 }
-
 
 function generateNoResi() {
     const prefix = "RESI";
@@ -327,9 +368,8 @@ onMounted(() => {
                         <Field as="select" name="provinceOrigin" v-model="provinceOrigin" class="form-control"
                             @change="fetchCities('origin')">
                             <option value="0">-- Pilih Provinsi Asal--</option>
-                            <!-- <option v-for="(prov) in provinces" :key="prov.id" :value="prov.id">{{ prov.name }}</option> -->
-                              <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
-                        </Field>
+                            <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
+                        </Field as="select">
                         <ErrorMessage name="provinceOrigin" class="text-danger small" />
                     </div>
                 </div>
@@ -341,7 +381,7 @@ onMounted(() => {
                         <Field as="select" name="cityOrigin" v-model="cityOrigin" class="form-control">
                             <option value="">-- Pilih Kota Asal --</option>
                             <option v-for="(name, id) in citiesOrigin" :key="id" :value="id">{{ name }}</option>
-                        </Field>
+                        </Field as="select">
                         <ErrorMessage name="cityOrigin" class="text-danger small" />
                         <!-- <div v-if="ErrorMessage" name="cityOrigin" class="text-danger">{{ errors.cityOrigin }}</div> -->
                     </div>
@@ -373,20 +413,7 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div class="col-md-6 ">
-                    <div class="fv-row mb-7">
-                        <label class="form-label required fw-bold">Provinsi Tujuan</label>
-                        <Field as="select" name="provinceDestination" v-model="provinceDestination" class="form-control"
-                            @change="fetchCities('destination')">
-                            <option value="0">-- Pilih Provinsi Tujuan--</option>
-                            <!-- <option v-for="(prov) in provinces" :key="prov.id" :value="prov.id">{{ prov.name }}</option> -->
-                              <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
-                        </Field>
-                        <ErrorMessage name="provinceDestination" class="text-danger small" />
-                    </div>
-                </div>
-
-                <!-- <div class="col-md-6">
+                <div class="col-md-6">
                     <div class="fv-row mb-7">
                         <label class="form-label required fw-bold">Provinsi Tujuan</label>
                         <Field as="select" name="provinceDestination" v-model="provinceDestination" class="form-control"
@@ -395,9 +422,9 @@ onMounted(() => {
                             <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
                         </Field as="select">
                         <ErrorMessage name="provinceDestination" class="text-danger small" />
-                        <div v-if="ErrorMessage" name="provinceDestination" class="text-danger">{{ errors.provinceDestination }}</div>
+                        <!-- <div v-if="ErrorMessage" name="provinceDestination" class="text-danger">{{ errors.provinceDestination }}</div> -->
                     </div>
-                </div> -->
+                </div>
 
                 <!-- Kota Tujuan -->
                 <div class="col-md-6">
@@ -476,7 +503,6 @@ onMounted(() => {
                     <ErrorMessage name="jenis_layanan" class="text-danger small" />
                 </div>
                 </div>
-                
 
                 <div class="col-md-6">
                     <div class="fv-row mb-7">
@@ -485,7 +511,6 @@ onMounted(() => {
                         :value="services.length > 0 && biaya ? biaya.toLocaleString('id-ID') : '-'" readonly />
                     </div>
                 </div>
-
 
                 <div class="col-12">
                     <label class="form-label fw-bold fs-6"></label>
@@ -508,7 +533,6 @@ onMounted(() => {
 </template>
 
 <style>
-/* Custom CSS untuk SweetAlert yang lebih lebar */
 .swal-wide {
     width: 600px !important;
 }

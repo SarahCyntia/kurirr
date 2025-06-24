@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('inputorder', function (Blueprint $table) {
             $table->id(); 
+            $table->id_riwayat(); 
             $table->string('nama_pengirim');
             $table->text('alamat_pengirim');
             $table->string('no_telp_pengirim');
@@ -18,7 +19,9 @@ return new class extends Migration
             $table->string('no_telp_penerima');
             $table->string('jenis_barang');
             $table->string('jenis_layanan');
+            $table->string('riwayat');
             $table->integer('berat_barang');
+            $table->integer('biaya');
             $table->enum('status', ['menunggu', 'dalam proses', 'dikirim', 'selesai'])->default('dikirim');
             $table->string('no_resi');
             $table->timestamps();

@@ -44,6 +44,7 @@ const cariResi = async () => {
 import { ref } from "vue";
 import axios from "axios";
 import type { Input } from "@/types";
+import Swal from "sweetalert2";
 
 
 // State input user
@@ -96,6 +97,8 @@ const cariResi = async () => {
       },
     });
     result.value = response.data.data;
+    const ratingKey = `rating_${result.value?.no_resi}`;
+    isRatingSubmitted.value = localStorage.getItem(ratingKey) === 'submitted';
   } catch (err: any) {
     error.value = err.response?.data?.message || "Resi tidak ditemukan.";
   } finally {
@@ -138,7 +141,7 @@ const kirimRating = async () => {
 
     const response = await axios.post("/beri-rating", {
       no_resi: result.value?.no_resi,
-      rating: parseInt(rating.value),
+      rating: rating.value, // ✅ tidak perlu parseInt
       ulasan: ulasan.value.trim(),
     });
 
@@ -154,7 +157,13 @@ const kirimRating = async () => {
     // Simpan status ke localStorage
     localStorage.setItem(`rating_${result.value?.no_resi}`, 'submitted');
 
-    alert('Rating berhasil dikirim!');
+    // alert('Rating berhasil dikirim!');
+    Swal.fire({
+      icon: 'success',
+      title: 'Berhasil!',
+      text: 'Rating berhasil dikirim!',
+      confirmButtonText: 'OK',
+    });
 
   } catch (err) {
     console.error('Error lengkap:', err);

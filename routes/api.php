@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\D_penggunaController;
 use App\Http\Controllers\KurirController;
+use App\Http\Controllers\PaymentssControllerlama;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
@@ -26,7 +27,9 @@ use App\Http\Controllers\CheckOngkirController;
 use App\Http\Controllers\ResiController;
 use App\Http\Controllers\OrderanController;
 use App\Http\Controllers\CekResiController;
+use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\RiwayatController;
+use App\Models\Payment;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,7 +43,6 @@ use App\Http\Controllers\RiwayatController;
 */
 Route::post('/beri-rating', [CekResiController::class, 'store']);
 Route::post('/beri-rating', [InputController::class, 'store']);
-// Di routes/web.php atau routes/api.php
 Route::post('/beri-rating', [InputController::class, 'beriRating']); // Sesuaikan nama controller
 
 Route::get('/cek-resi/{nomorResi}', [CekResiController::class, 'cekResi']);
@@ -50,6 +52,8 @@ Route::get('/cek-resi/{no_resi}', [CekResiController::class, 'cekResi']);
 Route::get('/cek-resi', [CekResiController::class, 'cekResi']);
 Route::post('/cek-resi', [ResiController::class, 'cek'])->withoutMiddleware(['auth']);
 Route::get('/cek-resi/{Input}', [OrderedController::class, 'show']);
+
+
 
 //  Route::put('/riwayat/store/{id}',[ResiController::class,'lihatRiwayat'])->withoutMiddleware('can:input');
 
@@ -138,15 +142,20 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::put('/input', [InputController::class, 'update']);
         // Route::put('/input', [InputController::class, 'update'])->withoutMiddleware('can:input');
         Route::post('/input/stores', [InputController::class, 'storePenilaian']);
-        Route::put('/riwayat/store/{id}',[RiwayatController::class,'tambahRiwayat'])->withoutMiddleware('can:input');
-        Route::get('/cetak-resi/{no_resi}', [inputController::class, 'cetakResi']);
+        Route::put('/riwayat/store/{id}', [RiwayatController::class, 'tambahRiwayat'])->withoutMiddleware('can:input');
         Route::get('/provinces', [InputController::class, 'getProvinces']);
         // Route::get('/cities/{provinceId}', [InputController::class, 'getCities']);
         Route::post('/cost', [InputController::class, 'hitungOngkir']);
-        Route::get('/Input/{input}',[InputController::class,'show'])->withoutMiddleware('can:input');
+        Route::get('/Input/{input}', [InputController::class, 'show'])->withoutMiddleware('can:input');
         Route::get('/input/{id}', [InputController::class, 'show'])->name('input.show');
-        
-        Route::get('/riwayat', [InputController::class, 'index']); // atau OrderController
+
+        Route::get('/riwayat', [InputController::class, 'index']); // atau 
+        Route::get('/cetak-pdf/{noResi}', [InputController::class, 'cetakpdf']);
+        Route::get('/download-resi/{noResi}', [InputController::class, 'downloadpdf']);
+        Route::get('/resi/{noResi}/cetak', [InputController::class, 'handleResiPdf']);
+Route::get('/resi/{noResi}/download', fn($noResi) => app(InputController::class)->handleResiPdf($noResi, 'download'));
+
+
     });
 
     Route::middleware('can:ordered')->group(function () {
@@ -156,14 +165,14 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::get('/ordered/{Input}', [OrderedController::class, 'show']);
         // Route::put('/ordered', [OrderedController::class, 'update']);
         // Kalau di API
-Route::put('/ordered/{id}', [InputController::class, 'update']);
-// // Atau kalau pakai resource
-Route::resource('ordered', InputController::class);
-// Ini akan otomatis buat route PUT untuk update
+        Route::put('/ordered/{id}', [InputController::class, 'update']);
+        // // Atau kalau pakai resource
+        Route::resource('ordered', InputController::class);
+        // Ini akan otomatis buat route PUT untuk update
 
         Route::put('/input/{id}', [InputController::class, 'update']);
-    //     Route::get('/orders/all', [OrderedController::class, 'allOrders']);
-    //    Route::post('/orders/all', [OrderedController::class, 'allOrders']);
+        //     Route::get('/orders/all', [OrderedController::class, 'allOrders']);
+        //    Route::post('/orders/all', [OrderedController::class, 'allOrders']);
         Route::put('/ordered', [OrderedController::class, 'update'])->withoutMiddleware('can:ordered');
         Route::apiResource('/Ordered', OrderedController::class)
             ->except(['index', 'store']);
@@ -176,19 +185,19 @@ Route::resource('ordered', InputController::class);
     // Route::middleware('auth:sanctum')->get('/kurirs/by-user', [AkunController::class, 'byUser']);
 // Route::middleware('auth:sanctum')->put('/kurirs/by-user', [AkunController::class, 'updateByUser']);
 
-Route::middleware('auth:sanctum')->get('/laporan-kurir', [LaporanKurirController::class, 'index']);
-        Route::get('/ordered', [LaporanKurirController::class, 'get'])->withoutMiddleware('can:ordered');
+    Route::middleware('auth:sanctum')->get('/laporan-kurir', [LaporanKurirController::class, 'index']);
+    Route::get('/ordered', [LaporanKurirController::class, 'get'])->withoutMiddleware('can:ordered');
 
 
 
-Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces']);
-Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
+    Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces']);
+    Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
 
-Route::get('/ongkir', 'CheckOngkirController@index');
-Route::post('/ongkir', 'CheckOngkirController@check_ongkir');
-Route::get('/cities/{province_id}', 'CheckOngkirController@getCities');
+    Route::get('/ongkir', 'CheckOngkirController@index');
+    Route::post('/ongkir', 'CheckOngkirController@check_ongkir');
+    Route::get('/cities/{province_id}', 'CheckOngkirController@getCities');
 
-Route::get('/provinces', [CheckOngkirController::class, 'getProvinces']);
+    Route::get('/provinces', [CheckOngkirController::class, 'getProvinces']);
     Route::get('/cities/{province_id}', [CheckOngkirController::class, 'getCities']);
     Route::post('/ongkir', [CheckOngkirController::class, 'checkOngkir']);
 
@@ -196,54 +205,44 @@ Route::get('/provinces', [CheckOngkirController::class, 'getProvinces']);
     Route::get('/cetak-resi/{noResi}', [ResiController::class, 'cetak']);
     Route::get('/cetak-resi/{noResi}', [InputController::class, 'cetakResi']);
 
-// Route untuk melihat PDF di browser
-Route::get('/cetak-resi/{noResi}', [InputController::class, 'cetakResi'])->name('cetak.resi');
+    // Route untuk melihat PDF di browser
+    Route::get('/cetak-resi/{noResi}', [InputController::class, 'cetakResi'])->name('cetak.resi');
 
-// Route untuk download PDF
-Route::get('/download-resi/{noResi}', [InputController::class, 'downloadResi'])->name('download.resi');
+    // Route untuk download PDF
+    Route::get('/download-resi/{noResi}', [InputController::class, 'downloadResi'])->name('download.resi');
 
+    Route::post('/input/{id}/riwayat', [RiwayatController::class, 'store'])->name('riwayat.store');
 
-    // Route::middleware('can:orderan')->group(function () {
-    //     Route::get('/orderan', [OrderanController::class, 'get'])->withoutMiddleware('can:orderan');
-    //     Route::post('/orderan', [OrderanController::class, 'index'])->withoutMiddleware('can:input');;
-    //     Route::post('/orderan/store', [OrderanController::class, 'store']);
-    //     Route::get('/orderan/{Input}', [OrderanController::class, 'show']);
-    //     Route::put('/orderan', [OrderanController::class, 'update']);
-    //     Route::put('/orderan', [OrderanController::class, 'update'])->withoutMiddleware('can:orderan');
-    //     Route::apiResource('/orderan', OrderanController::class)
-    //         ->except(['index', 'store']);
-    // });
 
     
+// Route untuk checkout (membuat transaksi)
+Route::post('/payments', [PaymentController::class, 'create']);
+Route::post('/payment/create', [PaymentsController::class, 'create']);
+
+Route::post('/webhooks/midtrans', [PaymentsController::class, 'webhook']);
 
 
+// routes/web.php
+// Route::post('/payments', [InputController::class, 'process']);
+// Route::post('/payments', [InputController::class, 'process']);
+// ATAU routes/api.php
+Route::post('/payments', [InputController::class, 'payment']);
+Route::post('/api/payments', [InputController::class, 'payment']);
 
+Route::middleware('can:payment')->group(function () {
+            Route::get('payment', [InputController::class, 'get'])->withoutMiddleware('can:payment');
+            // Route::post('payment', [InputController::class, 'index']);
+            Route::post('payment/store', [InputController::class, 'store']);
+            Route::post('payment/create-snap', [InputController::class, 'createSnap']);
+Route::post('payment/store', [InputController::class, 'store']);
 
-// Route::post('/riwayat/store/{id}', [OrderedController::class, 'storeRiwayat']);
+            Route::apiResource('payment', InputController::class)
+                ->except(['index', 'store']);
+        });
+        Route::post('/payment/snap', [PaymentController::class, 'createCharge']);
+        // routes/web.php
+Route::post('/order/snap', [PaymentssControllerlama::class, 'createCharge']);
+Route::post('/order/snap', [PaymentController::class, 'createCharge']);
+        Route::post('/input/snap', [PaymentController::class, 'snap']);
 
-// Route::get('/input/{id}/riwayat', [RiwayatController::class, 'index']);
-// Route::post('/input/{id}/riwayat', [RiwayatController::class, 'store']);
-Route::post('/input/{id}/riwayat', [RiwayatController::class, 'store'])->name('riwayat.store');
-
-
-
-
-
-    // Route::middleware('can:kurir')->group(function () {
-    // ✅ Menampilkan daftar kurir (GET)
-    // Route::get('kurir', [KurirController::class, 'index']);
-
-    // ✅ Menyimpan kurir baru (POST)
-    // Route::post('kurir', [KurirController::class, 'store']);
-
-    // ✅ Menampilkan detail kurir berdasarkan ID (GET)
-    // Route::get('kurir/{kurir}', [KurirController::class, 'show']);
-
-    // ✅ Memperbarui data kurir berdasarkan ID (PUT)
-    // Route::put('kurir/{kurir}', [KurirController::class, 'update']);
-
-    // Route::apiResource('kurir', KurirController::class);
-    // ✅ Menghapus kurir berdasarkan ID (DELETE)
-    // Route::delete('kurir/{kurir}', [KurirController::class, 'destroy']);
-    // });
 });
