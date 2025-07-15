@@ -45,6 +45,7 @@ import { ref } from "vue";
 import axios from "axios";
 import type { Input } from "@/types";
 import Swal from "sweetalert2";
+import { computed } from "vue";
 
 
 // State input user
@@ -107,7 +108,8 @@ const cariResi = async () => {
   }
 };
 
-// Fungsi untuk parsing riwayat pengiriman
+const parsedRiwayat = computed(() => riwayat(result.value?.riwayat));
+
 const riwayat = (data: any) => {
   if (!data) return [];
   try {
@@ -117,6 +119,17 @@ const riwayat = (data: any) => {
     return [];
   }
 };
+
+// Fungsi untuk parsing riwayat pengiriman
+// const riwayat = (data: any) => {
+//   if (!data) return [];
+//   try {
+//     return typeof data === 'string' ? JSON.parse(data) : data;
+//   } catch (e) {
+//     console.error('Error parsing riwayat:', e);
+//     return [];
+//   }
+// };
 
 
 // Fungsi untuk format tanggal
@@ -245,17 +258,29 @@ const kirimRating = async () => {
                 <td class="status-text"> {{ result.status }}</td>
               </tr>
             </table>
-            <h2 class="h2">Riwayat Pengiriman</h2>
+            <!-- <h2 class="h2">Riwayat Pengiriman</h2>
             <div class="shipping-history">
               <table class="table table-bordered">
-                <!-- menggunakan array v-for -->
+                menggunakan array v-for
                 <tr v-for="riwayat in result.riwayat" :key="riwayat?.id_riwayat">
                   <td>{{ riwayat.deskripsi }}</td>
-                  <td>{{ formatDate(riwayat.created_at) }}</td>
-                  <!-- <td>{{ result.riwayat }} {{ formatDate(result.created_at) }} </td> -->
-                  <!-- <td class="timestamp">{{ result.timestamp }}</td> -->
+                  <td>{{ formatDate(riwayat.created_at) }}</td> ini yang benar
+                  <td>{{ result.riwayat }} {{ formatDate(result.created_at) }} </td>
+                  <td class="timestamp">{{ result.timestamp }}</td>
                 </tr>
               </table>
+            </div> -->
+            <h2 class="h2">Riwayat Pengiriman</h2>
+            <div class="shipping-history">
+              <table v-if="parsedRiwayat.length > 0" class="table table-bordered">
+                <tr v-for="item in parsedRiwayat" :key="item?.id_riwayat">
+                  <td>{{ item.deskripsi }}</td>
+                  <td>{{ formatDate(item.created_at) }}</td>
+                </tr>
+              </table>
+              <div v-else class="riwayat-text">
+                Belum ada riwayat pengiriman.
+              </div>
             </div>
           </tbody>
           <!-- <div v-if="result.status === 'selesai' && !isRatingSubmitted" class="mt-4">
@@ -422,6 +447,16 @@ const kirimRating = async () => {
   padding: 0.75rem 1rem;
   font-size: 2.5rem;
   text-transform: uppercase;
+  /* border-radius: 5px; */
+}
+.table-bordered .riwayat-text {
+  /* vertical-align: middle; */
+  text-align: justify;
+  text-indent: 30px;
+  background-color: #fff;
+  padding: 0.75rem 1rem;
+  font-size: 1.3rem;
+  /* text-transform: uppercase; */
   /* border-radius: 5px; */
 }
 

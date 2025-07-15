@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useDelete } from "@/libs/hooks";
 import Form from "./Form.vue";
 import { createColumnHelper, type Row } from "@tanstack/vue-table";
@@ -41,22 +41,31 @@ function formatDate(waktu: string | null | undefined): string {
   });
 }
 
-const statusSteps = ["menunggu", "dalam proses", "dikirim", "selesai"] as const;
+const statusSteps = ["menunggu", "dalam proses", "masuk gudang", "Keluar gudang", "diproses", "dikirim", "selesai"] as const;
 const statusLabels: Record<string, string> = {
   "menunggu": "Menunggu",
   "dalam proses": "Dalam Proses",
+  "masuk gudang": "Masuk Gudang ",
+  "keluar gudang": "Keluar Gudang",
+  "diproses": "Diproses",
   "dikirim": "Dikirim",
   "selesai": "Selesai"
 };
-const statusIcons: Record<string, "info" | "question" | "warning" | "success"> = {
+const statusIcons: Record<string, "info" | "question" | "dark" | "secondary" | "muted" | "warning" | "success"> = {
   "menunggu": "info",
   "dalam proses": "question",
+  "masuk gudang": "dark",
+  "keluar gudang": "secondary",
+  "diproses": "muted",
   "dikirim": "warning",
   "selesai": "success"
 };
 const statusColors: Record<string, string> = {
   "menunggu": "bg-info",
   "dalam proses": "bg-danger",
+  "masuk gudang": "bg-danger",
+  "keluar gudang": "bg-secondary",
+  "diproses": "bg-muted",
   "dikirim": "bg-warning",
   "selesai": "bg-success",
 };
@@ -263,7 +272,7 @@ const { delete: deleteInput } = useDelete({
 
 const stored = localStorage.getItem("changedButtons");
 const changedButtons = ref<Set<number>>(new Set(stored ? JSON.parse(stored) : []));
-  // const changedButtons = ref<Set<number>>(new Set());
+// const changedButtons = ref<Set<number>>(new Set());
 
 watch(changedButtons, (val) => {
   localStorage.setItem("changedButtons", JSON.stringify([...val]));
@@ -342,63 +351,63 @@ const columns = [
   }),
 
 
-column.accessor("id", {
-  header: "Order",
-  cell: (cell) => {
-    const id = cell.getValue() as number;
-    const row = cell.row.original;
-    const status = row.status;
-    const isChanged = changedButtons.value.has(id);
-    const label = isChanged ? "Tambah" : "Antar";
+  column.accessor("id", {
+    header: "Order",
+    cell: (cell) => {
+      const id = cell.getValue() as number;
+      const row = cell.row.original;
+      const status = row.status;
+      const isChanged = changedButtons.value.has(id);
+      const label = isChanged ? "Tambah" : "Antar";
 
-    // Kalau status selesai, tampilkan ikon centang
-    if (status === "selesai") {
+      // Kalau status selesai, tampilkan ikon centang
+      if (status === "selesai") {
+        return h(
+          "span",
+          {
+            class: "text-success fw-bold",
+            style: "font-size: 1.2rem;",
+          },
+          "✓"
+        );
+      }
+
+      // Kalau belum selesai, tetap tampilkan tombol aksi
       return h(
-        "span",
+        "button",
         {
-          class: "text-success fw-bold",
-          style: "font-size: 1.2rem;",
+          class: "btn btn-sm btn-info",
+          async onClick() {
+            selected.value = id;
+
+            if (isChanged) {
+              openForm.value = true;
+            } else {
+              const result = await Swal.fire({
+                title: "Ambil Orderan Ini?",
+                text: "Yakin ingin mengambil orderan ini untuk dikirim?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Ya, Ambil",
+                cancelButtonText: "Batal",
+              });
+
+              if (!result.isConfirmed) return;
+
+              await Swal.fire({
+                title: "Orderan Diambil",
+                icon: "success",
+                confirmButtonText: "OK",
+              });
+
+              changedButtons.value.add(id);
+            }
+          },
         },
-        "✓"
+        label
       );
-    }
-
-    // Kalau belum selesai, tetap tampilkan tombol aksi
-    return h(
-      "button",
-      {
-        class: "btn btn-sm btn-info",
-        async onClick() {
-          selected.value = id;
-
-          if (isChanged) {
-            openForm.value = true;
-          } else {
-            const result = await Swal.fire({
-              title: "Ambil Orderan Ini?",
-              text: "Yakin ingin mengambil orderan ini untuk dikirim?",
-              icon: "question",
-              showCancelButton: true,
-              confirmButtonText: "Ya, Ambil",
-              cancelButtonText: "Batal",
-            });
-
-            if (!result.isConfirmed) return;
-
-            await Swal.fire({
-              title: "Orderan Diambil",
-              icon: "success",
-              confirmButtonText: "OK",
-            });
-
-            changedButtons.value.add(id);
-          }
-        },
-      },
-      label
-    );
-  },
-}),
+    },
+  }),
 
 
 
@@ -494,93 +503,91 @@ column.accessor("id", {
   // }),
 
   // column.accessor("waktu", { header: "Waktu" }),
-//     column.display({
-//   id: "aksiGudang",
-//   header: "Aksi Gudang",
-//   cell: (cell) => {
-//     const row = cell.row.original;
-//     return h("div", { class: "d-flex flex-wrap gap-2" }, [
-//       h(
-//         "button",
-//         {
-//           class: "btn btn-sm btn-success",
-//           onClick: () => masukGudang(row),
-//         },
-//         "Masuk Gudang"
-//       ),
-//       h(
-//         "button",
-//         {
-//           class: "btn btn-sm btn-secondary",
-//           onClick: () => keluarGudang(row),
-//         },
-//         "Keluar Gudang"
-//       ),
-//     ]);
-//   },
-// }),
+  //     column.display({
+  //   id: "aksiGudang",
+  //   header: "Aksi Gudang",
+  //   cell: (cell) => {
+  //     const row = cell.row.original;
+  //     return h("div", { class: "d-flex flex-wrap gap-2" }, [
+  //       h(
+  //         "button",
+  //         {
+  //           class: "btn btn-sm btn-success",
+  //           onClick: () => masukGudang(row),
+  //         },
+  //         "Masuk Gudang"
+  //       ),
+  //       h(
+  //         "button",
+  //         {
+  //           class: "btn btn-sm btn-secondary",
+  //           onClick: () => keluarGudang(row),
+  //         },
+  //         "Keluar Gudang"
+  //       ),
+  //     ]);
+  //   },
+  // }),
 
-column.display({
-  id: "aksiGudang",
-  header: "Aksi Gudang",
-  cell: (cell) => {
-    const row = cell.row.original;
+  column.display({
+    id: "aksiGudang",
+    header: "Aksi Gudang",
+    cell: (cell) => {
+      const row = cell.row.original;
 
-    // Jika status sudah "masuk gudang", tampilkan badge (✅)
-    if (row.status === "masuk gudang") {
-      return h("span", { class: "badge bg-success" }, "Sudah Masuk");
-    }
+      // Jika status sudah "masuk gudang", tampilkan badge (✅)
+      if (row.status === "masuk gudang") {
+        return h("span", { class: "badge bg-success" }, "Sudah Masuk");
+      }
 
-    // Jika belum, tampilkan tombol
-    return h(
-      "button",
-      {
-        class: "btn btn-sm btn-success",
-        onClick: () => masukGudang(row),
-        disabled: row.status === "selesai",
-      },
-      "Masuk Gudang"
-    );
-  },
-}),
+      // Jika belum, tampilkan tombol
+      return h(
+        "button",
+        {
+          class: "btn btn-sm btn-success",
+          onClick: () => masukGudang(row),
+          disabled: row.status === "selesai",
+        },
+        "Masuk Gudang"
+      );
+    },
+  }),
 
+  // column.display({
+  //   id: "aksiGudang",
+  //   header: "Aksi Gudang",
+  //   cell: (cell) => {
+  //     const row = cell.row.original;
 
+  //     const changedButtons = [];
 
-// column.display({
-//   id: "aksiGudang",
-//   header: "Aksi Gudang",
-//   cell: (cell) => {
-//     const row = cell.row.original;
+  //     // Kalau belum masuk gudang → tampilkan tombol masuk
+  //     if (row.status !== 'masuk gudang') {
+  //       changedButtons.push(h(
+  //         "button",
+  //         {
+  //           class: "btn btn-sm btn-success",
+  //           onClick: () => masukGudang(row),
+  //         },
+  //         "Masuk Gudang"
+  //       ));
+  //     }
 
-//     const changedButtons = [];
+  //     Kalau sudah masuk gudang → bisa keluar
+  //     if (row.status === 'masuk gudang') {
+  //       buttons.push(h(
+  //         "button",
+  //         {
+  //           class: "btn btn-sm btn-secondary",
+  //           onClick: () => keluarGudang(row),
+  //         },
+  //         "Keluar Gudang"
+  //       ));
+  //     }
 
-//     // Kalau belum masuk gudang → tampilkan tombol masuk
-//     if (row.status !== 'masuk gudang') {
-//       changedButtons.push(h(
-//         "button",
-//         {
-//           class: "btn btn-sm btn-success",
-//           onClick: () => masukGudang(row),
-//         },
-//         "Masuk Gudang"
-//       ));
-//     }
-
-//     Kalau sudah masuk gudang → bisa keluar
-//     if (row.status === 'masuk gudang') {
-//       buttons.push(h(
-//         "button",
-//         {
-//           class: "btn btn-sm btn-secondary",
-//           onClick: () => keluarGudang(row),
-//         },
-//         "Keluar Gudang"
-//       ));
-//     }
-
-//     return h("div", { class: "d-flex flex-wrap gap-2" }, changedButtons);
-//   },
-// }),
+  //     return h("div", { class: "d-flex flex-wrap gap-2" }, changedButtons);
+  //   },
+  // }),
 
 ];
 const submit = async () => {
@@ -610,6 +617,14 @@ onMounted(async () => {
   }
 });
 
+const url = computed(() => {
+  const params = new URLSearchParams();
+  ['masuk gudang', 'keluar gudang', 'diproses', 'dikirim', 'selesai'].forEach(status => {
+    params.append('exclude_status[]', status);
+  });
+  return `/input?${params.toString()}`;
+});
+
 // onMounted(async () => {
 //     if (props.selected) {
 //         isLoading.value = true;
@@ -619,11 +634,89 @@ onMounted(async () => {
 //     }
 // });
 
+// Token auth (dari Laravel Sanctum atau session)
+// const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+// Fungsi ambil paket
+function claimPackage(packageId) {
+    if (confirm('Yakin ingin mengambil paket ini?')) {
+        fetch(`/api/input/${packageId}/claim`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // 'X-CSRF-TOKEN': token // Untuk Laravel CSRF
+                'RESI-': token // Untuk Laravel CSRF
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Paket berhasil diambil!');
+                loadPackages(); // Refresh daftar paket
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan!');
+        });
+    }
+}
+
+// Load paket tersedia
+function loadPackages() {
+    fetch('/api/packages') // endpoint dari controller index()
+        .then(response => response.json())
+        .then(data => {
+            // Render data ke dalam tabel/list
+            renderPackages(data.data);
+        });
+}
+
+// Render paket ke HTML
+function renderPackages(input) {
+    const container = document.getElementById('input-list');
+    let html = '<table class="table"><thead><tr><th>No Resi</th><th>Pengirim</th><th>Penerima</th><th>Status</th><th>Aksi</th></tr></thead><tbody>';
+    
+    input.forEach(input => {
+        html += `<tr>
+            <td>${input.no_resi || '-'}</td>
+            <td>${input.nama_pengirim}</td>
+            <td>${input.nama_penerima}</td>
+            <td>${input.status}</td>
+            <td>`;
+        
+        // Jika paket belum diambil, tampilkan tombol "Ambil"
+        if (!input.kurir_id) {
+            html += `<button onclick="claimPackage(${input.id})" class="btn btn-primary btn-sm">Ambil Paket</button>`;
+        } else {
+            html += `<span class="badge badge-success">Sudah Diambil</span>`;
+        }
+        
+        html += `</td></tr>`;
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// Load saat halaman pertama kali dibuka
+document.addEventListener('DOMContentLoaded', function() {
+    loadPackages();
+});
+
+
+
+
+
 // Reset saat form ditutup
 watch(openForm, (val) => {
   if (!val) selected.value = "";
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
+
 </script>
 
 <template>
@@ -635,14 +728,13 @@ watch(openForm, (val) => {
     <div class="card-header align-items-center">
       <h2 class="mb-0">Orderan</h2>
     </div>
-
+    <paginate ref="paginateRef" id="table-inputorder" :url=url :columns="columns" />
     <!-- <div class="card-body">
       <p v-if="inputData">Data input: {{ inputData }}</p>
       <paginate ref="paginateRef" id="table-inputorder" url="/input?exclude_status=selesai" :columns="columns" />
       Tanpa spasi
     </div> -->
-        <!-- Untuk melihat data yang status = 'masuk gudang' -->
-<paginate ref="paginateRef" id="table-gudang" url="/input?aksi=masuk" :columns="columns" />
+    <!-- <paginate ref="paginateRef" id="table-inputorder" url="/input?exclude_status=Masuk gudang" :columns="columns" /> -->
 
   </div>
 </template>
@@ -654,3 +746,6 @@ watch(openForm, (val) => {
 
 }
 </style>
+
+
+

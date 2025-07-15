@@ -120,10 +120,6 @@ const routes: Array<RouteRecordRaw> = [
                 path: "/dashboard/pengiriman",
                 name: "dashboard.pengiriman",
                 component: () => import("@/pages/dashboard/pengiriman/index.vue"),
-                meta: {
-                    pageTitle: "Pengiriman",
-                    breadcrumbs: ["Pengiriman"],
-                },
             },
             // {
             //     path: "/dashboard/order",
@@ -218,6 +214,12 @@ const routes: Array<RouteRecordRaw> = [
                 name: "dashboard.orderan",
                 component: () =>
                     import("@/pages/dashboard/orderan/index.vue"),
+            },
+            {
+                path: "/dashboard/gudang",
+                name: "dashboard.gudang",
+                component: () =>
+                    import("@/pages/dashboard/gudang/index.vue"),
             },
         ],
     },

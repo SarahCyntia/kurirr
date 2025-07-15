@@ -91,7 +91,7 @@ function getEdit() {
         .then(({ data }) => {
             console.log(data);
             Input.value = {
-                riwayat: data.riwayat || "",
+                riwayat: "",
                 status: data.status || "menunggu", // atau nilai default lainnya
                 id_user: user.user.id,
             };
@@ -251,7 +251,7 @@ watch(
                         <div class="fv-row mb-7">
                             <label class="form-label fw-bold fs-6">Riwayat Pengiriman</label>
                             <Field class="form-control" type="text" name="riwayat" v-model="Input.riwayat"
-                                placeholder="Masukkan Riwayat " />
+                                placeholder="Masukkan Riwayat" />
                             <ErrorMessage name="riwayat" class="text-danger" />
                         </div>
                         <!-- <div class="fv-row mb-7">

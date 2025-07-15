@@ -13,6 +13,7 @@ return new class extends Migration
 {
     Schema::create('riwayat', function (Blueprint $table) {
         $table->id();
+        $table->unsignedBigInteger('kurir_id');
         $table->unsignedBigInteger('id_order');
         $table->text('deskripsi');
         $table->timestamps();

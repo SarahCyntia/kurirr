@@ -21,7 +21,9 @@ return new class extends Migration
         $table->text('alamat')->nullable();
         $table->enum('status', ['aktif', 'nonaktif'])->default('nonaktif');
         $table->timestamps();
+        $table->foreignId('kurir_id')->nullable()->constrained('kurir')->nullOnDelete();
     });
+
 }
     // public function up(): void
     // {

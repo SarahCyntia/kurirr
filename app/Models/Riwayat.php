@@ -12,7 +12,9 @@ class Riwayat extends Model
     protected $table = 'riwayat';
 
     protected $fillable = [
+        'id_riwyayat',
         'id',
+        'kurir_id',
         'status',
         'deskripsi',
     ];
@@ -24,4 +26,9 @@ class Riwayat extends Model
     {
         return $this->belongsTo(Input::class, 'id');
     }
+    public function kurir()
+    {
+        return $this->belongsTo(Kurir::class);
+    }
 }
+

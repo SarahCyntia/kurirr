@@ -148,6 +148,12 @@ const MainMenuConfig: Array<MenuItem> = [
                 name: "orderan",
                 keenthemesIcon: "bi bi-record-fill",
             },
+            {
+                heading: "gudang",
+                route: "/dashboard/gudang",
+                name: "gudang",
+                keenthemesIcon: "bi bi-record-fill",
+            },
         ],
     },
 ];

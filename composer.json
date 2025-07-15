@@ -10,6 +10,7 @@
     "require": {
         "php": "^8.1",
         "barryvdh/laravel-dompdf": "*",
+        "dipantry/rajaongkir": "^2.2",
         "guzzlehttp/guzzle": "^7.9",
         "kavist/rajaongkir": "1.1",
         "laravel/framework": "^10.10",

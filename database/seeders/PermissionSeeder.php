@@ -21,7 +21,7 @@ class PermissionSeeder extends Seeder
 
         $menuMaster = ['master', 'master-user', 'master-role'];
         $menuOrder = ['order', 'input', 'data', 'ordered', 'riwayat', 'riwayatt'];
-        $menuWebsite = ['website', 'setting','kurir','pesanan','pelanggan', 'transaksi', 'akun', 'orderan', 'cekresi', 'd_pengguna'];
+        $menuWebsite = ['website', 'setting','kurir','pesanan','pelanggan', 'transaksi', 'akun', 'orderan', 'cekresi', 'd_pengguna', 'gudang', 'pengiriman'];
 
         $permissionsByRole = [
             'admin' => ['dashboard', ...$menuMaster, ...$menuWebsite,...$menuOrder],

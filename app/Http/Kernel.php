@@ -69,4 +69,15 @@ class Kernel extends HttpKernel
         'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
         'json' => \App\Http\Middleware\EnsureApiJson::class,
     ];
+
+    // app/Http/Kernel.php
+protected $routeMiddleware = [
+    // ...
+    'role.kurir' => \App\Http\Middleware\EnsureUserIsKurir::class,
+    'binderbyte.rate' => \App\Http\Middleware\BinderByteRateLimit::class,
+];
+// protected $routeMiddleware = [
+//     // ... existing middleware
+//     'binderbyte.rate' => \App\Http\Middleware\BinderByteRateLimit::class,
+// ];
 }

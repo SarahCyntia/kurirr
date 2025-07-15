@@ -107,11 +107,11 @@ const showRincians = (data: Input) => {
 
     html: `
     <div style="text-align: left;">
-        <p><b>Asal Provinsi :</b> ${data.asal_provinsi_id || '-'}</p>
-        <p><b>Asal Kota :</b> ${data.asal_kota_id || '-'}</p>
+        <p><b>Asal Provinsi :</b> ${data.asal_provinsi.name || '-'}</p>
+        <p><b>Asal Kota :</b> ${data.asal_kota.name || '-'}</p>
         <p><b>No. Telpon Pengirim :</b> ${data.no_telp_pengirim}</p>
-        <p><b>Tujuan Provinsi :</b> ${data.tujuan_provinsi_id || '-'}</p>
-        <p><b>Tujuan Kota :</b> ${data.tujuan_kota_id|| '-'}</p>
+        <p><b>Tujuan Provinsi :</b> ${data.tujuan_provinsi.name || '-'}</p>
+        <p><b>Tujuan Kota :</b> ${data.tujuan_kota.name|| '-'}</p>
         <p><b>No. Telpon Penerima :</b> ${data.no_telp_penerima || '-'}</p>
         <p><b>Jenis Barang :</b> ${data.jenis_barang || '-'}</p>
         <p><b>Ekspedisi :</b> ${data.ekspedisi || '-'}</p>
@@ -235,21 +235,21 @@ const columns = [
   },
 }),
 
-column.accessor("id", {
-  header: "Detail",
-  cell: (cell) =>
-  h("div", { class: "d-flex gap-2" }, [
-    h(
-      "button",
-      {
-        class: "btn btn-sm btn-icon btn-danger",
-        onClick: () => showRincians(cell.row.original),
-      },
-      h("i", { class: "bi bi-building" })
-      // "Lihat"
-    ),
-  ]),
-}),
+      column.display({
+    id: "order",
+    header: "Detail Order",
+    cell: (cell) => {
+      console.log("ROW ORIGINAL:", cell.row.original); // 🔍 Debug log
+      return h(
+        "button",
+        {
+          class: "btn btn-sm btn-danger",
+          onClick: () => showRincians(cell.row.original),
+        },
+        "Lihat Detail"
+      );
+    },
+  }),
 column.display({
   id: "penilaian",
   header: "Penilaian",

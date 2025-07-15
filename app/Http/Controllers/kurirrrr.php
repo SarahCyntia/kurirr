@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use function Laravel\Prompts\select;
 
-class KurirController extends Controller
+class Kurirrrr extends Controller
 {
     /**
      * Get paginated list of kurir

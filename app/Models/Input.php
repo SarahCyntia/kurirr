@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Input extends Model
 {
-    
+
     use HasFactory;
-    
+
 
     // Nama tabel jika tidak default "inputs"
     protected $table = 'inputorder';
@@ -18,6 +18,7 @@ class Input extends Model
     public $timestamps = false;
     // Kolom yang bisa diisi secara massal
     protected $fillable = [
+        'kurir_id',
         'nama_pengirim',
         'alamat_pengirim',
         'no_telp_pengirim',
@@ -28,47 +29,60 @@ class Input extends Model
         'jenis_layanan',
         'berat_barang',
         'no_resi',
-        'ekspedisi', 
-        'layanan', 
-        'biaya', 
+        'ekspedisi',
+        'layanan',
+        'biaya',
         'waktu',
-        'asal_provinsi_id', 
-        'asal_kota_id', 
-        'tujuan_provinsi_id', 
+        'asal_provinsi_id',
+        'asal_kota_id',
+        'tujuan_provinsi_id',
         'tujuan_kota_id',
         'ulasan',
         'rating',
+        'status_pembayaran',
     ];
 
-    public function asalProvinsi() {
+    public function asalProvinsi()
+    {
         return $this->belongsTo(Province::class, 'asal_provinsi_id');
     }
 
-    public function asalKota() {
+    public function asalKota()
+    {
         return $this->belongsTo(City::class, 'asal_kota_id');
     }
 
-    public function tujuanProvinsi() {
+    public function tujuanProvinsi()
+    {
         return $this->belongsTo(Province::class, 'tujuan_provinsi_id');
     }
 
-    public function tujuanKota() {
+    public function tujuanKota()
+    {
         return $this->belongsTo(City::class, 'tujuan_kota_id');
     }
 
     // Input.php
 
-// RiwayatPengiriman.php
-public function riwayat()
-{
-    return $this->hasMany(Riwayat::class, 'id');
-}
+    // RiwayatPengiriman.php
+    public function riwayat()
+    {
+        return $this->hasMany(Riwayat::class, 'id');
+    }
 
-        // Cast rating ke integer
+    // Cast rating ke integer
     protected $casts = [
         'rating' => 'integer',
         'ulasan' => 'string',
     ];
+    // public function kurir()
+// {
+//     return $this->belongsTo(User::class, 'kurir_id');
+// }
+    public function kurir()
+    {
+        return $this->hasOne(Kurir::class, 'id');
+    }
 
     // public function riwayat(): HasMany
     // {
@@ -80,27 +94,28 @@ public function riwayat()
     //     return response()->json($data);
     // }
 }
-    // public function pengguna() {
-    //     return $this->belongsTo(User::class, 'pengguna_id');
-    // }
 
-    // protected $fillable = [
-    //     'id_pelanggan',
-    //     'nama_barang',
-    //     'alamat_asal',
-    //     'alamat_tujuan',
-    //     'penerima',
-    //     'berat_paket',
-    //     'tanggal_order',
-    //     'tanggal_dikemas',
-    //     'tanggal_pengambilan',
-    //     'tanggal_dikirim',
-    //     'tanggal_penerimaan',
-    //     'metode_pengiriman',
-    //     'biaya_pengiriman',
-    //     'status',
-    //     'nilai',
-    //     'ulasan',
-    //     'jarak',
-    // ];
+// public function pengguna() {
+//     return $this->belongsTo(User::class, 'pengguna_id');
+// }
+
+// protected $fillable = [
+//     'id_pelanggan',
+//     'nama_barang',
+//     'alamat_asal',
+//     'alamat_tujuan',
+//     'penerima',
+//     'berat_paket',
+//     'tanggal_order',
+//     'tanggal_dikemas',
+//     'tanggal_pengambilan',
+//     'tanggal_dikirim',
+//     'tanggal_penerimaan',
+//     'metode_pengiriman',
+//     'biaya_pengiriman',
+//     'status',
+//     'nilai',
+//     'ulasan',
+//     'jarak',
+// ];
 

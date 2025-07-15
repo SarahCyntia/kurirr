@@ -24,20 +24,20 @@ class KurirController extends Controller
         $page = $request->page ? $request->page - 1 : 0;
 
         DB::statement('set @no=0+' . $page * $per);
-        // $data = Kurir::select('id', 'name', 'email', 'phone', 'alamat', 'penilaian', 'photo')
-        $data = Kurir::select('id', 'status','alamat', 'penilaian', 'jenis_kendaraan');
-        $data = Kurir::with('user')->select('id', 'user_id','status', 'alamat', 'penilaian', 'jenis_kendaraan') // Tambahkan relasi user
+        $data = Kurir::select('id', 'name', 'email', 'phone', 'alamat', 'penilaian', 'photo');
+        // $data = Kurir::select('id', 'status','alamat', 'penilaian', 'jenis_kendaraan');
+        $data = Kurir::with('user')->select('id', 'user_id', 'status', 'alamat', 'penilaian', 'jenis_kendaraan') // Tambahkan relasi user
             ->when($request->search, function ($query, $search) {
                 // $query->where('name', 'like', "%$search%")
-                    $query->where('id', 'like', "%$search%")
-                        ->orWhere('status', 'like', "%$search%")
-                        ->orWhere('jenis_kendaraan', 'like', "%$search%")
-                        ->orWhere('alamat', 'like', "%$search%")
-                        ->orWhere('penilaian', 'like', "%$search%");
+                $query->where('id', 'like', "%$search%")
+                    ->orWhere('status', 'like', "%$search%")
+                    ->orWhere('jenis_kendaraan', 'like', "%$search%")
+                    ->orWhere('alamat', 'like', "%$search%")
+                    ->orWhere('penilaian', 'like', "%$search%");
             })->latest()->paginate($per);
 
-        $no = ($data->currentPage()-1) * $per + 1;
-        foreach($data as $item){
+        $no = ($data->currentPage() - 1) * $per + 1;
+        foreach ($data as $item) {
             $item->no = $no++;
         }
 
@@ -87,22 +87,21 @@ class KurirController extends Controller
     public function show(Kurir $kurir)
     {
         $kurir->load('user');
-    
+
         return response()->json([
             // 'kurir'=> ['alamat' => $kurir->alamat],
             'user' => [
-                    'name' => $kurir->user->name,
-                    'email' => $kurir->user->email,
-                    'phone' => $kurir->user->phone,
-                    'photo' => $kurir->user->photo,
-                    'alamat' => $kurir->alamat,
-                    'jenis_kendaraan' => $kurir->jenis_kendaraan,
-                    'penilaian' => $kurir->penilaian,
-                    'status' => $kurir->status,
-                    // 'password' => $kurir->user->password,
-                ],
-            ]);
-    
+                'name' => $kurir->user->name,
+                'email' => $kurir->user->email,
+                'phone' => $kurir->user->phone,
+                'photo' => $kurir->user->photo,
+                'alamat' => $kurir->alamat,
+                'jenis_kendaraan' => $kurir->jenis_kendaraan,
+                'penilaian' => $kurir->penilaian,
+                'status' => $kurir->status,
+                // 'password' => $kurir->user->password,
+            ],
+        ]);
     }
 
     /**
@@ -111,9 +110,9 @@ class KurirController extends Controller
     public function update(UpdateKurirRequest $request, Kurir $kurir)
     {
         $validatedData = $request->validated();
-        
-        $validatedData['id'] = $request->input('id'); 
-        
+
+        $validatedData['id'] = $request->input('id');
+
         if ($request->filled('password')) {
             $validatedData['password'] = Hash::make($validatedData['password']);
         } else {
@@ -131,7 +130,7 @@ class KurirController extends Controller
             $validatedData['photo'] = $request->file('photo')->store('photo', 'public');
         }
 
-        
+
         $kurir->user->update([
             'name' => $request->name,
             'email' => $request->email,
@@ -139,7 +138,7 @@ class KurirController extends Controller
             // 'password' => $request->password,
             'photo' => $validatedData['photo'] ?? $kurir->user->photo,
         ]);
-        
+
         $kurir->update($validatedData);
         return response()->json([
             'success' => true,
@@ -179,78 +178,78 @@ class KurirController extends Controller
         ]);
     }
 
-    // public function transaksiCountByUser()
-    // {
-    //     $user = auth()->user();
-    //     $kurir = $user->kurir;
-    
-    //     if (!$kurir) {
-    //         return response()->json([
-    //             'menunggu' => 0,
-    //             'dalam proses' => 0,
-    //             'pengambilan paket' => 0,
-    //             'dikirm' => 0,
-    //             'selesaai' => 0,
-    //         ]);
-    //     }
-    
-    //     $kurirId = $kurir->kurir_id;
-    
-    //     $menungguCount = Input::where('kurir_id', $kurirId)
-    //         ->where('status', 'menunggu')
-    //         ->whereDate('tanggal_order', Carbon::menunggu())
-    //         ->count();
-            
-    //     $dalamProsesCount = Input::where('kurir_id', $kurirId)
-    //         ->where('status', 'dalam proses')
-    //         ->whereDate('tanggal_dikemas', Carbon::dalamProses())
-    //         ->count();
+    public function inputCountByUser()
+    {
+        $user = auth()->user();
+        $kurir = $user->kurir;
 
-    //     $pengambilanPaketCount = Input::where('kurir_id', $kurirId)
-    //         ->where('status', 'pengambilan paket')
-    //         ->whereDate('tanggal_pengambilan', Carbon::pengambilanPaket())
-    //         ->count();
+        if (!$kurir) {
+            return response()->json([
+                'menunggu' => 0,
+                'dalam proses' => 0,
+                'diproses' => 0,
+                'dikirm' => 0,
+                'selesaai' => 0,
+            ]);
+        }
 
-    //     $dikirimCount = Input::where('kurir_id', $kurirId)
-    //         ->where('status', 'dikirim')
-    //         ->whereDate('tanggal_dikirim', Carbon::dikirim())
-    //         ->count();
+        $kurirId = $kurir->kurir_id;
+
+        $menungguCount = Input::where('kurir_id', $kurirId)
+            ->where('status', 'menunggu')
+            ->whereDate('tanggal_order', Carbon::menunggu())
+            ->count();
+
+        $dalamProsesCount = Input::where('kurir_id', $kurirId)
+            ->where('status', 'dalam proses')
+            ->whereDate('tanggal_dikemas', Carbon::dalamProses())
+            ->count();
+
+        $diprosesCount = Input::where('kurir_id', $kurirId)
+            ->where('status', 'pengambilan paket')
+            ->whereDate('tanggal_diprosespengambilan', Carbon::pengambilanPaket())
+            ->count();
+
+        $dikirimCount = Input::where('kurir_id', $kurirId)
+            ->where('status', 'dikirim')
+            ->whereDate('tanggal_dikirim', Carbon::dikirim())
+            ->count();
 
 
-    //     $selesaiCount = Input::where('kurir_id', $kurirId)
-    //         ->where('status', 'selesai')
-    //         ->whereMonth('tanggal_penerimaan', Carbon::now()->selesai)
-    //         ->count();
+        $selesaiCount = Input::where('kurir_id', $kurirId)
+            ->where('status', 'selesai')
+            ->whereMonth('tanggal_penerimaan', Carbon::now()->selesai)
+            ->count();
 
-    
-    //     return response()->json([
-    //         'menunggu' => $menungguCount,
-    //         'dalam proses' => $dalamProsesCount,
-    //         'pengambilan paket' => $pengambilanPaketCount,
-    //         'dikirim' => $dikirimCount,
-    //         'selesai' => $selesaiCount,
-    //     ]);
-    // }
+
+        return response()->json([
+            'menunggu' => $menungguCount,
+            'dalam proses' => $dalamProsesCount,
+            'diproses' => $diprosesCount,
+            'dikirim' => $dikirimCount,
+            'selesai' => $selesaiCount,
+        ]);
+    }
 
 
     public function destroy(Kurir $kurir)
-{
-    // Hapus foto dari storage jika user memiliki foto
-    if ($kurir->user && $kurir->user->photo) {
-        Storage::disk('public')->delete($kurir->user->photo);
+    {
+        // Hapus foto dari storage jika user memiliki foto
+        if ($kurir->user && $kurir->user->photo) {
+            Storage::disk('public')->delete($kurir->user->photo);
+        }
+
+        // Hapus data user yang terkait
+        if ($kurir->user) {
+            $kurir->user->delete();
+        }
+
+        // Hapus data kurir
+        $kurir->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data kurir berhasil dihapus'
+        ]);
     }
-
-    // Hapus data user yang terkait
-    if ($kurir->user) {
-        $kurir->user->delete();
-    }
-
-    // Hapus data kurir
-    $kurir->delete();
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Data kurir berhasil dihapus'
-    ]);
-}
 }

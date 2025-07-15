@@ -23,13 +23,14 @@ return new class extends Migration
             $table->integer('berat_barang');
             $table->integer('biaya');
             $table->enum('status', ['menunggu', 'dalam proses', 'dikirim', 'selesai'])->default('dikirim');
+            $table->enum('status_pembayaran', ['belum dibayar', 'settlement', 'pending', 'expire', 'cancel', 'deny', 'failure', 'refund'])->default('belum dibayar');
             $table->string('no_resi');
             $table->timestamps();
         });
     }
     // public function up()
     // {
-    //     Schema::create('inputorder', function (Blueprint $table) {
+    //     Schema::create('inputorder', function (Blueprint $table) {   
     //         $table->id(); 
     //         $table->string('nama_barang');
     //         $table->text('alamat_asal');

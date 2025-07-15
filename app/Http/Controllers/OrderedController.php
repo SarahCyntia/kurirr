@@ -7,6 +7,7 @@ use App\Models\Input;
 use App\Models\Riwayat;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderedController extends Controller
 {
@@ -17,44 +18,134 @@ class OrderedController extends Controller
 
     public function index(Request $request)
     {
-        $data = Input::with('riwayat')->get(); // atau Order::with('riwayat')->get();
-        $per = $request->input('per', 10);
-        $page = $request->input('page', 1);
 
-        DB::statement('SET @no := ' . (($page - 1) * $per));
+        $query = Input::query();
+        if ($request->has('exclude_status')) {
+            $excluded = is_array($request->exclude_status)
+                ? $request->exclude_status
+                : [$request->exclude_status];
 
-        $data = Input::when($request->search, function (Builder $query, string $search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_pengirim', 'like', "%$search%")
-                    ->orWhere('alamat_pengirim', 'like', "%$search%")
-                    ->orWhere('no_telp_pengirim', 'like', "%$search%")
-                    ->orWhere('nama_penerima', 'like', "%$search%")
-                    ->orWhere('alamat_penerima', 'like', "%$search%")
-                    ->orWhere('no_telp_penerima', 'like', "%$search%")
-                    ->orWhere('jenis_barang', 'like', "%$search%")
-                    ->orWhere('jenis_layanan', 'like', "%$search%")
-                    ->orWhere('berat_barang', 'like', "%$search%")
-                    ->orWhere('riwayat_pengiriman', 'like', "%$search%");
-            });
-        })
-            ->when($request->status, function ($query, $status) {
-                $query->where('status', $status);
+            $query->whereNotIn('status', $excluded);
+
+            // if ($request->aksi === 'keluar') {
+            //     $query->where('status', '!=', 'masuk gudang'); // atau sesuai kondisi
+            // } elseif ($request->aksi === 'masuk') {
+            //     $query->where('status', 'masuk gudang');
+            // }
+
+            $data = Input::with('riwayat')->get(); // atau Order::with('riwayat')->get();
+            $per = $request->input('per', 10);
+            $page = $request->input('page', 1);
+
+            DB::statement('SET @no := ' . (($page - 1) * $per));
+
+            $data = Input::when($request->search, function (Builder $query, string $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_pengirim', 'like', "%$search%")
+                        ->orWhere('alamat_pengirim', 'like', "%$search%")
+                        ->orWhere('no_telp_pengirim', 'like', "%$search%")
+                        ->orWhere('nama_penerima', 'like', "%$search%")
+                        ->orWhere('alamat_penerima', 'like', "%$search%")
+                        ->orWhere('no_telp_penerima', 'like', "%$search%")
+                        ->orWhere('jenis_barang', 'like', "%$search%")
+                        ->orWhere('jenis_layanan', 'like', "%$search%")
+                        ->orWhere('berat_barang', 'like', "%$search%")
+                        ->orWhere('riwayat_pengiriman', 'like', "%$search%");
+                });
             })
-            ->when($request->has('exclude_status'), function ($query) use ($request) {
-                $query->where('status', '!=', $request->exclude_status);
-            })
-            ->latest()
-            ->paginate($per);
+                ->when(auth()->user()->role->name === 'kurir', function ($query) {
+                    $kurirId = auth()->user()->kurir->kurir_id;
 
-        // Tambah nomor urut
-        $no = ($data->currentPage() - 1) * $per + 1;
-        foreach ($data as $item) {
-            $item->no = $no++;
+                    $query->where(function ($q) use ($kurirId) {
+                        $q->whereNull('kurir_id') // Belum diambil siapa pun
+                            ->orWhere(function ($subQuery) use ($kurirId) {
+                                $subQuery->where('kurir_id', '!=', $kurirId) // Milik kurir lain
+                                    ->where('status', '!=', 'keluar gudang'); // Dan belum keluar
+                            })
+                            ->orWhere(function ($subQuery) use ($kurirId) {
+                                $subQuery->where('kurir_id', $kurirId)
+                                    ->where('status', '!=', 'keluar gudang'); // Milik dia tapi belum keluar
+                            });
+                    });
+                })
+
+                
+                // ->when(auth()->user()->role->name === 'kurir', function ($query) {
+                //     $kurirId = auth()->user()->kurir->kurir_id;
+                //     $query->where(function ($q) use ($kurirId) {
+                //         $q->whereNull('kurir_id') // belum diambil
+                //         ->orWhere('kurir_id', $kurirId); // paket milik dia sendiri
+                //         Log::info('Kurir ID:', ['kurir_id' => auth()->user()->kurir->kurir_id]);
+                //     });
+                //     })
+                ->when($request->has('exclude_status'), function ($query) use ($request) {
+                    $excludedStatuses = (array) $request->exclude_status;
+
+                    // Tetap tampilkan jika paket milik dia sendiri walau status-nya dikecualikan
+                    $query->where(function ($q) use ($excludedStatuses) {
+                        $q->whereNotIn('status', $excludedStatuses)
+                            ->orWhere('kurir_id', auth()->user()->kurir->kurir_id); // tetap tampilkan milik sendiri
+                    });
+                });
+                $statuses = $request->input('status', []);
+                if (!empty($statuses)) {
+                    $query->whereIn('status', $statuses);
+                };
+
+                // ->when($request->status, function ($query, $status) {
+                //     $query->where('status', $status);
+                // })
+                // ->when($request->has('exclude_status'), function ($query) use ($request) {
+                //     $query->where('status', '!=', $request->exclude_status);
+                // })
+                ->latest()
+                ->paginate($per);
+
+            // Tambah nomor urut
+            $no = ($data->currentPage() - 1) * $per + 1;
+            foreach ($data as $item) {
+                $item->no = $no++;
+            }
+            // ->orderBy('created_at', 'desc')
+            // ->paginate($per);
+
+            return response()->json($data);
+            // return datatables()->of($query)->make(true);
         }
-        // ->orderBy('created_at', 'desc')
-        // ->paginate($per);
+    }
+    public function claim($id)
+    {
+        $user = auth()->user();
 
-        return response()->json($data);
+        // Validasi: hanya role kurir yang boleh ambil paket
+        if ($user->role->name !== 'kurir') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya kurir yang boleh mengambil paket.',
+            ], 403);
+        }
+
+        $input = Input::findOrFail($id);
+        $kurirId = $user->kurir->kurir_id;
+
+        // Cek apakah sudah diambil kurir lain
+        if ($input->kurir_id && $input->kurir_id !== $kurirId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Paket sudah diambil oleh kurir lain.',
+            ]);
+        }
+
+        // Jika belum diambil, set kurir_id
+        if (!$input->kurir_id) {
+            $input->kurir_id = $kurirId;
+            $input->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Paket berhasil diambil oleh kurir ini.',
+        ]);
     }
 
     public function store(Request $request)
@@ -90,13 +181,13 @@ class OrderedController extends Controller
 
     // }
     public function show($id)
-{
-    $inputorder = Input::with(['riwayat' => fn($q) => $q->orderBy('created_at')])->findOrFail($id);
+    {
+        $inputorder = Input::with(['riwayat' => fn($q) => $q->orderBy('created_at')])->findOrFail($id);
 
-    return response()->json($inputorder);
-    // $input = Input::with('riwayat')->findOrFail($id);
-    // return response()->json($input);
-}
+        return response()->json($inputorder);
+        // $input = Input::with('riwayat')->findOrFail($id);
+        // return response()->json($input);
+    }
 
     public function update(Request $request, $id)
     {
@@ -105,7 +196,7 @@ class OrderedController extends Controller
             'riwayat_pengiriman' => 'nullable|array',
             'riwayat_pengiriman.*' => 'string',
         ]);
-   
+
         // $validated = $request->validate([
         //     'status' => 'required|string',
         //     'riwayat_pengiriman' => 'nullable|string', // hanya 1 pesan log baru
@@ -134,86 +225,84 @@ class OrderedController extends Controller
         //         $input->tanggal_penerimaan = now();
         //         break;
         // }
-   $input = Input::findOrFail($id);
+        $input = Input::findOrFail($id);
 
-    // Update status (jika ada)
-    if ($request->filled('status')) {
-        $input->status = $request->status;
-        $input->save();
+        // Update status (jika ada)
+        if ($request->filled('status')) {
+            $input->status = $request->status;
+            $input->save();
+        }
+
+        // Tambahkan ke tabel riwayat
+        if ($request->filled('riwayat_pengiriman')) {
+            Riwayat::create([
+                'inputorder_id' => $input->id,
+                'keterangan' => $request->riwayat_pengiriman,
+                'waktu' => now(), // atau $request->waktu jika pakai waktu manual
+            ]);
+
+            //  $waktuBaru = now()->format('d-m-Y H:i:s');
+            // $statusString = $request->status . ' (' . $waktuBaru . ')';
+            // switch ($request->status) {
+            //     case 'dalam proses':
+            //         $input->tanggal_dikemas = now();
+            //         break;
+            //     case 'dikirim':
+            //         $input->tanggal_dikirim = now();
+            //         break;
+            //     case 'selesai':
+            //         $input->tanggal_penerimaan = now();
+            //         break;
+            // }
+
+            // Tambahkan pesan baru ke array
+            if (!empty($validated['riwayat'])) {
+                $riwayat[] = [
+                    'pesan' => $validated['riwayat'],
+                    'waktu' => now()->format('Y-m-d H:i'),
+                ];
+            }
+
+            // Simpan status baru dan riwayat yang sudah diperbarui
+            // $input->status = $validated['status'];
+            $input->status = $request->status;
+            // $input->riwayat = json_encode($riwayat);
+            $riwayat = json_decode($_POST['riwayat_pengiriman'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                error_log('JSON Error: ' . json_last_error_msg());
+            }
+            $input->save();
+
+            return response()->json([
+                'message' => 'Status dan riwayat berhasil diperbarui',
+                'status' => $input->status,
+                'riwayat' => $riwayat
+            ]);
+        }
+    }
+    protected $casts = [
+        'riwayat_pengiriman' => 'array',
+    ];
+    // Misalnya ini model Input
+    public function riwayat()
+    {
+        return $this->hasMany(Riwayat::class, 'id_riwayat', 'id');
+        // 'id' = foreign key di tabel `riwayat`, 'id' = primary key di `input`
     }
 
-    // Tambahkan ke tabel riwayat
-    if ($request->filled('riwayat_pengiriman')) {
-        Riwayat::create([
-            'inputorder_id' => $input->id,
-            'keterangan' => $request->riwayat_pengiriman,
-            'waktu' => now(), // atau $request->waktu jika pakai waktu manual
-        ]);
-
-
-
-        //  $waktuBaru = now()->format('d-m-Y H:i:s');
-        // $statusString = $request->status . ' (' . $waktuBaru . ')';
-        // switch ($request->status) {
-        //     case 'dalam proses':
-        //         $input->tanggal_dikemas = now();
-        //         break;
-        //     case 'dikirim':
-        //         $input->tanggal_dikirim = now();
-        //         break;
-        //     case 'selesai':
-        //         $input->tanggal_penerimaan = now();
-        //         break;
-        // }
-
-        // Tambahkan pesan baru ke array
-        if (!empty($validated['riwayat'])) {
-            $riwayat[] = [
-                'pesan' => $validated['riwayat'],
-                'waktu' => now()->format('Y-m-d H:i'),
-            ];
-        }
-
-        // Simpan status baru dan riwayat yang sudah diperbarui
-        // $input->status = $validated['status'];
-        $input->status = $request->status;
-        // $input->riwayat = json_encode($riwayat);
-        $riwayat = json_decode($_POST['riwayat_pengiriman'], true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log('JSON Error: ' . json_last_error_msg());
-        }
-        $input->save();
+    public function showRiwayat($id)
+    {
+        $input = Input::with('riwayat')->findOrFail($id);
 
         return response()->json([
-            'message' => 'Status dan riwayat berhasil diperbarui',
-            'status' => $input->status,
-            'riwayat' => $riwayat
+            'riwayat_pengiriman' => $input->riwayat->map(function ($item) {
+                return [
+                    'deskripsi' => $item->deskripsi,
+                    'created_at' => $item->created_at->toDateTimeString(), // penting!
+                ];
+            }),
         ]);
     }
-}
-protected $casts = [
-    'riwayat_pengiriman' => 'array',
-];
-// Misalnya ini model Input
-public function riwayat()
-{
-    return $this->hasMany(Riwayat::class, 'id_riwayat', 'id');
-    // 'id' = foreign key di tabel `riwayat`, 'id' = primary key di `input`
-}
-
-public function showRiwayat($id)
-{
-    $input = Input::with('riwayat')->findOrFail($id);
-
-    return response()->json([
-        'riwayat_pengiriman' => $input->riwayat->map(function ($item) {
-            return [
-                'deskripsi' => $item->deskripsi,
-                'created_at' => $item->created_at->toDateTimeString(), // penting!
-            ];
-        }),
-    ]);
-}
 
 
 
@@ -294,5 +383,30 @@ public function showRiwayat($id)
             'success' => true,
             'message' => 'Data pesanan berhasil dihapus',
         ]);
+    }
+    public function masuk(Request $request)
+    {
+        $input = Input::findOrFail($request->input_id);
+        $input->status = 'masuk gudang';
+        $input->save();
+
+        $input->riwayat()->create([
+            'deskripsi' => $request->deskripsi,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function keluar(Request $request)
+    {
+        $input = Input::findOrFail($request->input_id);
+        $input->status = 'keluar gudang';
+        $input->save();
+
+        $input->riwayat()->create([
+            'deskripsi' => $request->deskripsi,
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }
