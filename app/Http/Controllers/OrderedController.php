@@ -69,7 +69,10 @@ class OrderedController extends Controller
                     });
                 })
 
-                
+                 ->when($request->status_pembayaran, function ($query, $status_pembayaran) {
+                // Jika parameter 'status_pembayaran' ada, filter berdasarkan status_pembayaran tersebut
+                $query->where('status_pembayaran', $status_pembayaran);
+            })
                 // ->when(auth()->user()->role->name === 'kurir', function ($query) {
                 //     $kurirId = auth()->user()->kurir->kurir_id;
                 //     $query->where(function ($q) use ($kurirId) {

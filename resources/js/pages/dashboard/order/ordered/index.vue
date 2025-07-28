@@ -83,6 +83,7 @@ const updateStatus = async (row: Row<Input>) => {
   if (currentIndex === -1 || currentStatus === "selesai") return;
 
   const nextStatus = statusSteps[currentIndex + 1];
+
   const confirmed = await Swal.fire({
     icon: statusIcons[nextStatus],
     title: `Ubah Status ke \"${statusLabels[nextStatus]}\"?`,
@@ -92,16 +93,44 @@ const updateStatus = async (row: Row<Input>) => {
   }).then(r => r.isConfirmed);
 
   if (!confirmed) return;
-  row.original.status = nextStatus;
+
   try {
     await axios.put(`/ordered/${row.original.id}`, { status: nextStatus });
+
     Swal.fire("Berhasil", "Status diperbarui", "success");
-    refresh();
+
+    // ✅ Jangan ubah row.original langsung → tunggu refresh
+    await refresh(); // Pastikan ini await agar data sync sebelum interaksi selanjutnya
   } catch {
-    row.original.status = currentStatus;
     Swal.fire("Gagal", "Tidak bisa ubah status", "error");
   }
 };
+
+// const updateStatus = async (row: Row<Input>) => {
+//   const currentStatus = row.original.status;
+//   const currentIndex = statusSteps.indexOf(currentStatus);
+//   if (currentIndex === -1 || currentStatus === "selesai") return;
+
+//   const nextStatus = statusSteps[currentIndex + 1];
+//   const confirmed = await Swal.fire({
+//     icon: statusIcons[nextStatus],
+//     title: `Ubah Status ke \"${statusLabels[nextStatus]}\"?`,
+//     html: `Anda akan mengubah status ke <strong>${statusLabels[nextStatus]}</strong>.`,
+//     showCancelButton: true,
+//     confirmButtonText: "Ya, ubah"
+//   }).then(r => r.isConfirmed);
+
+//   if (!confirmed) return;
+//   row.original.status = nextStatus;
+//   try {
+//     await axios.put(`/ordered/${row.original.id}`, { status: nextStatus });
+//     Swal.fire("Berhasil", "Status diperbarui", "success");
+//     refresh();
+//   } catch {
+//     row.original.status = currentStatus;
+//     Swal.fire("Gagal", "Tidak bisa ubah status", "error");
+//   }
+// };
 
 const showRincian = (data: any) => {
   riwayatTertampil.value = (data.riwayat || []).map((item: any) => ({
@@ -130,7 +159,8 @@ const masukGudang = async (data: Input) => {
     try {
       await axios.post(`/gudang/masuk`, {
         input_id: data.id,
-        deskripsi: "Paket masuk gudang oleh petugas"
+        // deskripsi: "Paket masuk gudang oleh petugas"
+        deskripsi: "Paket masuk gudang oleh kurir"
       });
       Swal.fire("Berhasil", "Paket masuk gudang", "success");
       refresh();
@@ -367,6 +397,8 @@ const url = computed(() => {
   // Status yang tidak ditampilkan
   ['masuk gudang', 'keluar gudang', 'diproses', 'dikirim', 'selesai'].forEach(status => {
   params.append('exclude_status[]', status);
+  params.append('status_pembayaran', 'settlement');
+
 });
 
 
@@ -391,7 +423,8 @@ onMounted(async () => {
 });
 
 const props = defineProps<{ selected: string }>();
-const emit = defineEmits(["close", "refresh"]);
+// const emit = defineEmits(["close", "refresh"]);
+const emit = defineEmits(["success", "refresh"]);
 watch(openForm, (val) => {
   if (!val) selected.value = "";
   window.scrollTo({ top: 0, behavior: "smooth" });

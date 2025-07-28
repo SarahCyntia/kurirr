@@ -321,6 +321,8 @@ router.beforeEach(async (to, from, next) => {
                 !authStore.user.permission.includes(to.meta.permission)
             ) {
                 next({ name: "404" });
+            } else if (to.name === "dashboard" && authStore.user.role?.name === "pengguna") {
+                next({ name: "dashboard_pengguna" });
             } else if (to.meta.checkDetail == false) {
                 next();
             }

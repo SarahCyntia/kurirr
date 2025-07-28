@@ -28,34 +28,6 @@ const formatDate = (timestamp?: string) => {
     minute: '2-digit',
   });
 };
-
-const hideMap = ref(false);
-
-const activeStep = ref(0); // default = 0 (drop off)
-
-// Fungsi update berdasarkan status
-const updateActiveStep = (status: string) => {
-  const statusLower = status.toLowerCase();
-
-  if (statusLower === "menunggu") {
-    activeStep.value = 0;
-  } else if (
-    statusLower === "dalam proses" ||
-    statusLower === "diproses" ||
-    statusLower === "masuk gudang" ||
-    statusLower === "keluar gudang"
-  ) {
-    activeStep.value = 1;
-  } else if (statusLower === "dikirim") {
-    activeStep.value = 2;
-  } else if (statusLower === "selesai" || statusLower === "terkirim") {
-    activeStep.value = 3;
-  } else {
-    activeStep.value = 0; // fallback default
-  }
-};
-
-
 // Fungsi cari resi
 const cariResi = async () => {
   if (!noResi.value) {
@@ -64,7 +36,6 @@ const cariResi = async () => {
     return;
   }
 
-  hideMap.value = true;
   isLoading.value = true;
   error.value = "";
   result.value = null;
@@ -76,9 +47,6 @@ const cariResi = async () => {
       },
     });
     result.value = response.data.data;
-    
-    updateActiveStep(result.value?.status || "");
-
     const ratingKey = `rating_${result.value?.no_resi}`;
     isRatingSubmitted.value = localStorage.getItem(ratingKey) === 'submitted';
   } catch (err: any) {
@@ -89,25 +57,6 @@ const cariResi = async () => {
 };
 
 
-const steps = ref([
-  {
-    label: "Drop off",
-    icon: "/storage/photo/dro.png", // contoh file
-  },
-  {
-    label: "Sedang diproses",
-    icon: "/storage/photo/diproses.png",
-  },
-  {
-    label: "Sedang diantar",
-    icon: "/storage/photo/dikirimm.png",
-  },
-  {
-    label: "Terkirim",
-    icon: "/storage/photo/selesa.png",
-  },
-]);
-
 const parsedRiwayat = computed(() => riwayat(result.value?.riwayat));
 
 const riwayat = (data: any) => {
@@ -117,6 +66,53 @@ const riwayat = (data: any) => {
   } catch (e) {
     console.error('Error parsing riwayat:', e);
     return [];
+  }
+};
+
+
+const kirimRating = async () => {
+  if (!rating.value || !ulasan.value.trim()) {
+    error.value = "Mohon beri rating dan ulasan.";
+    return;
+  }
+
+  try {
+    console.log('Mengirim data:', {
+      no_resi: result.value?.no_resi,
+      rating: rating.value,
+      ulasan: ulasan.value,
+    });
+
+    const response = await axios.post("/beri-rating", {
+      no_resi: result.value?.no_resi,
+      rating: rating.value, // ✅ tidak perlu parseInt
+      ulasan: ulasan.value.trim(),
+    });
+
+    console.log('Response berhasil:', response.data);
+
+    isRatingSubmitted.value = true;
+    error.value = "";
+
+    // Reset form
+    rating.value = '';
+    ulasan.value = '';
+
+    // Simpan status ke localStorage
+    localStorage.setItem(`rating_${result.value?.no_resi}`, 'submitted');
+
+    // alert('Rating berhasil dikirim!');
+    Swal.fire({
+      icon: 'success',
+      title: 'Berhasil!',
+      text: 'Rating berhasil dikirim!',
+      confirmButtonText: 'OK',
+    });
+
+  } catch (err) {
+    console.error('Error lengkap:', err);
+    console.error('Response error:', err.response);
+    error.value = err.response?.data?.message || "Gagal mengirim rating.";
   }
 };
 
@@ -135,59 +131,77 @@ const riwayat = (data: any) => {
           <input v-model="noResi" type="text" class="form-control" placeholder="Masukkan No Resi"
             @keyup.enter="cariResi" />
         </div>
+        <!-- <div class="col-md-6">
+          <label class="form-label">Ekspedisi</label>
+          <select v-model="ekspedisi" class="form-select">
+            <option disabled value="">-- Pilih Ekspedisi --</option>
+            <option v-for="item in ekspedisiList" :key="item" :value="item">
+              {{ item }}
+            </option>
+          </select>
+        </div> -->
         <div class="col-12">
           <button class="btn btn-danger w-100 mt-2" @click="cariResi">Cari</button>
         </div>
       </div>
-
       <div v-if="isLoading" class="alert alert-info">Sedang mencari...</div>
-
       <div v-if="error" class="alert alert-danger">{{ error }}</div>
-
-      <div class="tracking-map-wrapper text-center mb-5" v-if="!hideMap">
-        <img src="/storage/photo/images1.png" alt="Tracking Map" class="map-image" />
-      </div>
-
-      <!-- Progress Status Visual -->
-      <div v-if="result" class="tracking-steps my-5 d-flex justify-between">
-        <!-- Status Saat Ini -->
-        <div v-for="(step, index) in steps" :key="step.label" class="step text-center"
-        :class="{ active: index <= activeStep }">
-        <div v-if="index !== steps.length - 1" class="step-line"></div>
-        <div class="icon-wrapper">
-          <img :src="step.icon" alt="icon" width="60" />
-        </div>
-        <div class="label fw-bold mt-2">{{ step.label }}</div>
-        <div v-if="index < steps.length - 1" class="line"></div>
-      </div>
-    </div>
-    
 
       <div v-if="result" class="table-responsive">
         <table class="table table-bordered">
           <tbody>
-            <!-- <h2 class="h2">Status Pengiriman</h2>
+            <tr>
+              <th>No Resi</th>
+              <td>{{ result.no_resi }}</td>
+            </tr>
+            <!-- <tr>
+              <th>Ekspedisi</th>
+              <td>{{ result.ekspedisi }}</td>
+            </tr> -->
+            <tr>
+              <th>Nama Pengirim</th>
+              <td>{{ result.nama_pengirim }}</td>
+            </tr>
+            <tr>
+              <th>Nama Penerima</th>
+              <td>{{ result.nama_penerima }}</td>
+            </tr>
+            <tr>
+              <th>Alamat Penerima</th>
+              <td>{{ result.alamat_penerima }}</td>
+            </tr>
+            <tr>
+              <th>Jenis Barang</th>
+              <td>{{ result.jenis_barang }}</td>
+            </tr>
+            <tr>
+              <th>Berat Barang</th>
+              <td>{{ result.berat_barang }} kg</td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="table table-bordered">
+          <tbody>
+            <h2 class="h2">Status Pengiriman</h2>
             <table class="table table-bordered">
               <tr>
-                <td class="status-text"> {{ result.keterangan_status }}</td> bukan yg ini
+                <!-- <td class="status-text"> {{ result.keterangan_status }}</td> -->
                 <td class="status-text"> {{ result.status }}</td>
               </tr>
-            </table> -->
-
-            <!-- Riwayat Pengiriman Timeline -->
-            <h2 class="h2">Riwayat Pengiriman</h2>
-            <div v-if="parsedRiwayat.length > 0" class="timeline">
-              <div v-for="(item, index) in parsedRiwayat" :key="index" class="timeline-item">
-                <div class="timeline-dot" :class="{ 'done': index === 0 }"></div>
-                <div class="timeline-content">
-                  <div class="timeline-date">{{ formatDate(item.created_at) }}</div>
-                  <div class="timeline-description">{{ item.deskripsi }}</div>
-                </div>
-              </div>
-            </div>
-            <div v-else class="riwayat-text">Belum ada riwayat pengiriman.</div>
-
+            </table>
             <!-- <h2 class="h2">Riwayat Pengiriman</h2>
+            <div class="shipping-history">
+              <table class="table table-bordered">
+                menggunakan array v-for
+                <tr v-for="riwayat in result.riwayat" :key="riwayat?.id_riwayat">
+                  <td>{{ riwayat.deskripsi }}</td>
+                  <td>{{ formatDate(riwayat.created_at) }}</td> ini yang benar
+                  <td>{{ result.riwayat }} {{ formatDate(result.created_at) }} </td>
+                  <td class="timestamp">{{ result.timestamp }}</td>
+                </tr>
+              </table>
+            </div> -->
+            <h2 class="h2">Riwayat Pengiriman</h2>
             <div class="shipping-history">
               <table v-if="parsedRiwayat.length > 0" class="table table-bordered">
                 <tr v-for="item in parsedRiwayat" :key="item?.id_riwayat">
@@ -198,7 +212,7 @@ const riwayat = (data: any) => {
               <div v-else class="riwayat-text">
                 Belum ada riwayat pengiriman.
               </div>
-            </div> -->
+            </div>
           </tbody>
           <div>
             <!-- Template HTML Anda -->
@@ -230,54 +244,6 @@ const riwayat = (data: any) => {
 
 </template>
 <style scoped>
-.timeline {
-  position: relative;
-  margin: 2rem auto;
-  padding-left: 30px;
-  border-left: 3px solid #f5717c;
-}
-
-.timeline-item {
-  position: relative;
-  margin-bottom: 2rem;
-  padding-left: 20px;
-}
-
-.timeline-dot {
-  position: absolute;
-  top: 0;
-  left: -10px;
-  width: 20px;
-  height: 20px;
-  background-color: #fff;
-  border: 4px solid #f5717c;
-  border-radius: 50%;
-  z-index: 1;
-}
-
-/* .timeline-dot.done {
-      background-color: #f5717c;
-    } */
-
-.timeline-content {
-  padding: 5px 10px;
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.timeline-date {
-  font-weight: bold;
-  color: #8d212e;
-  font-size: 0.95rem;
-}
-
-.timeline-description {
-  margin-top: 5px;
-  font-size: 1.1rem;
-  color: #444;
-}
-
 .card {
   max-width: 1000px;
   margin: 4rem auto;
@@ -320,9 +286,8 @@ const riwayat = (data: any) => {
 
 .form-control,
 .form-select {
-  /* padding: 0.85rem; */
+  padding: 0.85rem;
   font-size: 1.15rem;
-  width: 200%;
   border-radius: 10px;
   border: 1px solid #ced4da;
   transition: border-color 0.3s ease;
@@ -454,124 +419,5 @@ const riwayat = (data: any) => {
   color: #333;
   /* warna teks agar jelas */
   text-align: center;
-}
-
-.tracking-steps {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-  padding: 2rem 1rem;
-}
-
-.step {
-  position: relative;
-  text-align: center;
-  flex: 1;
-}
-
-.step .icon-wrapper {
-  width: 70px;
-  height: 70px;
-  background-color: #f8d7da;
-  border: 4px dashed #f5717c;
-  border-radius: 50%;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.step .icon-wrapper img {
-  width: 40px;
-  height: 40px;
-}
-
-.step .label {
-  margin-top: 10px;
-  font-weight: 600;
-  color: #c53141;
-}
-
-.step.active .icon-wrapper {
-  background-color: #f5717c;
-}
-
-.step.active .label {
-  color: #b02335;
-}
-
-.line {
-  position: absolute;
-  top: 50%;
-  right: -50%;
-  height: 4px;
-  width: 100%;
-  background-color: #f5717c;
-  z-index: -1;
-}
-
-.tracking-steps {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-  gap: 20px;
-}
-
-.step {
-  flex: 1;
-  position: relative;
-}
-
-.icon-wrapper {
-  width: 80px;
-  height: 80px;
-  border: 3px dashed #f08080;
-  border-radius: 50%;
-  padding: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: transparent;
-  /* semua icon transparan */
-  transition: all 0.3s ease;
-}
-
-.step.active .icon-wrapper {
-  border-color: #f08080;
-  /* warna tetap sama jika aktif */
-  border-style: dashed;
-  /* tetap dashed */
-  background-color: transparent;
-}
-
-.label {
-  margin-top: 10px;
-  font-weight: bold;
-  color: #991b1b;
-}
-
-.line {
-  position: absolute;
-  top: 40px;
-  /* tengah icon-wrapper */
-  left: 100%;
-  width: 100%;
-  height: 3px;
-  background-color: #f08080;
-  z-index: -1;
-}
-
-.map-image {
-  width: 100%;
-  /* Buat full container */
-  max-width: 600px;
-  /* Maksimum ukuran yang diinginkan */
-  height: auto;
-  /* Biar tidak gepeng */
-  margin: 0 auto;
-  /* Tengah jika width dibatasi */
-  display: block;
 }
 </style>

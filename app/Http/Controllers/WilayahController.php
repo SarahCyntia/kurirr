@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\BinderByteService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Http;
 
 class WilayahController extends Controller
 {
@@ -15,32 +16,43 @@ class WilayahController extends Controller
         $this->binderByte = $binderByte;
     }
 
-    /**
-     * Get all provinces
-     */
-    public function getProvinces(): JsonResponse
+     public function getProvinsi()
     {
-        try {
-            $provinces = $this->binderByte->getProvinces();
-            
+        $response = Http::get('https://api.binderbyte.com/wilayah/provinsi', [
+            'api_key' => env('BINDERBYTE_API_KEY'),
+        ]);
+
+        if ($response->successful()) {
+            return response()->json($response->json());
+        } else {
             return response()->json([
-                'success' => true,
-                'message' => 'Provinces retrieved successfully',
-                'data' => $provinces
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve provinces',
-                'error' => $e->getMessage()
-            ], 500);
+                'error' => 'Gagal mengambil data provinsi',
+                'detail' => $response->json(),
+            ], $response->status());
         }
     }
 
-    /**
-     * Get cities by province ID
-     */
+    // public function getProvinces(): JsonResponse
+    // {
+    //     try {
+    //         $provinces = $this->binderByte->getProvinces();
+            
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Provinces retrieved successfully',
+    //             'data' => $provinces
+    //         ]);
+            
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to retrieve provinces',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+
     public function getCities($provinceId): JsonResponse
     {
         try {
@@ -61,9 +73,6 @@ class WilayahController extends Controller
         }
     }
 
-    /**
-     * Get districts by city ID
-     */
     public function getDistricts($cityId): JsonResponse
     {
         try {
@@ -84,9 +93,7 @@ class WilayahController extends Controller
         }
     }
 
-    /**
-     * Get villages by district ID
-     */
+
     public function getVillages($districtId): JsonResponse
     {
         try {

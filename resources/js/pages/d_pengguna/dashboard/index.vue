@@ -3,14 +3,14 @@
       <div class="text">
         <h1>
           Halo <br />
-          <span>Cepat & Terpercaya</span>
+          <!-- <span>Cepat & Terpercaya</span> -->
         </h1>
         <!-- <h1>
           Layanan Pengiriman <br />
           <span>Cepat & Terpercaya</span>
         </h1> -->
         <p class="par">
-          Kami siap mengantarkan paket Anda ke seluruh Indonesia dengan <strong>aman</strong> dan <strong>tepat waktu</strong>.
+          <!-- Kami siap mengantarkan paket Anda ke seluruh Indonesia dengan <strong>aman</strong> dan <strong>tepat waktu</strong>. -->
         </p>
         <!-- <button class="cn">
           <a href="/halaman/kirimpaket.html">Kirim Paket</a>

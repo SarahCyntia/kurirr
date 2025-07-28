@@ -577,16 +577,13 @@ const url = computed(() => {
   //   params.append("status[]", status);
   // });
 
-  params.append('status_pembayaran', 'settlement');
-
   return `/input?${params.toString()}`;
 });
 
 
 // Untuk reload data
 const refresh = () => paginateRef.value?.refetch(); const props = defineProps<{ selected: string }>();
-// const emit = defineEmits(["close", "refresh"]);
-const emit = defineEmits(["success", "refresh"]);
+const emit = defineEmits(["close", "refresh"]);
 
 const formData = ref<any>({});
 const isLoading = ref(false);

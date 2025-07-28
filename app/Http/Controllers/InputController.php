@@ -245,6 +245,10 @@ class InputController extends Controller
                 // Jika parameter 'status' ada, filter berdasarkan status tersebut
                 $query->where('status', $status);
             })
+            ->when($request->status_pembayaran, function ($query, $status_pembayaran) {
+                // Jika parameter 'status_pembayaran' ada, filter berdasarkan status_pembayaran tersebut
+                $query->where('status_pembayaran', $status_pembayaran);
+            })
             // ->when($request->has('exclude_status'), function ($query) use ($request) {
             //     // Jika parameter 'exclude_status' ada, ambil data yang status-nya bukan nilai itu
             //     $query->where('status', '!=', $request->exclude_status);
@@ -406,6 +410,7 @@ class InputController extends Controller
 
     // Tambahkan riwayat otomatis
     $input->riwayat()->create([
+        'kurir_id' => $kurir->id,
         'deskripsi' => 'Paket diambil kurir ' . $kurir->user->name,
     ]);
 

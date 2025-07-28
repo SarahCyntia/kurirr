@@ -131,10 +131,10 @@ const MainMenuConfig: Array<MenuItem> = [
             //     keenthemesIcon: "bi bi-cart",
             // },
             {
-                heading: "Pengiriman",
+                heading: "Gudang",
                 route: "/dashboard/pengiriman",
                 name: "pengiriman",
-                keenthemesIcon: "bi bi-truck",
+                keenthemesIcon: "bi bi-house-fill",
             },
             {
                 heading: "cek resi",

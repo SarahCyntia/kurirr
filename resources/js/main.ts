@@ -113,27 +113,27 @@ app.directive("tooltip", (el) => {
 
 app.mount("#app");
 
-let cssRule =
-    "display:block;width:200px;border-radius: 3px 0 0 3px;padding:3px 15px;background:#108bc3;color:#FFF;font-size: 30px;font-family:Arial, Helvetica, sans-seriffont-weight: bold;";
-let cssRule2 =
-    "display:block;border-radius: 0 3px 3px 0;padding:3px 15px;background:#fff;color:#666;font-size: 30px;font-family:Arial, Helvetica, sans-serif;";
-console.log(
-    "%cMCFLYON" + "%cSystem, Apps & Website Development",
-    cssRule,
-    cssRule2
-);
+// let cssRule =
+//     "display:block;width:200px;border-radius: 3px 0 0 3px;padding:3px 15px;background:#108bc3;color:#FFF;font-size: 30px;font-family:Arial, Helvetica, sans-seriffont-weight: bold;";
+// let cssRule2 =
+//     "display:block;border-radius: 0 3px 3px 0;padding:3px 15px;background:#fff;color:#666;font-size: 30px;font-family:Arial, Helvetica, sans-serif;";
+// console.log(
+//     "%cMCFLYON" + "%cSystem, Apps & Website Development",
+//     cssRule,
+//     cssRule2
+// );
 
-cssRule =
-    "border-radius: 3px 0 0 3px;padding:3px 15px;background:#35495e;color:#fff;font-size: 12px;font-weight: bold;";
-cssRule2 =
-    "border-radius:0px;padding:3px 0px;background:#35495e;color:#FF5722;padding-left:0px;font-size: 12px;font-weight: bold;";
-const cssRule3 =
-    "border-radius: 0 3px 3px 0;padding:3px 15px;background:#35495e;color:#108bc3;font-size: 12px;font-weight: bold;";
-console.log(
-    "%cThis System Development by Mcflyon Teknologi Indonesia visit" +
-        "%c@" +
-        "%chttps://www.mcflyon.co.id",
-    cssRule,
-    cssRule2,
-    cssRule3
-);
+// cssRule =
+//     "border-radius: 3px 0 0 3px;padding:3px 15px;background:#35495e;color:#fff;font-size: 12px;font-weight: bold;";
+// cssRule2 =
+//     "border-radius:0px;padding:3px 0px;background:#35495e;color:#FF5722;padding-left:0px;font-size: 12px;font-weight: bold;";
+// const cssRule3 =
+//     "border-radius: 0 3px 3px 0;padding:3px 15px;background:#35495e;color:#108bc3;font-size: 12px;font-weight: bold;";
+// console.log(
+//     "%cThis System Development by Mcflyon Teknologi Indonesia visit" +
+//         "%c@" +
+//         "%chttps://www.mcflyon.co.id",
+//     cssRule,
+//     cssRule2,
+//     cssRule3
+// );

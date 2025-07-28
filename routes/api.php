@@ -328,5 +328,6 @@ Route::prefix('message')->group(function () {
 
         // Route::post('/input/{id}/claim', [OrderanController::class, 'claim']);
 
+// Route::get('/provinsi', [App\Http\Controllers\WilayahController::class, 'getProvinsi']);
 
 });

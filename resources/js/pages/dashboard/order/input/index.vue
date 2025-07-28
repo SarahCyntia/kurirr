@@ -112,6 +112,9 @@ const redirectToPayment = async (id: number) => {
                     transaction_status: result.transaction_status,
                     payment_type: result.payment_type
                 });
+                // Swal.fire({ icon: 'success', title: 'Pembayaran Berhasil' }).then(() => {
+                //   refresh();
+                //   });
                 Swal.fire({ icon: 'success', title: 'Pembayaran Berhasil' }).then(
                     refresh()
                 );

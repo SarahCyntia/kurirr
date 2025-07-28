@@ -28,7 +28,7 @@ class Riwayat extends Model
     }
     public function kurir()
     {
-        return $this->belongsTo(Kurir::class);
+        return $this->belongsTo(Kurir::class, 'id');
     }
 }
 

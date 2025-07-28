@@ -148,30 +148,6 @@ const showRincians = (data: Input) => {
   });
 };
 
-// const masukGudang = async (data: Input) => {
-//   const { isConfirmed } = await Swal.fire({
-//     title: "Konfirmasi",
-//     text: `Apakah Anda yakin ingin memasukkan paket ke gudang?`,
-//     icon: "question",
-//     showCancelButton: true,
-//     confirmButtonText: "Ya, Masukkan",
-//   });
-
-//   if (isConfirmed) {
-//     try {
-//       await axios.post(`/gudang/masuk`, {
-//         input_id: data.id,
-//         deskripsi: "Paket masuk gudang",
-//       });
-
-//       Swal.fire("Berhasil", "Paket berhasil dimasukkan ke gudang.", "success");
-//       refresh();
-//     } catch (error) {
-//       Swal.fire("Gagal", "Terjadi kesalahan saat menyimpan.", "error");
-//     }
-//   }
-// };
-
 const keluarGudang = async (data: Input) => {
   const { isConfirmed } = await Swal.fire({
     title: "Konfirmasi",
@@ -188,13 +164,39 @@ const keluarGudang = async (data: Input) => {
         deskripsi: "Paket keluar dari gudang",
       });
 
-      Swal.fire("Berhasil", "Paket berhasil dikeluarkan dari gudang.", "success");
-      refresh();
+      await Swal.fire("Berhasil", "Paket berhasil dikeluarkan dari gudang.", "success");
+
+      // ✅ Tambahkan `await` supaya refetch selesai dulu
+      await refresh();
     } catch (error) {
       Swal.fire("Gagal", "Terjadi kesalahan saat menyimpan.", "error");
     }
   }
 };
+
+// const keluarGudang = async (data: Input) => {
+//   const { isConfirmed } = await Swal.fire({
+//     title: "Konfirmasi",
+//     text: `Apakah Anda yakin ingin mengeluarkan paket dari gudang?`,
+//     icon: "warning",
+//     showCancelButton: true,
+//     confirmButtonText: "Ya, Keluarkan",
+//   });
+
+//   if (isConfirmed) {
+//     try {
+//       await axios.post(`/gudang/keluar`, {
+//         input_id: data.id,
+//         deskripsi: "Paket keluar dari gudang",
+//       });
+
+//       Swal.fire("Berhasil", "Paket berhasil dikeluarkan dari gudang.", "success");
+//       refresh();
+//     } catch (error) {
+//       Swal.fire("Gagal", "Terjadi kesalahan saat menyimpan.", "error");
+//     }
+//   }
+// };
 
 // Kolom tabel
 const columns = [
@@ -363,7 +365,8 @@ const submit = async () => {
 
 // Untuk reload data
 const refresh = () => paginateRef.value?.refetch(); const props = defineProps<{ selected: string }>();
-const emit = defineEmits(["close", "refresh"]);
+// const emit = defineEmits(["close", "refresh"]);
+const emit = defineEmits(["success", "refresh"]);
 
 const formData = ref<any>({});
 const isLoading = ref(false);

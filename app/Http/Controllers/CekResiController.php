@@ -12,11 +12,11 @@ class CekResiController extends Controller
 {
     $request->validate([
         'no_resi' => 'required|string',
-        'ekspedisi' => 'required|string',
+        'ekspedisi' => 'nullable|string',
     ]);
 
     $data = Input::where('no_resi', $request->no_resi)
-        ->where('ekspedisi', $request->ekspedisi)
+        // ->where('ekspedisi', $request->ekspedisi)
         ->with('riwayat')
         ->first();
 

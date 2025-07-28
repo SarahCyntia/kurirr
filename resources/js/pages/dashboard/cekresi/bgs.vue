@@ -31,30 +31,26 @@ const formatDate = (timestamp?: string) => {
 
 const hideMap = ref(false);
 
-const activeStep = ref(0); // default = 0 (drop off)
-
-// Fungsi update berdasarkan status
 const updateActiveStep = (status: string) => {
   const statusLower = status.toLowerCase();
 
   if (statusLower === "menunggu") {
-    activeStep.value = 0;
+    activeStep.result = 0;
   } else if (
     statusLower === "dalam proses" ||
     statusLower === "diproses" ||
     statusLower === "masuk gudang" ||
     statusLower === "keluar gudang"
   ) {
-    activeStep.value = 1;
+    activeStep.result = 1;
   } else if (statusLower === "dikirim") {
-    activeStep.value = 2;
+    activeStep.result = 2;
   } else if (statusLower === "selesai" || statusLower === "terkirim") {
-    activeStep.value = 3;
+    activeStep.result = 3;
   } else {
-    activeStep.value = 0; // fallback default
+    activeStep.result = 0; // default
   }
 };
-
 
 // Fungsi cari resi
 const cariResi = async () => {
@@ -76,9 +72,10 @@ const cariResi = async () => {
       },
     });
     result.value = response.data.data;
-    
-    updateActiveStep(result.value?.status || "");
 
+    if (result.status) {
+      updateActiveStep(result.status);
+    }
     const ratingKey = `rating_${result.value?.no_resi}`;
     isRatingSubmitted.value = localStorage.getItem(ratingKey) === 'submitted';
   } catch (err: any) {
@@ -145,47 +142,54 @@ const riwayat = (data: any) => {
       <div v-if="error" class="alert alert-danger">{{ error }}</div>
 
       <div class="tracking-map-wrapper text-center mb-5" v-if="!hideMap">
-        <img src="/storage/photo/images1.png" alt="Tracking Map" class="map-image" />
-      </div>
+  <img src="/storage/photo/images1.png" alt="Tracking Map" class="map-image" />
+</div>
 
-      <!-- Progress Status Visual -->
-      <div v-if="result" class="tracking-steps my-5 d-flex justify-between">
-        <!-- Status Saat Ini -->
-        <div v-for="(step, index) in steps" :key="step.label" class="step text-center"
-        :class="{ active: index <= activeStep }">
-        <div v-if="index !== steps.length - 1" class="step-line"></div>
-        <div class="icon-wrapper">
-          <img :src="step.icon" alt="icon" width="60" />
-        </div>
-        <div class="label fw-bold mt-2">{{ step.label }}</div>
-        <div v-if="index < steps.length - 1" class="line"></div>
+  <!-- Progress Status Visual -->
+  <div v-if="result" class="tracking-steps my-5 d-flex justify-between">
+    <div
+      v-for="(step, index) in steps"
+      :key="step.label"
+      class="step text-center"
+      :class="{ active: index <= activeStep }"
+    >
+     <div v-if="index !== steps.length - 1" class="step-line"></div>
+      <div class="icon-wrapper">
+        <img :src="step.icon" alt="icon" width="60" />
       </div>
+      <div class="label fw-bold mt-2">{{ step.label }}</div>
+      <div v-if="index < steps.length - 1" class="line"></div>
     </div>
-    
+  </div>
+
 
       <div v-if="result" class="table-responsive">
         <table class="table table-bordered">
           <tbody>
-            <!-- <h2 class="h2">Status Pengiriman</h2>
+            <h2 class="h2">Status Pengiriman</h2>
             <table class="table table-bordered">
               <tr>
-                <td class="status-text"> {{ result.keterangan_status }}</td> bukan yg ini
+                <!-- <td class="status-text"> {{ result.keterangan_status }}</td> -->
                 <td class="status-text"> {{ result.status }}</td>
               </tr>
-            </table> -->
+            </table>
 
             <!-- Riwayat Pengiriman Timeline -->
             <h2 class="h2">Riwayat Pengiriman</h2>
-            <div v-if="parsedRiwayat.length > 0" class="timeline">
-              <div v-for="(item, index) in parsedRiwayat" :key="index" class="timeline-item">
-                <div class="timeline-dot" :class="{ 'done': index === 0 }"></div>
-                <div class="timeline-content">
-                  <div class="timeline-date">{{ formatDate(item.created_at) }}</div>
-                  <div class="timeline-description">{{ item.deskripsi }}</div>
-                </div>
-              </div>
-            </div>
-            <div v-else class="riwayat-text">Belum ada riwayat pengiriman.</div>
+<div v-if="parsedRiwayat.length > 0" class="timeline">
+  <div
+    v-for="(item, index) in parsedRiwayat"
+    :key="index"
+    class="timeline-item"
+  >
+    <div class="timeline-dot" :class="{ 'done': index === 0 }"></div>
+    <div class="timeline-content">
+      <div class="timeline-date">{{ formatDate(item.created_at) }}</div>
+      <div class="timeline-description">{{ item.deskripsi }}</div>
+    </div>
+  </div>
+</div>
+<div v-else class="riwayat-text">Belum ada riwayat pengiriman.</div>
 
             <!-- <h2 class="h2">Riwayat Pengiriman</h2>
             <div class="shipping-history">
@@ -230,6 +234,7 @@ const riwayat = (data: any) => {
 
 </template>
 <style scoped>
+
 .timeline {
   position: relative;
   margin: 2rem auto;
@@ -255,9 +260,9 @@ const riwayat = (data: any) => {
   z-index: 1;
 }
 
-/* .timeline-dot.done {
-      background-color: #f5717c;
-    } */
+.timeline-dot.done {
+  background-color: #f5717c;
+}
 
 .timeline-content {
   padding: 5px 10px;
@@ -277,6 +282,8 @@ const riwayat = (data: any) => {
   font-size: 1.1rem;
   color: #444;
 }
+
+
 
 .card {
   max-width: 1000px;
@@ -510,7 +517,6 @@ const riwayat = (data: any) => {
   background-color: #f5717c;
   z-index: -1;
 }
-
 .tracking-steps {
   display: flex;
   align-items: center;
@@ -533,16 +539,13 @@ const riwayat = (data: any) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: transparent;
-  /* semua icon transparan */
+  background-color: transparent; /* semua icon transparan */
   transition: all 0.3s ease;
 }
 
 .step.active .icon-wrapper {
-  border-color: #f08080;
-  /* warna tetap sama jika aktif */
-  border-style: dashed;
-  /* tetap dashed */
+  border-color: #f08080; /* warna tetap sama jika aktif */
+  border-style: dashed;  /* tetap dashed */
   background-color: transparent;
 }
 
@@ -554,24 +557,31 @@ const riwayat = (data: any) => {
 
 .line {
   position: absolute;
-  top: 40px;
-  /* tengah icon-wrapper */
+  top: 40px; /* tengah icon-wrapper */
   left: 100%;
   width: 100%;
   height: 3px;
   background-color: #f08080;
   z-index: -1;
 }
-
 .map-image {
-  width: 100%;
-  /* Buat full container */
-  max-width: 600px;
-  /* Maksimum ukuran yang diinginkan */
-  height: auto;
-  /* Biar tidak gepeng */
-  margin: 0 auto;
-  /* Tengah jika width dibatasi */
+  width: 100%;         /* Buat full container */
+  max-width: 600px;    /* Maksimum ukuran yang diinginkan */
+  height: auto;        /* Biar tidak gepeng */
+  margin: 0 auto;      /* Tengah jika width dibatasi */
   display: block;
 }
+
+/* .step.active .icon-wrapper {
+  border: 3px solid #f44336;
+  background-color: #fff;
+}
+.step.active img {
+  filter: none; 
+}
+.step:not(.active) img {
+  filter: grayscale(100%);
+} */
+
+
 </style>
