@@ -389,7 +389,7 @@ const columns = [
     },
   }),
   
-      column.display({
+    column.display({
     id: "order",
     header: "Detail Order",
     cell: (cell) => {
