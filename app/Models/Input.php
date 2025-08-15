@@ -35,8 +35,10 @@ class Input extends Model
         'waktu',
         'asal_provinsi_id',
         'asal_kota_id',
+        'asal_kecamatan_id',
         'tujuan_provinsi_id',
         'tujuan_kota_id',
+        'tujuan_kecamatan_id',
         'ulasan',
         'rating',
         'status_pembayaran',
@@ -51,6 +53,10 @@ class Input extends Model
     {
         return $this->belongsTo(City::class, 'asal_kota_id');
     }
+    public function asalKecamatan()
+    {
+        return $this->belongsTo(City::class, 'asal_kecamatan_id');
+    }
 
     public function tujuanProvinsi()
     {
@@ -60,6 +66,10 @@ class Input extends Model
     public function tujuanKota()
     {
         return $this->belongsTo(City::class, 'tujuan_kota_id');
+    }
+    public function tujuanKecamatan()
+    {
+        return $this->belongsTo(City::class, 'tujuan_kecamatan_id');
     }
 
     // Input.php

@@ -166,13 +166,13 @@ const riwayat = (data: any) => {
       <div v-if="result" class="table-responsive">
         <table class="table table-bordered">
           <tbody>
-            <!-- <h2 class="h2">Status Pengiriman</h2>
+            <h2 class="h2">Status Pengiriman</h2>
             <table class="table table-bordered">
               <tr>
-                <td class="status-text"> {{ result.keterangan_status }}</td> bukan yg ini
+                <!-- <td class="status-text"> {{ result.keterangan_status }}</td> bukan yg ini -->
                 <td class="status-text"> {{ result.status }}</td>
               </tr>
-            </table> -->
+            </table>
 
             <!-- Riwayat Pengiriman Timeline -->
             <h2 class="h2">Riwayat Pengiriman</h2>
@@ -391,7 +391,7 @@ const riwayat = (data: any) => {
   text-indent: 30px;
   background-color: #fff;
   padding: 0.75rem 1rem;
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   text-transform: uppercase;
   /* border-radius: 5px; */
 }

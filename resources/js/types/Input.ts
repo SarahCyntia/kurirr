@@ -23,8 +23,10 @@ export interface Input {
 
     asal_provinsi_id: number;
     asal_kota_id: number;
+    asal_kecamatan_id: number;
     tujuan_provinsi_id: number;
     tujuan_kota_id: number;
+    tujuan_kecamatan_id: number;
 
     created_at: string
     updated_at: string

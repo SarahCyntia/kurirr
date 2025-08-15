@@ -12,7 +12,7 @@ class CheckOngkirController extends Controller
     // Ambil semua provinsi
     public function getProvinces()
     {
-        $provinces = Province::pluck('name', 'province_id');
+        $provinces = Province::pluck('name', 'id');
         return response()->json($provinces);
     }
 

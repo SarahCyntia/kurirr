@@ -233,156 +233,162 @@ const columns = [
     }, row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1))
   }),
 
-// column.accessor("id", {
-//   header: "Order",
-//   cell: ({ row }) => {
-//     const id = row.original.id;
-//     const isChanged = changedButtons.value.has(id);
-//     const label = isChanged ? "Tambah" : "Antar";
+  // column.accessor("id", {
+  //   header: "Order",
+  //   cell: ({ row }) => {
+  //     const id = row.original.id;
+  //     const isChanged = changedButtons.value.has(id);
+  //     const label = isChanged ? "Tambah" : "Antar";
 
-//     if (row.original.status === "selesai") {
-//       return h("span", { class: "text-success fw-bold" }, "✓");
-//     }
+  //     if (row.original.status === "selesai") {
+  //       return h("span", { class: "text-success fw-bold" }, "✓");
+  //     }
 
-//     return h("button", {
-//       class: "btn btn-sm btn-info",
-//       onClick: async () => {
-//         selected.value = id;
+  //     return h("button", {
+  //       class: "btn btn-sm btn-info",
+  //       onClick: async () => {
+  //         selected.value = id;
 
-//         if (isChanged) {
-//           openForm.value = true;
-//         } else {
-//           const result = await Swal.fire({
-//             title: "Ambil Orderan Ini?",
-//             text: "Yakin ingin mengambil orderan ini untuk dikirim?",
-//             icon: "question",
-//             showCancelButton: true,
-//             confirmButtonText: "Ya",
-//             cancelButtonText: "Batal"
-//           });
+  //         if (isChanged) {
+  //           openForm.value = true;
+  //         } else {
+  //           const result = await Swal.fire({
+  //             title: "Ambil Orderan Ini?",
+  //             text: "Yakin ingin mengambil orderan ini untuk dikirim?",
+  //             icon: "question",
+  //             showCancelButton: true,
+  //             confirmButtonText: "Ya",
+  //             cancelButtonText: "Batal"
+  //           });
 
-//           if (result.isConfirmed) {
-//             try {
-//               const { data } = await axios.post(`/input/${id}/claim`);
-//               if (data.success) {
-//                 await Swal.fire("Orderan Diambil", data.message, "success");
-//                 changedButtons.value.add(id);
-//                 refresh(); // ✅ refresh supaya data hilang dari kurir lain
-//               } else {
-//                 await Swal.fire("Gagal", data.message, "error");
-//               }
-//             } catch (error) {
-//               await Swal.fire("Error", "Gagal mengambil orderan", "error");
-//             }
-//           }
-//         }
-//       }
-//     }, label);
-//   }
-// }),
+  //           if (result.isConfirmed) {
+  //             try {
+  //               const { data } = await axios.post(`/input/${id}/claim`);
+  //               if (data.success) {
+  //                 await Swal.fire("Orderan Diambil", data.message, "success");
+  //                 changedButtons.value.add(id);
+  //                 refresh(); // ✅ refresh supaya data hilang dari kurir lain
+  //               } else {
+  //                 await Swal.fire("Gagal", data.message, "error");
+  //               }
+  //             } catch (error) {
+  //               await Swal.fire("Error", "Gagal mengambil orderan", "error");
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }, label);
+  //   }
+  // }),
 
 
-column.accessor("id", {
-  header: "Order",
-  cell: ({ row }) => {
-    const id = row.original.id;
-    const status = row.original.status;
+  column.accessor("id", {
+    header: "Order",
+    cell: ({ row }) => {
+      const id = row.original.id;
+      const status = row.original.status;
 
-    // Jika status selesai → tampilkan centang
-    if (status === "selesai") {
-      return h("span", { class: "text-success fw-bold" }, "✓");
-    }
+      // Jika status selesai → tampilkan centang
+      if (status === "selesai") {
+        return h("span", { class: "text-success fw-bold" }, "✓");
+      }
 
-    // Jika status menunggu → tombol Antar
-    if (status === "menunggu") {
+      // Jika status menunggu → tombol Antar
+      if (status === "menunggu") {
+        return h(
+          "button",
+          {
+            class: "btn btn-sm btn-primary",
+            async onClick() {
+              const confirm = await Swal.fire({
+                title: "Ambil Orderan Ini?",
+                text: "Yakin ingin mengambil orderan ini untuk dikirim?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Ya",
+                cancelButtonText: "Batal"
+              });
+
+              if (!confirm.isConfirmed) return;
+
+              try {
+                // ✅ 1. Klaim kurir
+                const claimRes = await axios.post(`/input/${id}/claim`);
+                console.log("CLAIM RESULT:", claimRes.data);
+
+                if (!claimRes.data.success) {
+                  return Swal.fire("Gagal", claimRes.data.message, "error");
+                }
+                // const claimRes = await axios.post(`/input/${id}/claim`);
+                // if (!claimRes.data.success) {
+                //   return Swal.fire("Gagal", claimRes.data.message, "error");
+                // }
+
+                // ✅ 2. Update status jadi "dalam proses"
+                await axios.put(`/ordered/${id}`, {
+                  status: "dalam proses",
+                });
+
+                // // ✅ 3. Tambah riwayat
+                // await axios.post("/riwayat", {
+                //   input_id: id,
+                //   deskripsi: "Paket diambil kurir"
+                // });
+
+                // ✅ 4. Refresh tabel
+                await Swal.fire("Berhasil", "Orderan berhasil diambil", "success");
+                refresh();
+              } catch (err) {
+                await Swal.fire("Error", "Terjadi kesalahan saat memproses", "error");
+              }
+            }
+          },
+          "Antar"
+        );
+      }
+
+      // Selain itu (status sudah "dalam proses", dst) → tombol Tambah
       return h(
         "button",
         {
-          class: "btn btn-sm btn-primary",
-          async onClick() {
-            const confirm = await Swal.fire({
-              title: "Ambil Orderan Ini?",
-              text: "Yakin ingin mengambil orderan ini untuk dikirim?",
-              icon: "question",
-              showCancelButton: true,
-              confirmButtonText: "Ya",
-              cancelButtonText: "Batal"
-            });
-
-            if (!confirm.isConfirmed) return;
-
-            try {
-              // ✅ 1. Klaim kurir
-              const claimRes = await axios.post(`/input/${id}/claim`);
-              if (!claimRes.data.success) {
-                return Swal.fire("Gagal", claimRes.data.message, "error");
-              }
-
-              // ✅ 2. Update status jadi "dalam proses"
-              await axios.put(`/ordered/${id}`, {
-                status: "dalam proses",
-              });
-
-              // // ✅ 3. Tambah riwayat
-              // await axios.post("/riwayat", {
-              //   input_id: id,
-              //   deskripsi: "Paket diambil kurir"
-              // });
-
-              // ✅ 4. Refresh tabel
-              await Swal.fire("Berhasil", "Orderan berhasil diambil", "success");
-              refresh();
-            } catch (err) {
-              await Swal.fire("Error", "Terjadi kesalahan saat memproses", "error");
-            }
+          class: "btn btn-sm btn-success",
+          onClick: () => {
+            selected.value = row.original.id;
+            openForm.value = true;
           }
         },
-        "Antar"
+        "Tambah"
       );
     }
+  }),
 
-    // Selain itu (status sudah "dalam proses", dst) → tombol Tambah
-    return h(
-      "button",
-      {
-        class: "btn btn-sm btn-success",
-        onClick: () => {
-          selected.value = row.original.id;
-          openForm.value = true;
-        }
-      },
-      "Tambah"
-    );
-  }
-}),
+  column.display({
+    id: "aksiGudang",
+    header: "Aksi Gudang",
+    cell: ({ row }) => {
+      const status = row.original.status;
 
-column.display({
-  id: "aksiGudang",
-  header: "Aksi Gudang",
-  cell: ({ row }) => {
-    const status = row.original.status;
+      if (status === "masuk gudang") {
+        return h("span", { class: "badge bg-success" }, "Sudah Masuk");
+      }
 
-    if (status === "masuk gudang") {
-      return h("span", { class: "badge bg-success" }, "Sudah Masuk");
-    }
+      // ❌ Jika status masih "menunggu" → tombol disable
+      if (status === "menunggu" || status === "selesai") {
+        return h("button", {
+          class: "btn btn-sm btn-secondary",
+          disabled: true,
+          title: "Status harus lebih dari 'Menunggu'",
+          style: "cursor: not-allowed"
+        }, "Masuk Gudang");
+      }
 
-    // ❌ Jika status masih "menunggu" → tombol disable
-    if (status === "menunggu"|| status === "selesai") {
+      // ✅ Selain itu (dalam proses, keluar gudang, dst) → tombol aktif
       return h("button", {
-        class: "btn btn-sm btn-secondary",
-        disabled: true,
-        title: "Status harus lebih dari 'Menunggu'",
-        style: "cursor: not-allowed"
+        class: "btn btn-sm btn-success",
+        onClick: () => masukGudang(row.original)
       }, "Masuk Gudang");
     }
-
-    // ✅ Selain itu (dalam proses, keluar gudang, dst) → tombol aktif
-    return h("button", {
-      class: "btn btn-sm btn-success",
-      onClick: () => masukGudang(row.original)
-    }, "Masuk Gudang");
-  }
-})
+  })
 
   // column.display({
   //   id: "aksiGudang",
@@ -393,13 +399,13 @@ column.display({
 
 const url = computed(() => {
   const params = new URLSearchParams();
-  
+
   // Status yang tidak ditampilkan
   ['masuk gudang', 'keluar gudang', 'diproses', 'dikirim', 'selesai'].forEach(status => {
-  params.append('exclude_status[]', status);
-  params.append('status_pembayaran', 'settlement');
+    params.append('exclude_status[]', status);
+    params.append('status_pembayaran', 'settlement');
 
-});
+  });
 
 
   // Tambahkan filter kurir_id kosong (belum diambil)
@@ -437,7 +443,7 @@ watch(openForm, (val) => {
     <div class="card-header align-items-center">
       <h2 class="mb-0">Orderan</h2>
     </div>
-    
+
     <paginate ref="paginateRef" id="table-inputorder" :url="url" :columns="columns" />
   </div>
 </template>

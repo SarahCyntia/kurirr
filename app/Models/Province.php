@@ -7,5 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Province extends Model
 {
-   protected $guarded = [];
+   Protected $guarded = [];
+
+    protected $table = 'provinces';
+
+    protected $fillable = [
+        'id',
+        'name',
+    ];
 }

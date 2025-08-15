@@ -106,25 +106,58 @@ class InputController extends Controller
         return response()->json($cities);
     }
 
-
     public function hitungOngkir(Request $request)
-    {
-        $response = Http::withHeaders([
-            'key' => config('services.rajaongkir.key')
-        ])->post('https://api.rajaongkir.com/starter/cost', [
-                    'origin' => $request->origin,
-                    'destination' => $request->destination,
-                    'weight' => $request->weight, // dalam gram
-                    'courier' => $request->courier, // jne / tiki / pos
-                ]);
+        {
+            Log::info('Check Ongkir', [
+                'origin' => $request->input('origin'),
+                'destination' => $request->input('destination'),
+                'weight' => $request->input('weight'),
+                'courier' => $request->input('courier'),
+            ]);
 
-        Log::info("Cost", $response['rajaongkir']);
+            //tambahkan ini
+            $response = Http::asForm()->withHeaders([
+                'key' => '2503fca740f27ebbbba89fa405755bfc', // Ambil dari config/ENV
+                'Accept' => 'application/json',
+            ])->post('https://rajaongkir.komerce.id/api/v1/calculate/domestic-cost', [
+            // ])->post('https://rajaongkir.komerce.id/api/v1/calculate/district/domestic-cost', [
+                'origin'      => $request->input('origin'),       // ID kecamatan asal  
+                'destination' => $request->input('destination'),  // ID kecamatan tujuan
+                'weight'      => $request->input('weight'),       // Berat gram
+                'courier'     => $request->input('courier'),      // jne, tiki, pos
+                'price'       => "lowest", // lowest / highest, default lowest 
+            ]);
 
-        $cost = $response['rajaongkir']['results'][0]['costs'];
+            $data = $response->json();
 
-        return response()->json($cost);
-    }
+            if ($response->successful() && isset($data['data'])) {
+                return response()->json($data['data'], 200);
+            }
 
+            return response()->json([
+                'error' => 'Gagal mengambil data ongkir',
+                'response' => $data
+            ], 500);
+        }
+    // public function hitungOngkir(Request $request)
+    // {
+    //     $response = Http::asForm()->withHeaders([
+    //         'key' => config('services.rajaongkir.key')
+    //     ])->post('https://api.rajaongkir.com/starter/cost', [
+    //                 'origin' => $request->origin,
+    //                 'destination' => $request->destination,
+    //                 'weight' => $request->weight, // dalam gram
+    //                 'courier' => $request->courier, // jne / tiki / pos
+    //             ]);
+
+    //     Log::info("Cost", $response['rajaongkir']);
+
+    //     $cost = $response['rajaongkir']['results'][0]['costs'];
+
+    //     return response()->json($cost);
+    // }
+
+    
 
     public function __construct()
     {
@@ -141,7 +174,7 @@ class InputController extends Controller
             ? auth()->user()->kurir->id
             : null;
 
-        $data = Input::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'riwayat'])
+        $data = Input::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'asalKecamatan', 'tujuanKecamatan', 'riwayat'])
             ->when($request->search, function (Builder $query, string $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('nama_pengirim', 'like', "%$search%")
@@ -426,11 +459,19 @@ class InputController extends Controller
     
     public function get($id)
     {
-        $input = Input::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'pengguna'])
+        $input = Input::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'pengguna', 'asalKecamatan', 'tujuanKecamatan'])
             ->findOrFail($id);
 
         return response()->json($input);
     }
+//     public function get($id)
+//     {
+//         $transaksii = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'asalKecamatan', 'tujuanKecamatan'])->with('pengiriman.kurir.user')
+//         // $transaksii = Transaksii::with(['asalProvinsi', 'asalKota', 'tujuanProvinsi', 'tujuanKota', 'pengguna'])
+//             ->findOrFail($id);
+
+//         return response()->json($transaksii);
+//     }
 
 
     public function store(Request $request, $id = null)
@@ -439,12 +480,14 @@ class InputController extends Controller
             'nama_pengirim' => 'required|string|max:255',
             'tujuan_provinsi_id' => 'required|exists:provinces,id',
             'tujuan_kota_id' => 'required|exists:cities,id',
+            'tujuan_kecamatan_id' => 'required|exists:districts,id',
             'alamat_pengirim' => 'required|string|max:255',
             'no_telp_pengirim' => 'required|string|max:20',
 
             'nama_penerima' => 'required|string|max:255',
             'asal_provinsi_id' => 'required|exists:provinces,id',
             'asal_kota_id' => 'required|exists:cities,id',
+            'asal_kecamatan_id' => 'required|exists:districts,id',
             'alamat_penerima' => 'required|string|max:255',
             'no_telp_penerima' => 'required|string|max:20',
             'jenis_barang' => 'required|string|max:255',
@@ -492,6 +535,7 @@ class InputController extends Controller
             'riwayat' => $riwayat,
         ]);
     }
+    
 
     public function update(Request $request, $id)
     {
