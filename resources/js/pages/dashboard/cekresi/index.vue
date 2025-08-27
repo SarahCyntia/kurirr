@@ -230,7 +230,104 @@ const riwayat = (data: any) => {
 
 </template>
 <style scoped>
+
 .timeline {
+  position: relative;
+  margin: 2rem auto;
+  padding-left: 40px;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 2rem;
+  padding-left: 25px;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Garis penghubung di antara item */
+.timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: 15px; /* Mulai dari bawah lingkaran */
+  left: -9px; /* Posisi tengah lingkaran */
+  width: 3px;
+  height: 3.5rem; /* Tinggi tetap untuk jarak antar item */
+  background-color: #f5717c;
+  z-index: 1;
+}
+
+.timeline-dot {
+  position: absolute;
+  top: 5px;
+  left: -17px; /* Posisi tengah untuk lingkaran 16px */
+  width: 16px;
+  height: 16px;
+  background-color: #fff;
+  border: 3px solid #f5717c;
+  border-radius: 50%;
+  z-index: 10;
+}
+
+.timeline-content {
+  padding: 12px 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.timeline-date {
+  font-weight: bold;
+  color: #8d212e;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.timeline-description {
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.4;
+}
+
+/* Responsive untuk layar kecil */
+@media (max-width: 768px) {
+  .timeline {
+    padding-left: 30px;
+  }
+  
+  .timeline-item {
+    padding-left: 20px;
+  }
+  
+  .timeline-item:not(:last-child)::before {
+    left: -7px;
+  }
+  
+  .timeline-dot {
+    left: -15px;
+  }
+  
+  .timeline-content {
+    padding: 10px 12px;
+    min-height: 50px;
+  }
+  
+  .timeline-date {
+    font-size: 0.85rem;
+  }
+  
+  .timeline-description {
+    font-size: 0.9rem;
+  }
+}
+/* .timeline {
   position: relative;
   margin: 2rem auto;
   padding-left: 30px;
@@ -253,13 +350,13 @@ const riwayat = (data: any) => {
   border: 4px solid #f5717c;
   border-radius: 50%;
   z-index: 1;
-}
+} */
 
 /* .timeline-dot.done {
       background-color: #f5717c;
     } */
 
-.timeline-content {
+/* .timeline-content {
   padding: 5px 10px;
   background-color: #fff;
   border-radius: 10px;
@@ -276,7 +373,7 @@ const riwayat = (data: any) => {
   margin-top: 5px;
   font-size: 1.1rem;
   color: #444;
-}
+} */
 
 .card {
   max-width: 1000px;
@@ -574,4 +671,5 @@ const riwayat = (data: any) => {
   /* Tengah jika width dibatasi */
   display: block;
 }
+
 </style>

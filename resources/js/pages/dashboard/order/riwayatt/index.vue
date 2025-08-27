@@ -5,11 +5,14 @@ import Form from "./form.vue";
 import { createColumnHelper } from "@tanstack/vue-table";
 import Swal from "sweetalert2";
 import type { Input } from "@/types";
+import { useAuth } from '@/composables/useAuth'
 
 const column = createColumnHelper<Input>();
 const paginateRef = ref<any>(null);
 const selected = ref<string>("");
 const openForm = ref<boolean>(false);
+const { user } = useAuth() // Asumsi ada composable untuk user yang login
+
 
 const { delete: deleteInput } = useDelete({
     onSuccess: () => refresh(),
@@ -173,6 +176,9 @@ watch(openForm, (val) => {
     }
     window.scrollTo(0, 0);
 });
+
+
+
 </script>
 
 <template>

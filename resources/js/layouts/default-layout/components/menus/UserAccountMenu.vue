@@ -50,9 +50,9 @@ const signOut = () => {
             confirmButton: "btn fw-semibold btn-light-primary",
             cancelButton: "btn fw-semibold btn-light-danger",
         },
-    }).then((result) => {
+    }).then(async(result) => {
         if (result.isConfirmed) {
-            store.logout();
+            await store.logout();
             Swal.fire({
                 icon: "success",
                 text: "Berhasil keluar",

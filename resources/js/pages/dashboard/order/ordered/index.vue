@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch, nextTick } from "vue";
 import { useDelete } from "@/libs/hooks";
 import Form from "./Form.vue";
 import { createColumnHelper, type Row } from "@tanstack/vue-table";
@@ -101,6 +101,7 @@ const updateStatus = async (row: Row<Input>) => {
 
     // ✅ Jangan ubah row.original langsung → tunggu refresh
     await refresh(); // Pastikan ini await agar data sync sebelum interaksi selanjutnya
+    // await nextTick(); // Tunggu Vue untuk update DOM
   } catch {
     Swal.fire("Gagal", "Tidak bisa ubah status", "error");
   }
@@ -430,7 +431,7 @@ onMounted(async () => {
 
 const props = defineProps<{ selected: string }>();
 // const emit = defineEmits(["close", "refresh"]);
-const emit = defineEmits(["success", "refresh"]);
+// const emit = defineEmits(["success", "refresh"]);
 watch(openForm, (val) => {
   if (!val) selected.value = "";
   window.scrollTo({ top: 0, behavior: "smooth" });

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\City;
+use App\Models\District;
 use App\Models\Province;
 use Illuminate\Http\Request;
 use Kavist\RajaOngkir\Facades\RajaOngkir;
@@ -19,8 +20,14 @@ class CheckOngkirController extends Controller
     // Ambil kota berdasarkan ID provinsi
     public function getCities($province_id)
     {
-        $cities = City::where('province_id', $province_id)->pluck('name', 'city_id');
+        $cities = City::where('province_id', $province_id)->pluck('name', 'id');
+        // $cities = City::where('province_id', $province_id)->pluck('name', 'city_id');
         return response()->json($cities);
+    }
+    public function getDistricts($city_id)
+    {
+        $districts = District::where('city_id', $city_id)->pluck('name', 'id');
+        return response()->json($districts);
     }
 
     // Hitung ongkir berdasarkan input dari Vue

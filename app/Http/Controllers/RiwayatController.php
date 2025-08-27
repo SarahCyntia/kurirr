@@ -11,6 +11,20 @@ use Illuminate\Support\Facades\Log;
 
 class RiwayatController extends Controller
 {
+
+    // public function index(Request $request)
+    // {
+    //     $user = auth()->user();
+
+    //     $data = Input::with('riwayat')
+    //         ->when($user->role === 'kurir', function ($query) use ($user) {
+    //             $query->where('kurir_id', $user->id);
+    //         })
+    //         ->get();
+
+    //     return response()->json($data);
+    // }
+
     // public function store(Request $request, $id)
     // {
     //     $request->validate([
@@ -28,7 +42,8 @@ class RiwayatController extends Controller
     //     return redirect()->back()->with('success', 'Riwayat berhasil ditambahkan.');
     // }
 
-    public function tambahRiwayat(Request $request,Input $id){
+    public function tambahRiwayat(Request $request, Input $id)
+    {
         $request->validate([
             'status' => 'required',
             'riwayat' => 'required'
@@ -37,12 +52,17 @@ class RiwayatController extends Controller
         $id->update([
             'status' => $request->status
         ]);
+        $kurir = auth()->user()->kurir; // kurir yang login
+        
 
-        Log::info($id );
+        Log::info($id);
 
         $data = Riwayat::create([
             'id' => $id->id,
-            'deskripsi' => $request->riwayat
+            // 'id' => $input->id,
+            'deskripsi' => $request->riwayat,
+            'kurir_id'   => $kurir->id,
+
         ]);
 
         return response()->json($data);
@@ -77,19 +97,19 @@ class RiwayatController extends Controller
     }
 
     public function resi()
-{
-    return $this->belongsTo(Input::class, 'no_resi', 'no_resi');
-}
-public function show($no_resi)
-{
-    $input = Input::where('no_resi', $no_resi)->firstOrFail();
-    $riwayat = Riwayat::where('no_resi', $no_resi)->orderBy('created_at')->get();
+    {
+        return $this->belongsTo(Input::class, 'no_resi', 'no_resi');
+    }
+    public function show($no_resi)
+    {
+        $input = Input::where('no_resi', $no_resi)->firstOrFail();
+        $riwayat = Riwayat::where('no_resi', $no_resi)->orderBy('created_at')->get();
 
-    return response()->json([
-        'input' => $input,
-        'riwayat' => $riwayat,
-    ]);
-}
+        return response()->json([
+            'input' => $input,
+            'riwayat' => $riwayat,
+        ]);
+    }
 
 }
 $data = Input::with('riwayat')->get();

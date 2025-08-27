@@ -49,16 +49,22 @@ use App\Http\Controllers\WilayahController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::get('/districts/{cityId}', [RajaOngkirController::class, 'getDistricts']);
+Route::get('/districts', [CheckOngkirController::class, 'getDistricts']);
+Route::get('/provinces', [CheckOngkirController::class, 'getProvinces']);
+Route::get('/cities/{province_id}', [CheckOngkirController::class, 'getCities']);
+Route::post('/ongkir', [CheckOngkirController::class, 'checkOngkir']);
+
 Route::post('/beri-rating', [CekResiController::class, 'store']);
 Route::post('/beri-rating', [InputController::class, 'store']);
 Route::post('/beri-rating', [InputController::class, 'beriRating']); // Sesuaikan nama controller
 
-Route::get('/cek-resi/{nomorResi}', [CekResiController::class, 'cekResi']);
-Route::get('/resi/{nomorResi}', [CekResiController::class, 'show']);
-Route::get('/cek-resi/{noResi}', [CekResiController::class, 'cek']);
-Route::get('/cek-resi/{no_resi}', [CekResiController::class, 'cekResi']);
+// Route::get('/cek-resi/{nomorResi}', [CekResiController::class, 'cekResi']);
+// Route::get('/resi/{nomorResi}', [CekResiController::class, 'show']);
+// Route::get('/cek-resi/{noResi}', [CekResiController::class, 'cek']);
+// Route::get('/cek-resi/{no_resi}', [CekResiController::class, 'cekResi']);
 Route::get('/cek-resi', [CekResiController::class, 'cekResi']);
-Route::post('/cek-resi', [ResiController::class, 'cek'])->withoutMiddleware(['auth']);
+// Route::post('/cek-resi', [ResiController::class, 'cek'])->withoutMiddleware(['auth']);
 Route::get('/cek-resi/{Input}', [OrderedController::class, 'show']);
 
 
@@ -149,9 +155,9 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         // Route::put('/input', [InputController::class, 'update'])->withoutMiddleware('can:input');
         Route::post('/input/stores', [InputController::class, 'storePenilaian']);
         Route::put('/riwayat/store/{id}', [RiwayatController::class, 'tambahRiwayat'])->withoutMiddleware('can:input');
-        Route::get('/provinces', [InputController::class, 'getProvinces']);
+        // Route::get('/provinces', [InputController::class, 'getProvinces']);
         // Route::get('/cities/{provinceId}', [InputController::class, 'getCities']);
-        Route::post('/cost', [InputController::class, 'hitungOngkir']);
+        Route::post('/cost', [InputController::class, 'hitungOngkir'])->withoutMiddleware(['can:input', 'auth', 'verified']);
         Route::get('/Input/{input}', [InputController::class, 'show'])->withoutMiddleware('can:input');
         Route::get('/input/{id}', [InputController::class, 'show'])->name('input.show');
 
@@ -164,7 +170,7 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::post('/input/{id}/oper', [InputController::class, 'operKeKurirLain']);
 
 
-         ;
+        ;
 
     });
 
@@ -197,10 +203,10 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
 
 
         Route::post('/packages/{id}/claim', [InputController::class, 'claimPackage']);
-    Route::post('/packages/{id}/release', [InputController::class, 'releasePackage']);
+        Route::post('/packages/{id}/release', [InputController::class, 'releasePackage']);
     });
-Route::post('/ordered/store', [OrderedController::class, 'store']);
-        Route::get('/ordered/{Input}', [OrderedController::class, 'show']);
+    Route::post('/ordered/store', [OrderedController::class, 'store']);
+    Route::get('/ordered/{Input}', [OrderedController::class, 'show']);
 
 
     Route::apiResource('pengiriman', PengirimanController::class);
@@ -213,23 +219,15 @@ Route::post('/ordered/store', [OrderedController::class, 'store']);
     Route::middleware('auth:sanctum')->get('/laporan-kurir', [LaporanKurirController::class, 'index']);
     Route::get('/ordered', [LaporanKurirController::class, 'get'])->withoutMiddleware('can:ordered');
 
-// lama yg dibawah
+    // lama yg dibawah
     // Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces']);
     // Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
 
-    Route::get('/districts/{cityId}', [RajaOngkirController::class, 'getDistricts']);
     Route::get('/cities/{provinceId}', [RajaOngkirController::class, 'getCities']);
     Route::get('/provinces/{province}/cities', [RajaOngkirController::class, 'getByProvince']);
+
     
-
-    Route::get('/ongkir', 'CheckOngkirController@index');
-    Route::post('/ongkir', 'CheckOngkirController@check_ongkir');
-    Route::get('/cities/{province_id}', 'CheckOngkirController@getCities');
-
-    Route::get('/districts', [CheckOngkirController::class, 'getDistricts']);
-    Route::get('/provinces', [CheckOngkirController::class, 'getProvinces']);
-    Route::get('/cities/{province_id}', [CheckOngkirController::class, 'getCities']);
-    Route::post('/ongkir', [CheckOngkirController::class, 'checkOngkir']);
+    // Route::post('/ongkir', [CheckOngkirController::class, 'checkOngkir'])->withoutMiddleware(['can:ongkir', 'auth', 'verified','json']);
 
 
     Route::get('/cetak-resi/{noResi}', [ResiController::class, 'cetak']);
@@ -253,8 +251,6 @@ Route::post('/ordered/store', [OrderedController::class, 'store']);
 
 
     // routes/web.php
-// Route::post('/payments', [InputController::class, 'process']);
-// Route::post('/payments', [InputController::class, 'process']);
 // ATAU routes/api.php
     Route::post('/payments', [InputController::class, 'payment']);
     Route::post('/api/payments', [InputController::class, 'payment']);
@@ -267,19 +263,21 @@ Route::post('/ordered/store', [OrderedController::class, 'store']);
         Route::post('payment/create-snap', [InputController::class, 'createSnap']);
         // Route::get('/payment/token/{id}', [InputController::class, 'getSnapToken']);
         Route::apiResource('payment', InputController::class)
-        ->except(['index', 'store']);
+            ->except(['index', 'store']);
         // Route::get('/payment/{id}', [InputController::class, 'show'])->name('payment.show');
-        
+
         // Route::post('/gudang/masuk', [InputController::class, 'masuk']);
         // Route::post('/gudang/keluar', [InputController::class, 'keluar']);
-        
+
     });
     Route::post('/manual-update-status', [PaymentController::class, 'manualUpdateStatus']);
     Route::post('/midtrans/notification', [PaymentController::class, 'handleNotification']);
     Route::post('/payment/snap', [PaymentController::class, 'createCharge']);
     Route::post('/input/snap', [PaymentController::class, 'snap']);
     Route::get('/payment/token/{id}', [PaymentController::class, 'getSnapToken']);
-    
+    Route::post('/payment/token', [PaymentController::class, 'getToken'])->middleware('auth:sanctum');
+
+
     Route::get('/payment/{id}', [PaymentController::class, 'show'])->name('payment.show');
 
 
@@ -302,37 +300,37 @@ Route::post('/ordered/store', [OrderedController::class, 'store']);
 
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-Route::get('/tracking', [DashboardController::class, 'tracking'])->name('tracking');
-Route::get('/sms', [DashboardController::class, 'sms'])->name('sms');
+    Route::get('/tracking', [DashboardController::class, 'tracking'])->name('tracking');
+    Route::get('/sms', [DashboardController::class, 'sms'])->name('sms');
 
     // Route::middleware(['auth', 'role:gudang'])->group(function () {
     //     Route::post('/gudang/masuk', [GudangController::class, 'masuk']);
     //     Route::post('/gudang/keluar', [GudangController::class, 'keluar']);
     // });
 
-// Wilayah Indonesia API
-Route::prefix('wilayah')->group(function () {
-    Route::get('/provinces', [WilayahController::class, 'getProvinces'])->withoutMiddleware('can:input');
-    Route::get('/cities/{province_id}', [WilayahController::class, 'getCities']);
-    Route::get('/districts/{city_id}', [WilayahController::class, 'getDistricts']);
-    Route::get('/villages/{district_id}', [WilayahController::class, 'getVillages']);
-});
+    // Wilayah Indonesia API
+    Route::prefix('wilayah')->group(function () {
+        // Route::get('/provinces', [WilayahController::class, 'getProvinces'])->withoutMiddleware('can:input');
+        Route::get('/cities/{province_id}', [WilayahController::class, 'getCities']);
+        Route::get('/districts/{city_id}', [WilayahController::class, 'getDistricts']);
+        Route::get('/villages/{district_id}', [WilayahController::class, 'getVillages']);
+    });
 
-// Tracking API
-Route::prefix('tracking')->group(function () {
-    Route::post('/track', [TrackingController::class, 'trackPackage']);
-    Route::post('/shipping-cost', [TrackingController::class, 'getShippingCost']);
-    Route::get('/couriers', [TrackingController::class, 'getCouriers']);
-});
+    // Tracking API
+    Route::prefix('tracking')->group(function () {
+        Route::post('/track', [TrackingController::class, 'trackPackage']);
+        Route::post('/shipping-cost', [TrackingController::class, 'getShippingCost']);
+        Route::get('/couriers', [TrackingController::class, 'getCouriers']);
+    });
 
-// SMS & WhatsApp API
-Route::prefix('message')->group(function () {
-    Route::post('/sms', [SmsController::class, 'sendSms']);
-    Route::post('/whatsapp', [SmsController::class, 'sendWhatsApp']);
-});
+    // SMS & WhatsApp API
+    Route::prefix('message')->group(function () {
+        Route::post('/sms', [SmsController::class, 'sendSms']);
+        Route::post('/whatsapp', [SmsController::class, 'sendWhatsApp']);
+    });
 
-        // Route::post('/input/{id}/claim', [OrderanController::class, 'claim']);
+    // Route::post('/input/{id}/claim', [OrderanController::class, 'claim']);
 
-// Route::get('/provinsi', [App\Http\Controllers\WilayahController::class, 'getProvinsi']);
+    // Route::get('/provinsi', [App\Http\Controllers\WilayahController::class, 'getProvinsi']);
 
 });

@@ -198,6 +198,7 @@ class OrderedController extends Controller
             'status' => 'required|string',
             'riwayat_pengiriman' => 'nullable|array',
             'riwayat_pengiriman.*' => 'string',
+            'kurir_id'   => $kurir->id,
         ]);
 
         // $validated = $request->validate([

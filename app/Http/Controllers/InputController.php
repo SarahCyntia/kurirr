@@ -101,7 +101,8 @@ class InputController extends Controller
         ])->get('https://api.rajaongkir.com/starter/city?province=' . $provinceId);
 
         $cities = collect($response['rajaongkir'])
-            ->pluck('city_name', 'city_id');
+            ->pluck('city_name', 'id');
+            // ->pluck('city_name', 'city_id');
 
         return response()->json($cities);
     }
@@ -169,6 +170,10 @@ class InputController extends Controller
         $per = $request->input('per', 10);
         $page = $request->input('page', 1);
 
+        if ($request->has('kurir_id')) {
+        $query->where('kurir_id', $request->kurir_id);
+    }
+
         DB::statement('SET @no := ' . (($page - 1) * $per));
         $kurirId = auth()->user()->role->name === 'kurir'
             ? auth()->user()->kurir->id
@@ -199,6 +204,7 @@ class InputController extends Controller
                       ->orWhere('kurir_id', $kurirId);
                 });
             }) 
+            
             // sebelumnya atas situ
 
             // ->when(auth()->user()->role->name === 'kurir', function ($query) use ($kurirId) {
@@ -289,6 +295,7 @@ class InputController extends Controller
             ->when($request->has('exclude_status'), function ($query) use ($request) {
                 $query->whereNotIn('status', $request->exclude_status);
             })
+
             ->latest() // Urutkan berdasarkan kolom 'created_at' secara descending
             ->paginate($per); // Paginasi berdasarkan nilai $per
 
@@ -300,8 +307,6 @@ class InputController extends Controller
 
         return response()->json($data);
     }
-
-
 
     // public function claim(Request $request, $id)
     // {
@@ -423,6 +428,15 @@ class InputController extends Controller
         ], 403);
     }
 
+    // if ($request->has('riwayat_id')) {
+    //         $query->where('riwayat_id', $request->riwayat_id);
+    //     }
+
+    //     // filter berdasarkan kurir_id (kalau kamu mau khusus per kurir)
+    //     if ($request->has('kurir_id')) {
+    //         $query->where('kurir_id', $request->kurir_id);
+    //     }
+
     // Cegah pengambilan ulang oleh kurir lain
     if ($input->kurir_id && $input->kurir_id !== $kurir->id) {
         return response()->json([
@@ -499,6 +513,7 @@ class InputController extends Controller
             'status' => 'required|in:menunggu,dalam proses,masuk gudang,keluar gudang, dikirim,dikirim,selesai',
             'ulasan' => 'nullable|string',
             // 'status_pembayaran' => 'nullable|in:menunggu, belum dibayar,dibayar',
+
         ]);
 
         $input = $id ? Input::findOrFail($id) : new Input(); // ini sudah benar

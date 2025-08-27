@@ -33,13 +33,16 @@ export const useAuthStore = defineStore("auth", () => {
 
     function setAuth(authUser: User, token = "") {
         isAuthenticated.value = true;
-        user.value = 
-            authUser, authUser.kurir,
-
+        user.value = {
+            ...authUser,
+            kurir: authUser.kurir,
+            // pengguna: authUser.pengguna,
+        };
         error.value = null;
 
         if (token) {
             JwtService.saveToken(token);
+            ApiService.setHeader(); // <- supaya header Authorization otomatis ada setelah login
         }
     }
 

@@ -49,7 +49,7 @@ const bayar = async (rowData) => {
   sessionStorage.setItem("draftTransaksi", JSON.stringify(draft));
 
   try {
-    const res = await axios.post("/api/payments", draft);
+    const res = await axios.post("/api/payment", draft);
     // const res = await axios.post("/payment/create", draft);
     const { snap_token } = res.data;
 
