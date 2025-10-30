@@ -28,6 +28,8 @@ const { delete: deleteInput } = useDelete({
     onSuccess: () => paginateRef.value?.refetch(),
 });
 
+
+
 interface Riwayat {
   id: number
   deskripsi: string
@@ -314,7 +316,23 @@ onMounted(async () => {
     }
 });
 
+onMounted(async () => {
+  try {
+    const res = await axios.get("/paket-riwayat");
+    riwayatList.value = res.data.data; // ⬅️ sesuaikan sama format API
+  } catch (err) {
+    console.error(err);
+  }
+});
 
+// onMounted(async () => {
+//   try {
+//     const res = await api.get("/kurir/riwayat");
+//     riwayat.value = res.data;
+//   } catch (err) {
+//     console.error(err);
+//   }
+// });
 
 // Reset saat form ditutup
 watch(openForm, (val) => {
@@ -339,6 +357,13 @@ watch(openForm, (val) => {
         </div>
 
          <div class="card-body">
+          
+          <!-- <paginate
+        ref="paginateRef"
+        id="table-riwayat"
+        url="/paket-riwayat"  
+        :columns="columns"
+      /> -->
         <paginate ref="paginateRef" id="table-inputorder" url="/input?status=selesai"
         :columns="columns"/>
       <!-- <paginate ref="paginateRef" id="table-inputorder" url="/input" :columns="columns"></paginate> -->

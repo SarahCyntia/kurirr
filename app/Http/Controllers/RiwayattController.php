@@ -9,7 +9,7 @@ use App\Models\Riwayat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-class RiwayatController extends Controller
+class RiwayattController extends Controller
 {
 
     // public function index(Request $request)
@@ -45,13 +45,13 @@ class RiwayatController extends Controller
     public function tambahRiwayat(Request $request, Input $id)
     {
         $request->validate([
-            // 'status' => 'required',
-            'riwayat_pengiriman' => 'required'
+            'status' => 'required',
+            'riwayat' => 'required'
         ]);
 
-        // $id->update([
-        //     'status' => $request->status
-        // ]);
+        $id->update([
+            'status' => $request->status
+        ]);
         $kurir = auth()->user()->kurir; // kurir yang login
         
 
@@ -60,7 +60,7 @@ class RiwayatController extends Controller
         $data = Riwayat::create([
             'id' => $id->id,
             // 'id' => $input->id,
-            'deskripsi' => $request->riwayat_pengiriman,
+            'deskripsi' => $request->riwayat,
             'kurir_id'   => $kurir->id,
 
         ]);
@@ -73,7 +73,7 @@ class RiwayatController extends Controller
     {
         $request->validate([
             'riwayat' => 'required|string',
-            // 'status' => 'required|string',
+            'status' => 'required|string',
         ]);
 
         $order = Order::findOrFail($id);
@@ -110,91 +110,7 @@ class RiwayatController extends Controller
             'riwayat' => $riwayat,
         ]);
     }
-  public function riwayatKurir()
-{
-    $user = auth()->user();
-    $kurir = $user->kurir;
-
-    $input = Input::with([
-        'asal_provinsi',
-        'asal_kota',
-        'asal_kecamatan',
-        'tujuan_provinsi',
-        'tujuan_kota',
-        'tujuan_kecamatan',
-        'riwayat' => function ($q) use ($kurir) {
-            $q->where('kurir_id', $kurir->id)
-              ->orderBy('created_at', 'desc');
-        }
-    ])
-    ->where('kurir_id', $kurir->id)
-    ->orderBy('created_at', 'desc')
-    ->paginate(10);
-
-    return response()->json([
-        'message' => 'Data riwayat kurir ditemukan',
-        'data' => $input,
-    ]);
-}
-
-public function testRelasi()
-{
-    $data = Input::with('riwayat')->first();
-    return response()->json($data);
-}
-
-
-//     public function riwayatKurir()
-// {
-//     $user = auth()->user();
-//     $kurir = $user->kurir;
-
-//     $riwayat = Riwayat::with(['input', 'kurir.user','input.asalKota', 'input.tujuanKota', 'input.asalProvinsi', 'input.tujuanProvinsi'])
-//         ->where('kurir_id', $kurir->id)
-//         ->whereHas('input', function ($query) {
-//             $query->where('status', 'selesai');
-//         })
-//         ->orderBy('created_at', 'desc')
-//         ->get();
-
-//     return response()->json($riwayat);
-// }
-
-//lama
-//     public function riwayatKurir()
-// {
-//     $user = auth()->user();
-//     $kurir = $user->kurir;
-
-//     // Ambil semua riwayat yang pernah diisi oleh kurir ini
-//     $riwayat = Riwayat::with(['input', 'kurir.user'])
-//         ->where('kurir_id', $kurir->id)
-//         ->orderBy('created_at', 'desc')
-//         ->get();
-
-//     return response()->json($riwayat);
-// }
-
-public function paketPernahDitangani()
-{
-    $user = auth()->user();
-    $kurir = $user->kurir;
-
-    // Ambil semua paket yang pernah ditangani kurir ini lewat tabel riwayat
-    $input = Input::whereHas('riwayat', function($q) use ($kurir) {
-            $q->where('id', $kurir->id);
-        })
-        ->with(['riwayat' => function($q) use ($kurir) {
-            $q->where('id', $kurir->id)
-              ->with('kurir.user');
-        }])
-        ->orderBy('created_at', 'desc')
-        ->get();
-
-    return response()->json($input);
-}
-
 
 }
-// $data = Input::with('riwayat')->get();
-// return response()->json($data);
+$data = Input::with('riwayat')->get();
+return response()->json($data);

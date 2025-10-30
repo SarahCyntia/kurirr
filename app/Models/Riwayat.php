@@ -10,6 +10,7 @@ class Riwayat extends Model
     use HasFactory;
 
     protected $table = 'riwayat';
+    protected $primaryKey = 'id_riwayat'; // <- kasih tau PK
 
     protected $fillable = [
         'id_riwyayat',

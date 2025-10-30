@@ -11,6 +11,7 @@ import axios from "axios";
 import { saveAs } from 'file-saver';
 import { onMounted } from "vue";
 import Swal from "sweetalert2";
+import JsBarcode from "jsbarcode";
 // import { Row } from "element-plus/es/components/table-v2/src/components";
 
 // Referensi dan variabel
@@ -139,42 +140,6 @@ const redirectToPayment = async (id: number) => {
         Swal.fire({ icon: 'error', title: 'Error mengambil token' });
     }
 };
-// const redirectToPayment = async (id: number) => {
-//   try {
-//     const { data } = await axios.get(`/payment/token/${id}`);
-//     const snapToken = data.snap_token;
-
-//     if (!snapToken) {
-//       alert('Token pembayaran tidak tersedia.');
-//       return;
-//     }
-
-//     window.snap.pay(snapToken, {
-//       onSuccess: (result: any) => {
-//         console.log('Pembayaran berhasil', result);
-//         alert('Pembayaran berhasil!');
-//         fetchOrders(); // ⬅ panggil ulang API transaksi, tidak reload
-//       },
-//       onPending: (result: any) => {
-//         console.log('Pembayaran pending', result);
-//         alert('Menunggu pembayaran...');
-//         fetchOrders(); // bisa tetap dipanggil jika kamu ingin update
-//       },
-//       onError: (result: any) => {
-//         console.error('Pembayaran gagal', result);
-//         alert('Pembayaran gagal.');
-//       },
-//       onClose: () => {
-//         console.log('Popup ditutup oleh user');
-//         // Optional: fetchOrders(); bisa di sini kalau perlu
-//       }
-//     });
-
-//   } catch (error) {
-//     console.error('Gagal mengambil token pembayaran:', error);
-//     alert('Gagal memproses pembayaran.');
-//   }
-// };
 
 const downloadReceipt = async (noResi: string) => {
   const response = await axios.get(`/download-resi/${noResi}`, {
@@ -221,18 +186,7 @@ const columns = [
     const noResi = row.original.no_resi;
 
     return h("div", { class: "d-flex gap-2" }, [
-      // h(
-      //   "button",
-      //   {
-      //     class: "btn btn-sm btn-info",
-      //     onClick: () => printReceipt(noResi),
-      //     title: "Cetak PDF"
-      //   },
-      //   [
-      //     h("i", { class: "la la-file-pdf-o me-1" }),
-      //     "Cetak PDF"
-      //   ]
-      // ),
+    
       h(
         "button",
         {
@@ -248,52 +202,6 @@ const columns = [
     ]);
   },
 }),
-// column.display({
-//   id: "bayar",
-//   header: "Bayar",
-//   cell: (cell) => {
-//     console.log("ROW ORIGINAL:", cell.row.original); // 🔍 Debug log
-    
-//     const rowData = cell.row.original;
-//     const isPaying = rowData.isPaying || false;
-
-//     return h(
-//       "button",
-//       {
-//         class: `btn btn-sm btn-success ${isPaying ? 'disabled' : ''}`,
-//         disabled: isPaying,
-//         onClick: () => handleBayar(cell.row.original),
-//       },
-//       [
-//         h("i", { class: "la la-credit-card me-1" }),
-//         isPaying ? "Memproses..." : "Bayar"
-//       ]
-//     );
-//   },
-// }),
-
-// column.display({
-//   id: "bayar",
-//   header: "Bayar",
-//   cell: (cell) => {
-//     const rowData = cell.row.original;
-//     const isPaying = rowData.isPaying || false;
-//     const isPaid = rowData.status === "paid" || rowData.status === "selesai";
-
-//     return h(
-//       "button",
-//       {
-//         class: `btn btn-sm btn-success ${isPaying || isPaid ? 'disabled' : ''}`,
-//         disabled: isPaying || isPaid,
-//         onClick: () => bayar(rowData),
-//       },
-//       [
-//         h("i", { class: "la la-credit-card me-1" }),
-//         isPaying ? "Memproses..." : isPaid ? "Sudah Dibayar" : "Bayar"
-//       ]
-//     );
-//   },
-// }),
 
 
 column.display({
@@ -322,36 +230,6 @@ column.display({
   }
 }),
 
-
-// column.display({
-//   id: "redirectToPayment",
-//   header: "Aksi",
-//   cell: (cell) => {
-//     const row = cell.row.original;
-//     const status = row.status_pembayaran?.toLowerCase();
-//     const buttons = [];
-
-//     // const row = cell.row.original;
-//     // const buttons = [];
-
-//     // Tampilkan tombol Bayar kalau belum ada payment_at
-//     if (!row.payment_at) {
-//       buttons.push(
-//         h(
-//           "button",
-//           {
-//             class: "btn btn-sm btn-success me-1",
-//             onClick: () => redirectToPayment(row.id),
-//           },
-//           [h("i", { class: "bi bi-credit-card me-1" }), "Bayar"]
-//         )
-//       );
-//     }
-
-//     return h("div", { class: "d-flex gap-1" }, buttons);
-//   }
-// }),
-
 column.accessor("status_pembayaran", {
         header: "Pembayaran",
         cell: (cell) => {
@@ -372,83 +250,6 @@ column.accessor("status_pembayaran", {
             return h("span", { class: badgeClass }, label);
         }
     }),
-
-  // // Tambahkan yang ini:
-  // column.display({
-  //   id: "status_pembayaran",
-  //   header: "Status Pembayaran",
-  //   cell: (cell) => {
-  //     const row = cell.row.original;
-  //     const status = row.status_pembayaran;
-  //     const isLunas = status === 'dibayar';
-
-  //     return h(
-  //       'button',
-  //       {
-  //         class: [
-  //           'px-3 py-1 rounded text-sm cursor-pointer',
-  //           isLunas ? 'bg-green-500 text-white' : 'bg-red-500 text-white',
-  //           'hover:opacity-80 transition',
-  //         ],
-  //         onClick: async () => {
-  //           try {
-  //             const newStatus = isLunas ? 'belum bayar' : 'dibayar';
-
-  //             await axios.put(`/api/pembayaran/${row.id}`, {
-  //               status_pembayaran: newStatus,
-  //             });
-
-  //             row.status_pembayaran = newStatus; // Update data lokal
-  //           } catch (err) {
-  //             console.error(err);
-  //             Swal.fire("Gagal", "Tidak bisa update status pembayaran", "error");
-  //           }
-  //         },
-  //       },
-  //       isLunas ? 'Dibayar' : 'Belum Bayar'
-  //     );
-  //   },
-  // }),
-
-//   column.display({
-//   id: "status_pembayaran",
-//   header: "Status Pembayaran",
-//   cell: (cell) => {
-//     const row = cell.row.original;
-//     const isLunas = row.status_pembayaran === 'dibayar';
-
-//     return h(
-//       'button',
-//       {
-//         class: [
-//           'px-2 py-1 rounded text-sm',
-//           isLunas ? 'bg-green-500 text-white' : 'bg-red-500 text-white',
-//           'hover:opacity-80 transition',
-//         ],
-//         onClick: async () => {
-//           try {
-//             // Update ke backend (opsional)
-//             await axios.put(`/api/pembayaran/${row.id}`, {
-//               status_pembayaran: isLunas ? 'belum bayar' : 'dibayar',
-//             });
-
-//             // Emit event atau refresh data
-//             // Contoh: reloadTable() atau fetchData()
-
-//             // Contoh sederhana reload data lokal (jika pakai ref):
-//             row.status_pembayaran = isLunas ? 'belum bayar' : 'dibayar';
-//           } catch (err) {
-//             console.error('Gagal update pembayaran', err);
-//             Swal.fire('Error', 'Gagal update status pembayaran', 'error');
-//           }
-//         },
-//       },
-//       isLunas ? 'Dibayar' : 'Belum Bayar'
-//     );
-//   },
-// }),
-
-
 ];
 
 // Fungsi bayar yang sudah diperbaiki
@@ -464,6 +265,21 @@ onMounted(() => {
 });
 // Untuk reload data
 const refresh = () => paginateRef.value?.refetch();
+
+
+// const barcodeElement = document.getElementById("barcode");
+//             if (barcodeElement && data.noResi) {
+//                 JsBarcode(barcodeElement, data.noResi, {
+//                     format: "CODE128",
+//                     width: 2,
+//                     height: 60,
+//                     displayValue: true,
+//                     fontSize: 14,
+//                     margin: 2,
+//                 });
+//               }
+
+
 
 // Reset saat form ditutup
 watch(openForm, (val) => {

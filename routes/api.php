@@ -38,6 +38,8 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SmsController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\WilayahController;
+use App\Models\Role;
+use GuzzleHttp\Psr7\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -149,7 +151,7 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     // });
     Route::middleware('can:input')->group(function () {
         Route::post('/input', [InputController::class, 'index'])->withoutMiddleware('can:input');
-        Route::get('/input', [InputController::class, 'get']);
+        Route::get('/input', [InputController::class, 'get'])->withoutMiddleware('can:input');
         Route::post('/input/store', [InputController::class, 'store']);
         Route::put('/input', [InputController::class, 'update']);
         // Route::put('/input', [InputController::class, 'update'])->withoutMiddleware('can:input');
@@ -160,8 +162,22 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::post('/cost', [InputController::class, 'hitungOngkir'])->withoutMiddleware(['can:input', 'auth', 'verified']);
         Route::get('/Input/{input}', [InputController::class, 'show'])->withoutMiddleware('can:input');
         Route::get('/input/{id}', [InputController::class, 'show'])->name('input.show');
+        
+        
 
-        Route::get('/riwayat', [InputController::class, 'index']); // atau 
+        // Route::get('/riwayat', [InputController::class, 'index']); // atau 
+        // Route::get('/kurir/riwayat', [KurirController::class, 'riwayatKurir']);
+        // Route::get('/kurir/riwayat', [InputController::class, 'riwayatKurir']);
+        Route::get('/paket-riwayat', [OrderedController::class, 'paketPernahDitangani'])->withoutMiddleware('can:input');
+        // Route::get('/paket-riwayat', [KurirController::class, 'paketPernahDitangani'])->withoutMiddleware('can:input');
+        // Route::get('/kurir/paket-riwayat', [InputController::class, 'paketPernahDitangani']);
+
+
+
+
+
+
+
         Route::get('/cetak-pdf/{noResi}', [InputController::class, 'cetakpdf']);
         Route::get('/download-resi/{noResi}', [InputController::class, 'downloadpdf']);
         Route::get('/resi/{noResi}/cetak', [InputController::class, 'handleResiPdf']);
@@ -170,7 +186,7 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::post('/input/{id}/oper', [InputController::class, 'operKeKurirLain']);
 
 
-        ;
+        
 
     });
 
@@ -179,6 +195,10 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
         Route::post('/ordered', [OrderedController::class, 'index']);
         Route::post('/ordered/store', [OrderedController::class, 'store']);
         Route::get('/ordered/{Input}', [OrderedController::class, 'show']);
+        Route::get('/kurir/orderansaya', [OrderedController::class, 'orderanSaya']);
+        Route::post('/ordered/{id}', [OrderedController::class, 'showOrdered']);
+
+
 
         // Route::middleware('auth:sanctum')->post('/input/{id}/claim', [InputController::class, 'claim']);
 
@@ -240,6 +260,7 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     Route::get('/download-resi/{noResi}', [InputController::class, 'downloadResi'])->name('download.resi');
 
     Route::post('/input/{id}/riwayat', [RiwayatController::class, 'store'])->name('riwayat.store');
+    Route::post('/riwayat', [RiwayatController::class, 'riwayatKurir']);
 
 
 
@@ -332,5 +353,20 @@ Route::middleware(['auth', 'verified', 'json'])->group(function () {
     // Route::post('/input/{id}/claim', [OrderanController::class, 'claim']);
 
     // Route::get('/provinsi', [App\Http\Controllers\WilayahController::class, 'getProvinsi']);
+
+
+
+    Route::get('/roles', function () {
+    return response()->json(Role::select('id', 'name')->get());
+});
+
+Route::middleware('auth:sanctum')->get('/user/role', function (Request $request) {
+    return response()->json([
+        'role' => $request->user()->getRoleNames()->first(),
+    ]);
+});
+
+
+
 
 });

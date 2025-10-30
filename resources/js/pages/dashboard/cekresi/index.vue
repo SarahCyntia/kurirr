@@ -9,7 +9,8 @@ import { computed } from "vue";
 // State input user
 const noResi = ref("");
 const ekspedisi = ref("");
-const ekspedisiList = ["JNE", "TIKI", "POS"];
+const ekspedisiList = ["JNE"];
+// const ekspedisiList = ["JNE", "TIKI", "POS"];
 const result = ref<Input | null>(null);
 const isLoading = ref(false);
 const error = ref("");
@@ -28,7 +29,7 @@ const formatDate = (timestamp?: string) => {
     minute: '2-digit',
   });
 };
-
+  
 const hideMap = ref(false);
 
 const activeStep = ref(0); // default = 0 (drop off)
@@ -200,8 +201,7 @@ const riwayat = (data: any) => {
               </div>
             </div> -->
           </tbody>
-          <div>
-            <!-- Template HTML Anda -->
+          <!-- <div>
             <div v-if="result.status === 'selesai' && !isRatingSubmitted" class="mt-4">
               <h2 class="h2">Beri Penilaian Pengiriman</h2>
               <div class="mb-3">
@@ -222,7 +222,7 @@ const riwayat = (data: any) => {
             <div v-else-if="isRatingSubmitted" class="alert alert-info">
               Terima kasih atas penilaian Anda!
             </div>
-          </div>
+          </div> -->
         </table>
       </div>
     </div>

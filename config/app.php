@@ -181,6 +181,12 @@ return [
     |
     */
 
+
+    'DNS1D' => Milon\Barcode\Facades\DNS1DFacade::class,
+'DNS2D' => Milon\Barcode\Facades\DNS2DFacade::class,
+
+
+
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),

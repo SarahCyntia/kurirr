@@ -15,6 +15,7 @@ declare module "vue-router" {
     }
 }
 
+
 const routes: Array<RouteRecordRaw> = [
      {
                 path: "/cekresi",

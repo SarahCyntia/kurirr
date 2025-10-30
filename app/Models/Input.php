@@ -75,6 +75,10 @@ class Input extends Model
     // Input.php
 
     // RiwayatPengiriman.php
+//     public function riwayat()
+// {
+//     return $this->hasMany(Riwayat::class, 'id', 'id');
+// }
     public function riwayat()
     {
         return $this->hasMany(Riwayat::class, 'id');

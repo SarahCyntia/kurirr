@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Console\Input\Input as InputInput;
 
-class OrderedController extends Controller
+class OrderController extends Controller
 {
 
     // ✅ Middleware auth (jika hanya user login boleh akses)

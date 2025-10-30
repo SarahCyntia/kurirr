@@ -19,16 +19,12 @@ const props = defineProps({
 interface District {
     name: string;
 }
-// const allDistrictsOrigin = ref<District[]>([]);
 
 const authStore = useAuthStore();
 const user = useAuthStore();
 const provinces = ref<Record<string, string>>({});
-// const provinces = ref<{ id: string; name: string }[]>([]);
 const provincesDestination = ref<{ id: string; name: string }[]>([]);
 const provincesOrigin = ref<{ id: string; name: string }[]>([]);
-// const searchCityDestination = ref("");
-// const showCityDropdownDestination = ref(false);
 const searchDistrictDestination = ref("");
 const searchDistrictOrigin = ref("");
 const showDistrictDropdownDestination = ref(false);
@@ -38,8 +34,6 @@ const showDropdownDistrictDestination = ref(false);
 
 const districtsDestination = ref<{ id: string; name: string }[]>([]);
 const districtsOrigin = ref<{ id: string; name: string }[]>([]);
-//salah semua
-// const citiesOrigin = ref<any[]>([]);
 const allDistrictsOrigin = ref<any[]>([]);
 
 const cities = ref<{ id: string; name: string }[]>([]);
@@ -50,8 +44,6 @@ const citiesOrigin = ref<{ id: string; name: string }[]>([]);
 const showDropdownCityOrigin = ref(false);
 const allCitiesOrigin = ref([]);
 const allDistrictsDestination = ref<{ id: string; name: string }[]>([]);
-// const allDistrictsOrigin = ref<{ id: string; name: string }[]>([]);
-// const allDistrictsOrigin = ref(false);
 
 const showProvinceDropdownOrigin = ref(false);
 const showProvinceDropdownDestination = ref(false);
@@ -62,10 +54,6 @@ const searchProvinceDestination = ref('');
 const districts = ref<{ id: string; name: string }[]>([]);
 
 
-// const citiesOrigin = ref<Record<string, string>>({});
-// const citiesDestination = ref<Record<string, string>>({});
-// const districtsOrigin = ref<Record<string, string>>({});
-// const districtsDestination = ref<Record<string, string>>({});
 const provinceOrigin = ref("0");
 const cityOrigin = ref("");
 const districtOrigin = ref("");
@@ -138,9 +126,6 @@ const { handleSubmit, errors, resetForm, setFieldValue } = useForm({
     }
 });
 
-
-
-
 // PROVINSI ASAL
 const searchProvinceOrigin = ref('');
 const selectProvinceOrigin = (prov: { id: string; name: string }) => {
@@ -155,6 +140,8 @@ const selectProvinceOrigin = (prov: { id: string; name: string }) => {
     // Reset kota yang sebelumnya mungkin sudah terisi
     cityOrigin.value = "";
     searchCityOrigin.value = "";
+    districtOrigin.value = "";
+    searchDistrictOrigin.value = "";
 };
 const filteredProvincesOrigin = computed(() => {
     return provinces.value.filter(prov =>
@@ -200,24 +187,9 @@ watch(provinceOrigin, (newVal) => {
         citiesOrigin.value = [];
     }
 });
-// watch(provinceOrigin, (newVal) => {
-//     if (newVal) {
-//         fetchCitiesByProvince(newVal);
-//     } else {
-//         citiesOrigin.value = [];
-//     }
-// });
-
-
-
-
-
-
 
 // KOTA ASAL
 const searchCityOrigin = ref("");
-// const cityOrigin = ref("");
-// const showCityDropdownOrigin = ref(false);
 
 const filteredCitiesOrigin = computed(() => {
     return cities.value.filter(city =>
@@ -233,11 +205,6 @@ const selectCityOrigin = (city: { id: string; name: string }) => {
     console.log("cityOrigin:", cityOrigin.value);
     fetchDistricts("origin");
 };
-// const hideDropdownCityOriginWithDelay = () => {
-//     setTimeout(() => {
-//         showDropdownCityOrigin.value = false;
-//     }, 200);
-// };
 const fetchCitiesOrigin = async (provinceId: string) => {
     try {
         const res = await axios.get(`/cities/${provinceId}`);
@@ -263,15 +230,6 @@ watch(searchCityOrigin, (val) => {
 
     // showDropdownCityOrigin.value = filteredCitiesOrigin.value.length > 0;
 });
-// const hideCityDropdownOriginWithDelay = () => {
-//     setTimeout(() => {
-//         showCityDropdownOrigin.value = false;
-//     }, 200);
-// };
-
-
-
-
 // // KECAMATAN ASAL
 
 const filteredDistrictsOrigin = computed(() => {
@@ -306,10 +264,6 @@ const displayedDistrictsOrigin = computed(() => {
   return filteredDistrictsOrigin.value.slice(0, limitDistrictOrigin.value);
 });
 
-// const limitCityOrigin = ref(10); // batas maksimal kota yang ditampilkan
-// const displayedDistrictsOrigin = computed(() => {
-//   return filteredDistrictsOrigin.value.slice(0, limitCityOrigin.value);
-// });
 const selectDistrictOrigin = (district: { id: string; name: string }) => {
   searchDistrictOrigin.value = district.name;
   districtOrigin.value = district.id;
@@ -335,11 +289,6 @@ watch(searchDistrictOrigin, (val) => {
 });
 
 
-
-
-
-
-
 // PROVINSI TUJUAN
 const selectProvinceDestination = (prov: { id: string; name: string }) => {
     searchProvinceDestination.value = prov.name;
@@ -353,6 +302,8 @@ const selectProvinceDestination = (prov: { id: string; name: string }) => {
     // Reset kota yang sebelumnya mungkin sudah terisi
     cityDestination.value = "";
     searchCityDestination.value = "";
+    districtDestination.value = "";
+    searchDistrictDestination.value = "";
 };
 // const searchProvinceDestination = ref('');
 const filteredProvincesDestination = computed(() => {
@@ -400,19 +351,6 @@ watch(provinceDestination, (newVal) => {
 watch(provinceDestination, () => {
     console.log(provinceDestination.value);
 })
-// ngambil data provinsi dari tabel
-
-// watch(provinceDestination, (newVal) => {
-//     if (newVal) {
-//         fetchCitiesByProvince(newVal);
-//     } else {
-//         cities.value = [];
-//     }
-// });
-
-
-
-
 // KOTA Tujuan
 const searchCityDestination = ref("");
 // const cityDestination = ref("");
@@ -461,14 +399,6 @@ watch(searchCityDestination, (val) => {
 
     // showDropdownCityDestination.value = filteredCitiesDestination.value.length > 0;
 });
-// const hideCityDropdownDestinationWithDelay = () => {
-//     setTimeout(() => {
-//         showCityDropdownDestination.value = false;
-//     }, 200);
-// };
-
-
-
 // KECAMATAN TUJUAN
 const filteredDistrictsDestination = computed(() => {
     return districtsDestination.value.filter(district =>
@@ -530,61 +460,7 @@ watch(searchDistrictDestination, (val) => {
     // showDropdownDistrictOrigin.value = filteredDistrictsOrigin.value.length > 0;
 });
 
-
-
-
-
-
-
-
-// const selectProvinceOrigin = (prov: { id: string; name: string }) => {
-//     searchProvinceOrigin.value = prov.name;
-//     provinceOrigin.value = prov.id;
-//     setFieldValue("provinceOrigin", prov.id); // sync ke VeeValidate
-//     fetchCities("origin");
-//     showProvinceDropdownOrigin.value = false;
-// };
-
-
-
-
-
-
-
-
-
-
-
-
-
 let hideCityDropdownTimeout: ReturnType<typeof setTimeout>;
-
-
-
-
-
-
-
-// const showDistrictDropdownDestination = ref(false);
-
-
-
-
-
-
-
-
-// const hideDropdownWithDelayDestination = () => {
-//     setTimeout(() => {
-//         showDropdownDestination.value = false;
-//     }, 200);
-// };
-// watch(
-//     () => searchProvinceDestination.value,
-//     () => {
-//         console.log("Hasil filter:", filteredProvincesDestination.value);
-//     }
-// );
 
 const hideDropdownWithDelay = () => {
     setTimeout(() => {
@@ -599,12 +475,6 @@ const hideDropdownWithDelayOrigin = () => {
     }, 200);
 };
 
-// watch(
-//     () => searchProvinceOrigin.value,
-//     () => {
-//         console.log("Hasil filter:", filteredProvincesOrigin.value);
-//     }
-// );
 const fetchDistricts = async (type: "origin" | "destination") => {
     const cityId = type === "origin" ? cityOrigin.value : cityDestination.value;
     if (!cityId) return;
@@ -624,25 +494,7 @@ const fetchDistricts = async (type: "origin" | "destination") => {
     }
 };
 
-// ica
-// const fetchProvinces = async () => {
-//   try {
-//     const res = await axios.get("/provinces");
 
-//     // Jika hasilnya { "11": "Aceh", "12": "Bali", ... }
-//     provinceDestination.value = Object.entries(res.data).map(([id, name]) => ({
-//       id,
-//       name,
-//     }));
-//     provinceOrigin.value = Object.entries(res.data).map(([id, name]) => ({
-//       id,
-//       name,
-//     }));    
-
-//   } catch {
-//     toast.error("Gagal mengambil provinsi");
-//   }
-// };
 const fetchProvinces = async () => {
     try {
         const res = await axios.get("/provinces");
@@ -705,55 +557,6 @@ const fetchCities = async (type: "origin" | "destination") => {
         toast.error("Gagal mengambil kota");
     }
 };
-// ini sebelumnya
-// const fetchCities = async (type: "destination" | "origin") => {
-//     try {
-//         const provinceId =
-//             type === "destination" ? provinceDestination.value : provinceOrigin.value;
-
-//         const res = await axios.get(`/cities/${provinceId}`);
-
-//         const citiesData = Object.entries(res.data).map(([id, name]) => ({
-//             id,
-//             name
-//         }));
-
-//         // if (type === "destination") {
-//         //     citiesDestination.value = res.data;
-//         //     cityDestination.value = ""
-//         // } else {
-//         //     citiesOrigin.value = res.data;
-//         //     cityOrigin.value = "";
-//         // }
-//     } catch {
-//         toast.error("Gagal mengambil data kota");
-//     }
-// };
-
-// ini sebelumnya
-// const fetchProvinces = async () => {
-//     try {
-//         const res = await axios.get("/provinces");
-//         provinces.value = res.data;
-//         console.log(provinces.value)
-//     } catch {
-//         toast.error("Gagal mengambil data provinsi");
-//     }
-// };
-
-
-// const getSelectedCost = () => {
-//     console.log('All services:', services.value);
-//     console.log('Selected service:', selectedService.value);
-
-//     const service = services.value.find(s => s.service === selectedService.value);
-//     const cost = service?.cost ?? 0;
-//     biaya.value = cost;
-
-//     console.log('Selected cost:', cost);
-//     return cost;
-// };
-
 
 
 const fetchOngkir = async () => {
@@ -807,62 +610,11 @@ const fetchOngkir = async () => {
   }
 };
 
-// ==========================
-// Ongkir & Layanan
-// ==========================
 const getSelectedCost = () => {
     const service = services.value.find(s => s.service === selectedService.value);
     biaya.value = service?.cost ?? 0;
 };
-// const fetchOngkir = async () => {
-//     if (
-//         provinceOrigin.value === "0" || !cityOrigin.value ||
-//         provinceDestination.value === "0" || !cityDestination.value ||
-//         !selectedCourier.value || !berat_barang.value || berat_barang.value <= 0
-//     ) {
-//         console.log(berat_barang.value)
-//         services.value = [];
-//         selectedService.value = "";
-//         biaya.value = 0;
-//         console.log("Keluar")
-//         return;
-//     }
 
-//     try {
-//         block(document.getElementById("form-input"));
-//         const res = await axios.post("/cost", {
-//             origin: cityOrigin.value,
-//             destination: cityDestination.value,
-//             weight: Math.round(berat_barang.value * 1000), // gram
-//             courier: selectedCourier.value,
-//         });
-//         console.log("DEBUG: response from /cost", res.data);
-//         // const resultServices = res.data.rajaongkir.results[0]?.costs || [];
-//         services.value = res.data.map((s: any) => ({
-//             service: s.service,
-//             description: s.description,
-//             cost: s.cost[0].value,
-//             etd: s.cost[0].etd
-//             // courier: selectedCourier.value.code,
-//         }));
-
-//         // Reset selected service dan biaya
-//         selectedService.value = "";
-//         biaya.value = 0;
-//         console.log("1", biaya.value)
-//     } catch (error) {
-//         toast.error("Gagal mengambil data ongkir");
-//         services.value = [];
-//         selectedService.value = "";
-//         biaya.value = 0;
-//         console.log("2", biaya.value)
-//     } finally {
-//         unblock(document.getElementById("form-input"));
-//     }
-// };   
-// watch([provinceOrigin, cityOrigin, provinceDestination, cityDestination, selectedCourier, berat_barang], () => {
-//     fetchOngkir();
-// });
 watch([provinceOrigin, cityOrigin, provinceDestination, cityDestination, districtDestination, districtOrigin, selectedCourier, berat_barang], () => {
     console.log("Watching changes in form fields...");
     fetchOngkir();
@@ -955,13 +707,30 @@ function submit() {
 
 }
 
-
 function generateNoResi() {
-    const prefix = "RESI";
-    const timestamp = Date.now().toString(); // angka unik berdasarkan waktu
-    const random = Math.floor(1000 + Math.random() * 9000); // angka acak 4 digit
-    return `${prefix}-${timestamp}-${random}`;
+    const prefix = "RESI"; // awalan tetap, biar resinya selalu mulai dengan "RESI"
+
+    const now = new Date(); // ambil waktu sekarang dari komputer/server
+
+    // Ambil tahun, bulan, dan tanggal dari waktu sekarang
+    const year = now.getFullYear(); // contoh: 2025
+    const month = String(now.getMonth() + 1).padStart(2, "0"); // bulan (0-11), makanya +1 biar 1-12. "padStart" biar selalu 2 digit, misalnya 09
+    const day = String(now.getDate()).padStart(2, "0"); // tanggal, juga dibuat 2 digit. Misalnya 07
+
+    // Buat angka acak 4 digit antara 1000 sampai 9999
+    const random = Math.floor(1000 + Math.random() * 9000);
+
+    // Gabungkan semua bagian jadi satu string nomor resi
+    return `${prefix}-${year}${month}${day}-${random}`;
 }
+
+// function generateNoResi() {
+//     const prefix = "RESI";
+//     const timestamp = Date.now(); // angka unik berdasarkan waktu
+//     // const timestamp = Date.now().toString(); // angka unik berdasarkan waktu
+//     const random = Math.floor(1000 + Math.random() * 9000); // angka acak 4 digit
+//     return `${prefix}-${timestamp}-${random}`;
+// }
 
 onMounted(() => {
     fetchProvinces();
@@ -1012,18 +781,6 @@ onMounted(() => {
                         </ul>
                     </div>
                 </div>
-                <!-- <div class="col-md-6 ">
-                    <div class="fv-row mb-7">
-                        <label class="form-label required fw-bold">Provinsi Asal</label>
-                        <Field as="select" name="provinceOrigin" v-model="provinceOrigin" class="form-control"
-                            @change="fetchCities('origin')">
-                            <option value="0">-- Pilih Provinsi Asal--</option>
-                            <option v-for="(prov) in provinces" :key="prov.id" :value="prov.id">{{ prov.name }}</option>bukan ini
-                            <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
-                        </Field>
-                        <ErrorMessage name="provinceOrigin" class="text-danger small" />
-                    </div>
-                </div> -->
 
                 <!-- Kota Asal -->
                 <div class="col-md-6">
@@ -1093,20 +850,6 @@ onMounted(() => {
                     </div>
                 </div>
 
-
-                <!-- <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label class="form-label required fw-bold">Provinsi Tujuan</label>
-                        <Field as="select" name="provinceDestination" v-model="provinceDestination" class="form-control"
-                            @change="fetchCities('destination')">
-                            <option value="0">-- Pilih Provinsi Tujuan --</option>
-                            <option v-for="(name, id) in provinces" :key="id" :value="id">{{ name }}</option>
-                        </Field as="select">
-                        <ErrorMessage name="provinceDestination" class="text-danger small" />
-                        <div v-if="ErrorMessage" name="provinceDestination" class="text-danger">{{ errors.provinceDestination }}</div>
-                    </div>
-                </div> -->
-
                 <!-- Provinsi Tujuan -->
                 <div class="col-md-6">
                     <div class="fv-row mb-7">
@@ -1150,28 +893,6 @@ onMounted(() => {
                         </ul>
                     </div>
                 </div>
-
-                <!-- <div class="col-md-6">
-                    <div class="fv-row mb-7">
-                        <label class="form-label required fw-bold">Kota Tujuan</label>
-
-                        <Field name="citiesDestination" v-model="searchCityDestination">
-                            <input type="text" class="form-control" v-model="searchCityDestination"
-                                placeholder="Ketik Kota Tujuan" @focus="showCityDropdownDestination = true"
-                                @blur="hideCityDropdownWithDelay" autocomplete="off" />
-                        </Field>
-                        <ErrorMessage name="citiesDestination" class="text-danger small" />
-
-                        <ul v-if="showCityDropdownDestination && filteredCitiesDestination.length"
-                            class="list-group position-absolute w-100" style="z-index: 1000;">
-                            <li v-for="city in filteredCitiesDestination" :key="city.id"
-                                class="list-group-item list-group-item-action"
-                                @mousedown.prevent="selectCityDestination(city)">
-                                {{ city.name }}
-                            </li>
-                        </ul>
-                    </div>
-                </div> -->
 
                 <!-- Kecamatan Tujuan -->
                  <div class="col-md-6">

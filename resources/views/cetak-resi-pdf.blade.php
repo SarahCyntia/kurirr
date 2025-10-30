@@ -118,6 +118,30 @@
 </head>
 <body>
     <h3>Struk Resi Pengiriman</h3>
+
+    {{-- <div class="section" style="text-align:center; margin-top:8px;">
+    @php
+        $barcode = new DNS1D();
+        $barcode->setStorPath(storage_path('framework/barcodes/'));
+    @endphp
+
+    <img
+        src="data:image/png;base64,{{ base64_encode($barcode->getBarcodePNG($data->no_resi, 'C128')) }}"
+        alt="barcode"
+        width="140"
+        height="40"
+    >
+</div> --}}
+
+
+  {{-- <div class="section" style="text-align:center; margin-top:8px;">
+    <img
+        src="data:image/png;base64,{{ base64_encode(DNS1D::getBarcodePNG($data->no_resi, 'C128')) }}"
+        alt="barcode"
+        width="140"
+        height="40"
+    >
+</div> --}}
     
     <div class="section">
         <strong>No Resi:</strong> 

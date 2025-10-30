@@ -231,25 +231,25 @@ const columns = [
     }, row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1))
   }),
 
-  column.display({
-    id: "riwayat",
-    header: "Riwayat",
-    cell: (cell) => {
-      const row = cell.row.original;
-      const hasRiwayat = row.riwayat && row.riwayat.length > 0;
+    column.display({
+      id: "riwayat",
+      header: "Riwayat",
+      cell: (cell) => {
+        const row = cell.row.original;
+        const hasRiwayat = row.riwayat && row.riwayat.length > 0;
 
-      return hasRiwayat
-        ? h(
-          "button",
-          {
-            class: "btn btn-sm btn-warning",
-            onClick: () => showRincian(row),
-          },
-          "Detail Riwayat"
-        )
-        : h("span", { class: "text-muted fst-italic" }, "Belum ada riwayat");
-    },
-  }),
+        return hasRiwayat
+          ? h(
+            "button",
+            {
+              class: "btn btn-sm btn-warning",
+              onClick: () => showRincian(row),
+            },
+            "Detail Riwayat"
+          )
+          : h("span", { class: "text-muted fst-italic" }, "Belum ada riwayat");
+      },
+    }),
   //     column.display({
   //   id: "riwayat",
   //   header: "Riwayat",

@@ -252,4 +252,72 @@ class KurirController extends Controller
             'message' => 'Data kurir berhasil dihapus'
         ]);
     }
+
+
+    public function paketRiwayat(Request $request)
+    {
+        // misalnya pakai auth, ambil id kurir yang sedang login
+        $kurirId = $request->user()->kurir->id ?? null;
+
+        if (!$kurirId) {
+            return response()->json([
+                'message' => 'Kurir tidak ditemukan'
+            ], 404);
+        }
+
+        // Ambil paket yang ada riwayat sesuai kurir
+        $input = Input::with(['riwayat' => function($q) use ($kurirId) {
+            $q->where('kurir_id', $kurirId);
+        }])->get();
+
+        return response()->json($input);
+    }
+
+//     public function paketPernahDitangani(Request $request)
+// {
+//     $kurirId = auth()->id(); // ambil id user yang login
+
+//     $data = Riwayat::with('paket')
+//         ->where('kurir_id', $kurirId)
+//         ->get();
+
+//     return response()->json($data);
+// }
+
+    public function paketPernahDitangani()
+{
+    $user = auth()->user();
+    $kurir = $user->kurir;
+
+    // Ambil semua paket yang pernah ditangani kurir ini lewat tabel riwayat
+    $input = Input::whereHas('riwayat', function($q) use ($kurir) {
+            $q->where('kurir_id', $kurir->id);
+        })
+        ->with(['riwayat' => function($q) use ($kurir) {
+            $q->where('kurir_id', $kurir->id)
+              ->with('kurir.user');
+        }])
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return response()->json($input);
+}
+
+
+//  index podokno index per
+//      public function riwayatKurir()
+// {
+//     $user = auth()->user(); // user yang login
+//     $kurir = $user->kurir; // relasi ke tabel kurir
+
+//     $input = Input::with(['riwayat' => function($q) use ($kurir) {
+//                     $q->where('kurir_id', $kurir->id);
+//                 }, 'riwayat.user.kurir'])
+//                 ->whereHas('riwayat', function($q) use ($kurir) {
+//                     $q->where('kurir_id', $kurir->id);
+//                 })
+//                 ->get();
+
+//     return response()->json($input);
+// }
 }

@@ -101,8 +101,8 @@ class OrderedController extends Controller
                 // ->when($request->has('exclude_status'), function ($query) use ($request) {
                 //     $query->where('status', '!=', $request->exclude_status);
                 // })
-                ->latest()
-                ->paginate($per);
+                // ->latest()
+                // ->paginate($per);
 
             // Tambah nomor urut
             $no = ($data->currentPage() - 1) * $per + 1;
@@ -296,7 +296,10 @@ class OrderedController extends Controller
 
     public function showRiwayat($id)
     {
-        $input = Input::with('riwayat')->findOrFail($id);
+        // $input = Input::with('riwayat')->findOrFail($id);
+        $input = Input::with(['riwayat.user.kurir'])->find($id);
+        // return response()->json($input);
+
 
         return response()->json([
             'riwayat_pengiriman' => $input->riwayat->map(function ($item) {
@@ -308,8 +311,11 @@ class OrderedController extends Controller
         ]);
     }
 
-
-
+    public function showByKurir($id)
+{
+    $data = Input::where('kurir_id', $id)->get();
+    return response()->json($data);
+}
 
     //    public function update(Request $request, $id)
 // {
@@ -413,4 +419,115 @@ class OrderedController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+
+    public function orderanSaya(Request $request)
+{
+    $user = auth()->user();
+
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'User tidak ditemukan atau belum login.',
+        ], 401);
+    }
+
+    if ($user->role->name !== 'kurir') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Hanya kurir yang bisa melihat data ini.',
+        ], 403);
+    }
+
+    // Ambil ID kurir yang login
+    $kurirId = $user->kurir->id ?? null;
+
+    if (!$kurirId) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Data kurir tidak ditemukan.',
+        ], 404);
+    }
+
+    // Ambil orderan yang diambil oleh kurir ini saja
+    $data = Input::with('riwayat')
+        ->where('kurir_id', $kurirId)
+        ->orderByDesc('created_at')
+        ->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $data,
+    ]);
+}
+
+
+//     public function orderanSaya()
+// {
+//     $user = auth()->user();
+
+//     if ($user->role->name !== 'kurir') {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Hanya kurir yang bisa melihat data ini.',
+//         ], 403);
+//     }
+
+//     $kurirId = $user->kurir->kurir_id;
+
+//     // Ambil hanya orderan milik kurir login
+//     $data = Input::with('riwayat')
+//         ->where('kurir_id', $kurirId)
+//         ->orderByDesc('created_at')
+//         ->get();
+
+//     return response()->json([
+//         'success' => true,
+//         'data' => $data,
+//     ]);
+// }
+    public function showOrdered()
+{
+    $user = auth()->user();
+
+    if ($user->role->name !== 'kurir') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Hanya kurir yang bisa melihat data ini.',
+        ], 403);
+    }
+
+    $kurirId = $user->kurir->kurir_id;
+
+    // Ambil hanya orderan milik kurir login
+    $data = Input::with('riwayat')
+        ->where('kurir_id', $kurirId)
+        ->orderByDesc('created_at')
+        ->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $data,
+    ]);
+}
+
+    public function paketPernahDitangani()
+{
+    $user = auth()->user();
+    $kurir = $user->kurir;
+
+    // Ambil semua paket yang pernah ditangani kurir ini lewat tabel riwayat
+    $input = Input::whereHas('riwayat', function($q) use ($kurir) {
+            $q->where('kurir_id', $kurir->id);
+        })
+        ->with(['riwayat' => function($q) use ($kurir) {
+            $q->where('kurir_id', $kurir->id)
+              ->with('kurir.user');
+        }])
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return response()->json($input);
+}
+
 }

@@ -16,6 +16,7 @@ use Illuminate\Notifications\Notification;
 use illuminate\Support\Str;
 use Midtrans\Config;
 use Midtrans\Snap;
+use Milon\Barcode\DNS2D;
 
 class InputController extends Controller
 {
@@ -32,24 +33,26 @@ class InputController extends Controller
     //     $pdf->setPaper([0, 0, 165, 566], 'portrait'); // 58mm x 200mm
 
     //     return $pdf->stream("struk-{$noResi}.pdf"); // tampilkan di browser
+    // }\
+
+    //ini sebelumnya
+    // public function handleResiPdf($noResi, $mode = 'view')
+    // {
+    //     $data = Input::where('no_resi', $noResi)->first();
+
+    //     if (!$data) {
+    //         abort(404, 'Data tidak ditemukan');
+    //     }
+
+    //     $pdf = Pdf::loadView('cetak-resi-pdf', compact('data'));
+    //     $pdf->setPaper([0, 0, 165, 566], 'portrait');
+
+    //     if ($mode === 'download') {
+    //         return $pdf->download("struk-{$noResi}.pdf");
+    //     }
+
+    //     return $pdf->stream("struk-{$noResi}.pdf");
     // }
-    public function handleResiPdf($noResi, $mode = 'view')
-    {
-        $data = Input::where('no_resi', $noResi)->first();
-
-        if (!$data) {
-            abort(404, 'Data tidak ditemukan');
-        }
-
-        $pdf = Pdf::loadView('cetak-resi-pdf', compact('data'));
-        $pdf->setPaper([0, 0, 165, 566], 'portrait');
-
-        if ($mode === 'download') {
-            return $pdf->download("struk-{$noResi}.pdf");
-        }
-
-        return $pdf->stream("struk-{$noResi}.pdf");
-    }
 
     public function downloadResi($noResi)
     {
@@ -61,7 +64,7 @@ class InputController extends Controller
 
         // Gunakan view yang sama
         $pdf = Pdf::loadView('cetak-resi-pdf', compact('data'));
-        $pdf->setPaper([0, 0, 165, 566], 'portrait'); // 58mm x 200mm
+        $pdf->setPaper([165, 566], 'portrait'); // 58mm x 200mm
 
         return $pdf->download("struk-{$noResi}.pdf"); // download otomatis
     }
@@ -170,9 +173,6 @@ class InputController extends Controller
         $per = $request->input('per', 10);
         $page = $request->input('page', 1);
 
-        if ($request->has('kurir_id')) {
-        $query->where('kurir_id', $request->kurir_id);
-    }
 
         DB::statement('SET @no := ' . (($page - 1) * $per));
         $kurirId = auth()->user()->role->name === 'kurir'
@@ -520,7 +520,10 @@ class InputController extends Controller
         if (!$id) {
             // Loop hingga menghasilkan no_resi yang belum ada di database
             do {
-                $resi = 'RESI-' . now()->timestamp . '-' . rand(1000, 9999);
+                // $resi = 'RESI-' . now()->timestamp . '-' . rand(1000, 9999);
+                // $resi = 'RESI-' . uniqid();
+                // $resi = 'RESI-' . now()->format('YmdHis') . '-' . rand(1000, 9999);
+                $resi = 'RESI-' . now()->format('Ymd') . '-' . rand(1000, 9999);
             } while (Input::where('no_resi', $resi)->exists());
 
             $input->no_resi = $resi;
@@ -678,7 +681,8 @@ class InputController extends Controller
             ], 400);
         }
 
-        $order_id = 'ONGKIR-' . now()->timestamp . '-' . Str::random(4);
+        // $order_id = 'ONGKIR-' . now()->timestamp . '-' . Str::random(4);
+        $order_id = 'ONGKIR-' . now()->format('Ymd') . '-' . rand(1000, 9999);
 
         $params = [
             'transaction_details' => [
@@ -807,8 +811,6 @@ class InputController extends Controller
                 // 'email' => $input->pengguna->email ?? 'user@gmail.com',
                 // 'email' => $input->pengguna_id ? ($input->pengguna->email ?? 'user@gmail.com') : 'user@gmail.com',
                 'email' => optional($input->pengirim)->email ?: 'user@gmail.com',
-
-
             ]
         ];
 
@@ -939,6 +941,7 @@ public function masuk(Request $request)
     {
         $input = Input::findOrFail($request->input_id);
         $input->status = 'keluar gudang';
+        $input->kurir_id = null;
         $input->save();
 
         $input->riwayat()->create([
@@ -1166,5 +1169,25 @@ public function masuk(Request $request)
 
         return response()->json(['message' => 'Status pembayaran diperbarui.']);
     }
+
+//     public function paketPernahDitangani()
+// {
+//     $user = auth()->user();
+//     $kurir = $user->kurir;
+
+//     // Ambil semua paket yang pernah ditangani kurir ini lewat tabel riwayat
+//     $input = Input::whereHas('riwayat', function($q) use ($kurir) {
+//             $q->where('id', $kurir->id);
+//         })
+//         ->with(['riwayat' => function($q) use ($kurir) {
+//             $q->where('id', $kurir->id)
+//               ->with('kurir.user');
+//         }])
+//         ->orderBy('created_at', 'desc')
+//         ->get();
+
+//     return response()->json($input);
+// }
+
 
 }

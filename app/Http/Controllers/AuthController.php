@@ -42,6 +42,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => true,
             'user' => auth()->user()->load('kurir'),
+            // 'role' => $user->role->name, // misal relasi role()
             'token' => $token
         ]);
     }

@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Input;
+use Milon\Barcode\DNS2D;
+use Milon\Barcode\DNS1D;
+
 
 class CekResiController extends Controller
 {

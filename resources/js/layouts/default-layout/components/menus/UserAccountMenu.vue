@@ -52,7 +52,7 @@ const signOut = () => {
         },
     }).then(async(result) => {
         if (result.isConfirmed) {
-            await store.logout();
+            await store.logout(); //ditambah await untuk menunggu proses logout selesai
             Swal.fire({
                 icon: "success",
                 text: "Berhasil keluar",
